@@ -1,0 +1,176 @@
+roleverse/
+├── README.md                       
+├── package.json
+├── next.config.js
+├── .env.local             
+│
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx                    # Landing: "Sign in with Google"
+│   │
+│   ├── auth/
+│   │   ├── callback/page.tsx       # Google OAuth callback
+│   │   └── signout/page.tsx
+│   │
+│   ├── (app)/                      # Protected routes
+│   │   ├── layout.tsx              # Check auth
+│   │   ├── dashboard/page.tsx      # "Your Campaigns"
+│   │   │
+│   │   ├── campaigns/
+│   │   │   ├── new/page.tsx        # Create campaign + SELECT GAME SYSTEM
+│   │   │   └── [id]/
+│   │   │       ├── page.tsx        # Campaign overview
+│   │   │       ├── upload/page.tsx # Upload game system PDFs (drag & drop)
+│   │   │       └── session/page.tsx # Live game session
+│   │   │
+│   │   ├── characters/
+│   │   │   ├── page.tsx            # Character list (filtered by campaign/system)
+│   │   │   ├── new/page.tsx        # Create character (inherits campaign system)
+│   │   │   └── [id]/page.tsx       # Dynamic character sheet (system-specific)
+│   │   │
+│   │   └── settings/
+│   │       ├── profile/page.tsx
+│   │       └── fg-desktop/page.tsx # Download desktop app
+│   │
+│   └── api/
+│       ├── auth/
+│       │   └── [...supabase]/route.ts # Google OAuth handler
+│       │
+│       ├── session/
+│       │   ├── start/route.ts
+│       │   └── process/route.ts    # Process player action (system-aware)
+│       │
+│       ├── agents/
+│       │   └── orchestrate/route.ts # Main agent coordinator (uses system prompts)
+│       │
+│       ├── mcp/
+│       │   └── route.ts            # MCP server endpoint
+│       │
+│       ├── voice/
+│       │   ├── transcribe/route.ts # Whisper API
+│       │   └── synthesize/route.ts # TTS
+│       │
+│       ├── campaigns/
+│       │   └── upload-pdf/route.ts # Process user PDF → RAG (system-tagged)
+│       │
+│       └── fg-bridge/
+│           └── sync/route.ts       # Receive from desktop app (auto-detect system)
+│
+├── components/
+│   ├── auth/
+│   │   └── GoogleSignInButton.tsx  # One-click sign in
+│   │
+│   ├── session/
+│   │   ├── ChatWindow.tsx          # Game narrative feed
+│   │   ├── VoiceControls.tsx       # Push-to-talk button
+│   │   ├── DiceRoller.tsx
+│   │   ├── CombatDisplay.tsx       # Shows FG combat if connected
+│   │   └── InitiativeTracker.tsx
+│   │
+│   ├── campaign/
+│   │   ├── CampaignCard.tsx        # Shows game system badge
+│   │   ├── CampaignList.tsx        # Can filter by system
+│   │   ├── PDFUploader.tsx         
+│   │   └── GameSystemSelector.tsx  
+│   │
+│   ├── character/
+│   │   ├── CharacterSheet.tsx      # Dynamic based on game_system
+│   │   ├── CharacterCard.tsx
+│   │   └── sheets/                 # System-specific sheets
+│   │       ├── ADD2ESheet.tsx      # AD&D 2E
+│   │       ├── DND5ESheet.tsx      # D&D 5E
+│   │       ├── PathfinderSheet.tsx # Pathfinder
+│   │       └── GenericSheet.tsx    # Other systems
+│   │
+│   └── ui/                         # shadcn/ui components
+│       ├── button.tsx
+│       ├── card.tsx
+│       ├── dialog.tsx
+│       ├── select.tsx              # For game system dropdown
+│       └── ...
+│
+├── lib/
+│   ├── supabase/
+│   │   ├── client.ts               # Browser client (RLS-protected)
+│   │   ├── server.ts               # Server client
+│   │   └── middleware.ts           # Auth middleware
+│   │
+│   ├── auth/
+│   │   └── google.ts               # Google OAuth setup
+│   │
+│   ├── game-systems/               
+│   │   ├── types.ts                # GameSystem, CharacterData types
+│   │   ├── registry.ts             # Central system registry + FG mapping
+│   │   ├── add1e.ts                # AD&D 1st Edition
+│   │   ├── add2e.ts                # AD&D 2nd Edition 
+│   │   ├── 3-5e.ts                 # D&D 3.5
+│   │   ├── 4e.ts                   # D&D 4E
+│   │   ├── 5e-2014.ts              # D&D 5E 2014 
+│   │   ├── 5e-2024.ts              # D&D 5E 2024
+│   │   ├── pathfinder.ts           # Pathfinder 1E
+│   │   ├── pathfinder-2e.ts        # Pathfinder 2E
+│   │   ├── dcc.ts                  # Dungeon Crawl Classics
+│   │   ├── tor1e.ts                # The One Ring 1E
+│   │   ├── tor2e.ts                # The One Ring 2E
+│   │   └── cyberpunk-2020.ts       # Cyberpunk 2020
+│   │
+│   ├── agents/
+│   │   ├── coordinator.ts          # Main orchestrator (uses game system)
+│   │   ├── rules-arbiter.ts        # Uses system.rulesPrompt
+│   │   ├── lore-keeper.ts
+│   │   ├── encounter-builder.ts
+│   │   ├── narrator.ts             
+│   │   └── npc-dialogue.ts
+│   │
+│   ├── mcp/
+│   │   ├── server.ts               # MCP protocol
+│   │   ├── types.ts                # MCPContext includes game_system
+│   │   └── tools/
+│   │       ├── roll-dice.ts        # System-aware (uses system.primaryDie)
+│   │       ├── query-rules.ts      # Filters by game_system 
+│   │       ├── get-character.ts    # Returns system schema 
+│   │       └── get-lore.ts         
+│   │
+│   ├── rag/
+│   │   ├── ingest-pdf.ts           # PDF → embeddings (tags with game_system)
+│   │   ├── query.ts                # Similarity search
+│   │   ├── embeddings.ts           # OpenAI embedding generation
+│   │   └── chunking.ts
+│   │
+│   └── fg-bridge/
+│       ├── desktop-protocol.ts     # Communication protocol
+│       ├── sync-handler.ts         # Maps FG ruleset → game_system
+│       └── parsers/                # FG parsers per system
+│           ├── add2e-parser.ts     # Parse 2E XML → CharacterData
+│           ├── 5e-parser.ts        # Parse 5E XML → CharacterData
+│           └── ...
+│
+├── supabase/
+│   ├── migrations/
+│   │   └── 001_initial_schema.sql  # Base schema 
+│   │   
+│   └── seed.sql                    # Sample campaigns for all systems
+│
+├── desktop/                        # Electron app (Phase 5)
+│   ├── main.js                     # Main process
+│   ├── preload.js
+│   ├── fg-detector.js              # Auto-detect FG + ruleset
+│   ├── fg-sync.js                  # Sync FG → Cloud (system-aware)
+│   └── tray-menu.js                # System tray UI
+│
+├── docs/
+│   ├── SETUP.md                    # Setup instructions
+│   ├── ROLEVERSE.txt               # Project skeleton
+│   ├── ARCHITECTURE.md             # System architecture
+│   ├── GAME_SYSTEMS.md             # Supported game systems details
+│   ├── API.md                      # API reference
+│   └── AGENTS.md                   # AI agent designs
+│   
+└── .github/                        # GitHub Actions CI/CD
+    ├── workflows/
+    │   ├── ci.yml                  
+    │   ├── deploy.yml              
+    │   ├── security.yml            
+    │   └── pr-labeler.yml          
+    ├── dependabot.yml             
+    └── labeler.yml                 
