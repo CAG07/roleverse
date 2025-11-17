@@ -4,25 +4,25 @@ A tabletop RPG companion that brings **AI-powered DM assistance**, **Fantasy Gro
 
 ## ✨ Features
 
-### 🤖 AI Dungeon Master (5 Specialized Agents)
+### AI Dungeon Master (5 Specialized Agents)
 - **Rules Arbiter**: Knows RPG rules from uploaded PDFs
 - **Lore Keeper**: Accesses your campaign knowledge via RAG (queries uploaded PDFs)
 - **Encounter Builder**: Creates dynamic encounters and surprises
 - **Narrator**: Crafts immersive descriptions and storytelling
 - **NPC Dialogue**: Roleplays characters with consistent personalities
 
-### 🎮 Fantasy Grounds Integration
+### Fantasy Grounds Integration
 - **Auto-sync characters** from Fantasy Grounds
 - **Real-time combat tracking** iniatiative, HP, attacks, damage, etc.
 - **Seamless data flow** between FG and web app
 - **Desktop app** for cross-platform integration
 
-### 🎤 Voice-Enabled Gameplay
+### Voice-Enabled Gameplay
 - **Push-to-talk** interface powered by OpenAI Whisper
 - **Text-to-speech** responses from AI DM
 - **Natural conversation** - no typing needed during play
 
-### 📚 Campaign Management and Kanka Integration
+### Campaign Management and Kanka Integration
 - Upload your **RPG rulebooks** (PDFs)
 - **RAG ingestion** for AI to reference rules
 - **Character sheets** synced from Fantasy Grounds
