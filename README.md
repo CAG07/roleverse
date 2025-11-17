@@ -56,44 +56,6 @@ A tabletop RPG companion that brings **AI-powered DM assistance**, **Fantasy Gro
 ## 🚀 Quick Start
 Placeholder for user setup instructions. See [SETUP.md](./SETUP.md) for full details.
 
-## 🎯 Build Status
-
-### ✅ Phase 1: Foundation (COMPLETE)
-- [x] Project structure
-- [x] Database schema with RLS
-- [x] Google OAuth setup
-- [x] Supabase clients
-- [x] Environment configuration
-
-### 🚧 Phase 2: Core Web App (IN PROGRESS)
-- [ ] Campaign CRUD
-- [ ] PDF upload & ingestion
-- [ ] Character sheets
-- [ ] UI components
-
-### ⏳ Phase 3: AI Agent System (PENDING)
-- [ ] MCP server with 5 tools
-- [ ] Agent orchestrator
-- [ ] Session management
-- [ ] RAG query system
-
-### ⏳ Phase 4: Voice Integration (PENDING)
-- [ ] Whisper API integration
-- [ ] TTS integration
-- [ ] Real-time voice controls
-
-### ⏳ Phase 5: FG Desktop App (PENDING)
-- [ ] Electron app structure
-- [ ] FG auto-detection
-- [ ] Character sync
-- [ ] Combat sync
-
-### ⏳ Phase 6: Testing (PENDING)
-- [ ] UAT with friends
-- [ ] Bug fixes
-- [ ] Documentation
-- [ ] Production deployment
-
 ## 📖 Documentation
 
 - **[SETUP.md](./SETUP.md)** - Complete setup guide and user instructions
