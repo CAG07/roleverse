@@ -47,7 +47,7 @@ A tabletop RPG companion that brings **AI-powered DM assistance**, **Fantasy Gro
 | **Frontend** | Next.js 15 + React 19 
 | **Backend** | Next.js API Routes (serverless)
 | **Database** | Supabase (PostgreSQL + pgvector)
-| **AI** | Anthropic Claude 3.5 Sonnet
+| **AI** | Anthropic Claude
 | **Embeddings** | OpenAI ada-002
 | **Voice** | OpenAI Whisper + ElevenLabs 
 | **Desktop** | Electron 
