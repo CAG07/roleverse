@@ -1,16 +1,19 @@
 import type { Metadata } from 'next';
-import { Crimson_Text, MedievalSharp } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 
-const crimsonText = Crimson_Text({
-  subsets: ['latin'],
-  weight: ['400', '600', '700'],
+const crimsonText = localFont({
+  src: [
+    { path: '../public/fonts/CrimsonText-Regular.woff2', weight: '400', style: 'normal' },
+    { path: '../public/fonts/CrimsonText-SemiBold.woff2', weight: '600', style: 'normal' },
+    { path: '../public/fonts/CrimsonText-Bold.woff2', weight: '700', style: 'normal' },
+  ],
   variable: '--font-crimson',
   display: 'swap',
 });
 
-const medievalSharp = MedievalSharp({
-  subsets: ['latin'],
+const medievalSharp = localFont({
+  src: '../public/fonts/MedievalSharp-Regular.woff2',
   weight: '400',
   variable: '--font-medieval',
   display: 'swap',
