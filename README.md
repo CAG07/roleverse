@@ -1,4 +1,4 @@
-# <img src="assets/d20.svg" width="28" height="28"> RoleVerse - AI-Powered RPG Companion
+# <img src="https://raw.githubusercontent.com/CAG07/roleverse/readme/assets/d20.svg" width="28" height="28"> RoleVerse - AI-Powered RPG Companion
 
 A tabletop RPG companion that brings **AI-powered DM assistance**, **Fantasy Grounds integration**, and **voice-enabled gameplay** for your solo RPG campaigns.
 
@@ -91,6 +91,6 @@ GNU AFFERO GENERAL PUBLIC LICENSE Version 3
 - [SETUP.md](./SETUP.md) - Setup troubleshooting
 - [GitHub Issues](link-to-issues) - Report bugs
 
-## <img src="assets/d20.svg" width="22" height="22"> Happy Adventuring!
+## <img src="https://raw.githubusercontent.com/CAG07/roleverse/readme/assets/d20.svg" width="22" height="22"> Happy Adventuring!
 
 Build something amazing. Share it with friends. Roll for initiative! ⚔️
