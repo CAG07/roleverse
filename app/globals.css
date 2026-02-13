@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: #e3a72f;
+  }
+
+  body {
+    @apply bg-cream text-brown font-body;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+}
+
+@layer components {
+  .rpg-border {
+    @apply border-2 border-gold;
+    box-shadow:
+      inset 0 0 10px rgba(0, 0, 0, 0.1),
+      0 0 10px rgba(0, 0, 0, 0.15);
+  }
+
+  .rpg-card {
+    @apply rpg-border rounded-sm bg-cream/90 p-6;
+    background-image: radial-gradient(
+      ellipse at center,
+      rgba(240, 236, 201, 0.95) 0%,
+      rgba(224, 219, 181, 0.95) 100%
+    );
+  }
+
+  .rpg-title {
+    @apply font-medieval text-rust;
+    text-shadow:
+      2px 2px 4px rgba(0, 0, 0, 0.4),
+      0 0 10px rgba(213, 75, 26, 0.2);
+  }
+
+  .rpg-button {
+    @apply rpg-border rounded-sm bg-brown px-6 py-3 font-medieval text-gold transition-all duration-200;
+  }
+
+  .rpg-button:hover {
+    @apply bg-brown-dark;
+    box-shadow:
+      inset 0 0 15px rgba(227, 167, 47, 0.2),
+      0 0 15px rgba(227, 167, 47, 0.3);
+  }
+
+  .rpg-divider {
+    @apply my-6 border-0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      #058789 20%,
+      #e3a72f 50%,
+      #058789 80%,
+      transparent 100%
+    );
+  }
+}
