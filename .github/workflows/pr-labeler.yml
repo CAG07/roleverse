@@ -13,7 +13,7 @@ jobs:
     name: Label by File Path
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/labeler@v5
         with:
@@ -25,7 +25,7 @@ jobs:
     name: Label by PR Size
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Label PR Size
         uses: codelytv/pr-size-labeler@v1
@@ -49,7 +49,7 @@ jobs:
     name: Label by PR Content
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check for Breaking Changes
         uses: actions/github-script@v7
