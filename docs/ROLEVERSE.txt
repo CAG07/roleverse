@@ -9,7 +9,7 @@ roleverse/
 │   ├── page.tsx                    # Landing: "Sign in with Google"
 │   │
 │   ├── auth/
-│   │   ├── callback/page.tsx       # Google OAuth callback
+│   │   ├── callback/route.ts       # Google OAuth callback
 │   │   └── signout/page.tsx
 │   │
 │   ├── (app)/                      # Protected routes

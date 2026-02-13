@@ -19,7 +19,7 @@ export default function SignOutPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4">
-      <div className="rpg-card w-full max-w-sm text-center">
+      <div className="w-full max-w-sm rpg-card text-center">
         <h1 className="mb-4 rpg-title text-3xl">Farewell, Adventurer</h1>
         <p className="text-brown/70">Ending your session&hellip;</p>
       </div>
