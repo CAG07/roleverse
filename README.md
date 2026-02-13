@@ -1,4 +1,4 @@
-# 🎲 RoleVerse - AI-Powered RPG Companion
+# <img src="assets/dice-d20-svgrepo-com.svg" width="28" height="28"> RoleVerse - AI-Powered RPG Companion
 
 A tabletop RPG companion that brings **AI-powered DM assistance**, **Fantasy Grounds integration**, and **voice-enabled gameplay** for your solo RPG campaigns.
 
@@ -68,7 +68,7 @@ Placeholder for user setup instructions. See [SETUP.md](./SETUP.md) for full det
 
 Contributions and submitting issues are welcome:
 1. Fork the repo
-2. Create feature branch (`git checkout -b feature/amazing-feature or bug/important-fix`)
+2. Create a branch (`git checkout -b feature/amazing-feature or bug/important-fix`)
 3. Commit changes 
 4. Push to branch 
 5. Open Pull Request
@@ -91,6 +91,6 @@ GNU AFFERO GENERAL PUBLIC LICENSE Version 3
 - [SETUP.md](./SETUP.md) - Setup troubleshooting
 - [GitHub Issues](link-to-issues) - Report bugs
 
-## 🎲 Happy Adventuring!
+## <img src="assets/dice-d20-svgrepo-com.svg" width="22" height="22"> Happy Adventuring!
 
 Build something amazing. Share it with friends. Roll for initiative! ⚔️
