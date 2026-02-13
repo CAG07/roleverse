@@ -8,15 +8,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        parchment: '#f4e4c1',
-        'parchment-dark': '#d4c4a1',
-        'ink-brown': '#3e2723',
-        'ink-dark': '#1a0f0a',
-        'gold-accent': '#c9a84c',
-        'gold-light': '#e0c872',
-        'blood-red': '#8b0000',
-        'dungeon-gray': '#2a2a2a',
-        'stone-gray': '#4a4a4a',
+        cream: '#f0ecc9',
+        'cream-dark': '#e0dbb5',
+        brown: '#503d2e',
+        'brown-dark': '#3a2a1e',
+        gold: '#e3a72f',
+        'gold-light': '#edc05a',
+        rust: '#d54b1a',
+        teal: '#058789',
+        'teal-dark': '#046a6c',
       },
       fontFamily: {
         medieval: ['MedievalSharp', 'Georgia', 'serif'],
@@ -24,7 +24,7 @@ const config: Config = {
       },
       backgroundImage: {
         'parchment-texture':
-          'radial-gradient(ellipse at center, #f4e4c1 0%, #d4c4a1 100%)',
+          'radial-gradient(ellipse at center, #f0ecc9 0%, #e0dbb5 100%)',
       },
     },
   },
