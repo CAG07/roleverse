@@ -2,68 +2,68 @@ version: 2
 
 updates:
   # npm dependencies
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "08:00"
-      timezone: "America/Chicago"
+      interval: 'weekly'
+      day: 'monday'
+      time: '08:00'
+      timezone: 'America/Chicago'
     open-pull-requests-limit: 10
     reviewers:
-      - "craigwilkey"  # Update with your GitHub username
+      - 'craigwilkey' # Update with your GitHub username
     labels:
-      - "dependencies"
-      - "automated"
+      - 'dependencies'
+      - 'automated'
     commit-message:
-      prefix: "chore(deps)"
+      prefix: 'chore(deps)'
     groups:
       # Group minor/patch updates to reduce PR noise
       next-ecosystem:
         patterns:
-          - "next"
-          - "next-*"
-          - "@next/*"
-          - "eslint-config-next"
+          - 'next'
+          - 'next-*'
+          - '@next/*'
+          - 'eslint-config-next'
       supabase:
         patterns:
-          - "@supabase/*"
-          - "supabase"
+          - '@supabase/*'
+          - 'supabase'
       anthropic:
         patterns:
-          - "@anthropic-ai/*"
+          - '@anthropic-ai/*'
       testing:
         patterns:
-          - "jest"
-          - "@jest/*"
-          - "ts-jest"
-          - "@testing-library/*"
-          - "vitest"
-          - "@vitest/*"
+          - 'jest'
+          - '@jest/*'
+          - 'ts-jest'
+          - '@testing-library/*'
+          - 'vitest'
+          - '@vitest/*'
       typescript:
         patterns:
-          - "typescript"
-          - "@types/*"
+          - 'typescript'
+          - '@types/*'
       linting:
         patterns:
-          - "eslint"
-          - "eslint-*"
-          - "@eslint/*"
-          - "prettier"
-          - "@typescript-eslint/*"
+          - 'eslint'
+          - 'eslint-*'
+          - '@eslint/*'
+          - 'prettier'
+          - '@typescript-eslint/*'
 
   # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "08:00"
-      timezone: "America/Chicago"
+      interval: 'weekly'
+      day: 'monday'
+      time: '08:00'
+      timezone: 'America/Chicago'
     open-pull-requests-limit: 5
     labels:
-      - "dependencies"
-      - "ci/cd"
-      - "automated"
+      - 'dependencies'
+      - 'ci/cd'
+      - 'automated'
     commit-message:
-      prefix: "ci(deps)"
+      prefix: 'ci(deps)'

@@ -16,7 +16,7 @@ export function GoogleSignInButton() {
   return (
     <button
       onClick={handleSignIn}
-      className="rpg-button flex w-full items-center justify-center gap-3 text-lg hover:text-gold-light"
+      className="flex w-full items-center justify-center gap-3 rpg-button text-lg hover:text-gold-light"
     >
       {/* Google "G" icon */}
       <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
