@@ -1,5 +1,20 @@
 import type { Metadata } from 'next';
+import { Crimson_Text, MedievalSharp } from 'next/font/google';
 import './globals.css';
+
+const crimsonText = Crimson_Text({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-crimson',
+  display: 'swap',
+});
+
+const medievalSharp = MedievalSharp({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-medieval',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'RoleVerse — AI-Powered Tabletop RPG Companion',
@@ -13,13 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Crimson+Text:wght@400;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" className={`${crimsonText.variable} ${medievalSharp.variable}`}>
       <body className="min-h-screen antialiased">{children}</body>
     </html>
   );
