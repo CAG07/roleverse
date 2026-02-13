@@ -59,7 +59,8 @@ const fgRulesetMap: Map<string, string> = new Map([
 export function getGameSystem(id: string): GameSystem {
   const system = systems.get(id);
   if (!system) {
-    throw new Error(`Unknown game system: ${id}`);
+    const validIds = Array.from(systems.keys()).join(', ');
+    throw new Error(`Unknown game system: ${id}. Valid systems: ${validIds}`);
   }
   return system;
 }
