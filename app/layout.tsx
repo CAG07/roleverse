@@ -22,11 +22,7 @@ export const metadata: Metadata = {
     'Your AI dungeon master companion. Manage campaigns, characters, and sessions across classic tabletop RPG systems.',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${crimsonText.variable} ${medievalSharp.variable}`}>
       <body className="min-h-screen antialiased">{children}</body>
