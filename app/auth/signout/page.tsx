@@ -10,8 +10,11 @@ export default function SignOutPage() {
   useEffect(() => {
     const signOut = async () => {
       const supabase = createClient();
-      await supabase.auth.signOut();
-      router.push('/');
+      try {
+        await supabase.auth.signOut();
+      } finally {
+        router.push('/');
+      }
     };
 
     signOut();

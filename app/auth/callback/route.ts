@@ -7,8 +7,13 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!error) {
+      return NextResponse.redirect(`${origin}/dashboard`);
+    }
   }
 
-  return NextResponse.redirect(`${origin}/dashboard`);
+  // Redirect to landing page if code is missing or exchange failed
+  return NextResponse.redirect(`${origin}/`);
 }
