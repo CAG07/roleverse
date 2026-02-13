@@ -68,7 +68,7 @@ Placeholder for user setup instructions. See [SETUP.md](./SETUP.md) for full det
 
 Contributions and submitting issues are welcome:
 1. Fork the repo
-2. Create feature branch (`git checkout -b feature/amazing-feature or bugfix/important-fix`)
+2. Create feature branch (`git checkout -b feature/amazing-feature or bug/important-fix`)
 3. Commit changes 
 4. Push to branch 
 5. Open Pull Request
