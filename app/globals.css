@@ -1,6 +1,90 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme {
+  --color-cream: #f0ecc9;
+  --color-cream-dark: #e0dbb5;
+  --color-brown: #503d2e;
+  --color-brown-dark: #3a2a1e;
+  --color-gold: #e3a72f;
+  --color-gold-light: #edc05a;
+  --color-rust: #d54b1a;
+  --color-teal: #058789;
+  --color-teal-dark: #046a6c;
+
+  --font-medieval: MedievalSharp, Georgia, serif;
+  --font-body: Crimson Text, Georgia, serif;
+
+  --background-image-parchment-texture: radial-gradient(
+    ellipse at center,
+    #f0ecc9 0%,
+    #e0dbb5 100%
+  );
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility rpg-border {
+  @apply border-2 border-gold;
+  box-shadow:
+    inset 0 0 10px rgba(0, 0, 0, 0.1),
+    0 0 10px rgba(0, 0, 0, 0.15);
+}
+
+@utility rpg-card {
+  @apply rounded-xs rpg-border bg-cream/90 p-6;
+  background-image: radial-gradient(
+    ellipse at center,
+    rgba(240, 236, 201, 0.95) 0%,
+    rgba(224, 219, 181, 0.95) 100%
+  );
+}
+
+@utility rpg-title {
+  @apply font-medieval text-rust;
+  text-shadow:
+    2px 2px 4px rgba(0, 0, 0, 0.4),
+    0 0 10px rgba(213, 75, 26, 0.2);
+}
+
+@utility rpg-button {
+  @apply rounded-xs rpg-border bg-brown px-6 py-3 font-medieval text-gold transition-all duration-200;
+
+  &:hover {
+    @apply bg-brown-dark;
+    box-shadow:
+      inset 0 0 15px rgba(227, 167, 47, 0.2),
+      0 0 15px rgba(227, 167, 47, 0.3);
+  }
+}
+
+@utility rpg-divider {
+  @apply my-6 border-0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #058789 20%,
+    #e3a72f 50%,
+    #058789 80%,
+    transparent 100%
+  );
+}
 
 @layer base {
   * {
@@ -10,54 +94,5 @@
   body {
     @apply bg-cream font-body text-brown;
     background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  }
-}
-
-@layer components {
-  .rpg-border {
-    @apply border-2 border-gold;
-    box-shadow:
-      inset 0 0 10px rgba(0, 0, 0, 0.1),
-      0 0 10px rgba(0, 0, 0, 0.15);
-  }
-
-  .rpg-card {
-    @apply rpg-border rounded-sm bg-cream/90 p-6;
-    background-image: radial-gradient(
-      ellipse at center,
-      rgba(240, 236, 201, 0.95) 0%,
-      rgba(224, 219, 181, 0.95) 100%
-    );
-  }
-
-  .rpg-title {
-    @apply font-medieval text-rust;
-    text-shadow:
-      2px 2px 4px rgba(0, 0, 0, 0.4),
-      0 0 10px rgba(213, 75, 26, 0.2);
-  }
-
-  .rpg-button {
-    @apply rpg-border rounded-sm bg-brown px-6 py-3 font-medieval text-gold transition-all duration-200;
-  }
-
-  .rpg-button:hover {
-    @apply bg-brown-dark;
-    box-shadow:
-      inset 0 0 15px rgba(227, 167, 47, 0.2),
-      0 0 15px rgba(227, 167, 47, 0.3);
-  }
-
-  .rpg-divider {
-    @apply my-6 border-0;
-    height: 2px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      #058789 20%,
-      #e3a72f 50%,
-      #058789 80%,
-      transparent 100%
-    );
   }
 }

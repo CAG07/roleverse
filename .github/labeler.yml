@@ -5,8 +5,8 @@
 frontend:
   - changed-files:
       - any-glob-to-any-file:
-          - 'src/app/**'
-          - 'src/components/**'
+          - 'app/**'
+          - 'components/**'
           - 'src/styles/**'
           - 'public/**'
           - '*.css'

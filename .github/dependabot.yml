@@ -11,7 +11,7 @@ updates:
       timezone: 'America/Chicago'
     open-pull-requests-limit: 10
     reviewers:
-      - 'craigwilkey' # Update with your GitHub username
+      - 'CAG07' # Update with your GitHub username
     labels:
       - 'dependencies'
       - 'automated'
