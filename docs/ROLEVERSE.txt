@@ -30,6 +30,7 @@ roleverse/
 │   │   │
 │   │   └── settings/
 │   │       ├── profile/page.tsx
+│   │       ├── discord/page.tsx    # Link Discord account, configure voice prefs
 │   │       └── fg-desktop/page.tsx # Download desktop app
 │   │
 │   └── api/
@@ -47,8 +48,12 @@ roleverse/
 │       │   └── route.ts            # MCP server endpoint
 │       │
 │       ├── voice/
-│       │   ├── transcribe/route.ts # Whisper API
-│       │   └── synthesize/route.ts # TTS
+│       │   ├── transcribe/route.ts # Whisper STT (uses shared lib/voice/whisper.ts)
+│       │   └── synthesize/route.ts # TTS (uses shared lib/voice/tts.ts)
+│       │
+│       ├── discord/
+│       │   ├── interactions/route.ts  # Discord interaction webhook endpoint
+│       │   └── link/route.ts          # Link Discord account to RoleVerse account
 │       │
 │       ├── campaigns/
 │       │   └── upload-pdf/route.ts # Process user PDF → RAG (system-tagged)
@@ -131,6 +136,19 @@ roleverse/
 │   │       ├── get-character.ts    # Returns system schema 
 │   │       └── get-lore.ts         
 │   │
+│   ├── voice/                      # Shared voice lib (used by both web UI + Discord)
+│   │   ├── whisper.ts              # OpenAI Whisper STT client
+│   │   ├── tts.ts                  # TTS client (OpenAI TTS / ElevenLabs)
+│   │   └── voice-profiles.ts      # Named voice configs (DM voice, NPC voices)
+│   │
+│   ├── discord/
+│   │   ├── bot.ts                  # Discord.js bot setup, event handlers
+│   │   ├── voice-session.ts        # Manages voice channel connection per campaign
+│   │   ├── audio-pipeline.ts       # Capture stream → Whisper → Agent → TTS → playback
+│   │   ├── user-mapping.ts         # Discord user ↔ RoleVerse user linking
+│   │   ├── text-commands.ts        # Slash commands (/roll, /status, /initiative)
+│   │   └── tts-voices.ts          # Voice profiles per agent/NPC (voice ID mapping)
+│   │
 │   ├── rag/
 │   │   ├── ingest-pdf.ts           # PDF → embeddings (tags with game_system)
 │   │   ├── query.ts                # Similarity search
@@ -151,7 +169,12 @@ roleverse/
 │   │   
 │   └── seed.sql                    # Sample campaigns for all systems
 │
-├── desktop/                        # Electron app (Phase 5)
+├── discord-bot/                    # Standalone bot process (runs separately from Next.js)
+│   ├── index.ts                    # Bot entry point
+│   ├── Dockerfile                  # For deployment
+│   └── package.json
+│
+├── desktop/                        # Electron app (Phase 9)
 │   ├── main.js                     # Main process
 │   ├── preload.js
 │   ├── fg-detector.js              # Auto-detect FG + ruleset
@@ -164,7 +187,8 @@ roleverse/
 │   ├── ARCHITECTURE.md             # System architecture
 │   ├── GAME_SYSTEMS.md             # Supported game systems details
 │   ├── API.md                      # API reference
-│   └── AGENTS.md                   # AI agent designs
+│   ├── AGENTS.md                   # AI agent designs
+│   └── DISCORD.md                  # Discord bot setup & voice architecture
 │   
 └── .github/                        # GitHub Actions CI/CD
     ├── workflows/
@@ -173,4 +197,4 @@ roleverse/
     │   ├── security.yml            
     │   └── pr-labeler.yml          
     ├── dependabot.yml             
-    └── labeler.yml                 
+    └── labeler.yml
