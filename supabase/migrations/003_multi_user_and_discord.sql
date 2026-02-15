@@ -1,0 +1,206 @@
+-- ============================================================================
+-- 003: Multi-User and Discord Tables
+-- Adds campaign membership, Discord integration, and voice profile tables.
+-- ============================================================================
+
+-- ============================================================================
+-- CAMPAIGN MEMBERS
+-- ============================================================================
+
+CREATE TABLE public.campaign_members (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  campaign_id UUID REFERENCES public.campaigns(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL DEFAULT 'player' CHECK (role IN ('dm', 'player')),
+  joined_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(campaign_id, user_id)
+);
+
+ALTER TABLE public.campaign_members ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Members can view fellow members"
+  ON public.campaign_members FOR SELECT
+  USING (
+    campaign_id IN (
+      SELECT cm.campaign_id FROM public.campaign_members cm
+      WHERE cm.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Campaign owner can add members"
+  ON public.campaign_members FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.campaigns c
+      WHERE c.id = campaign_id AND c.owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Owner can remove or member can leave"
+  ON public.campaign_members FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.campaigns c
+      WHERE c.id = campaign_id AND c.owner_id = auth.uid()
+    )
+    OR user_id = auth.uid()
+  );
+
+-- ============================================================================
+-- DISCORD USER LINKS
+-- ============================================================================
+
+CREATE TABLE public.discord_user_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  discord_user_id TEXT UNIQUE NOT NULL,
+  discord_username TEXT,
+  linked_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.discord_user_links ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage own discord links (select)"
+  ON public.discord_user_links FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users manage own discord links (insert)"
+  ON public.discord_user_links FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users manage own discord links (update)"
+  ON public.discord_user_links FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users manage own discord links (delete)"
+  ON public.discord_user_links FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- ============================================================================
+-- DISCORD SERVER LINKS
+-- ============================================================================
+
+CREATE TABLE public.discord_server_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  guild_id TEXT UNIQUE NOT NULL,
+  campaign_id UUID REFERENCES public.campaigns(id) ON DELETE CASCADE,
+  linked_by UUID REFERENCES auth.users(id),
+  voice_channel_id TEXT,
+  text_channel_id TEXT,
+  linked_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.discord_server_links ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Campaign members can view server links"
+  ON public.discord_server_links FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.campaign_members cm
+      WHERE cm.campaign_id = campaign_id AND cm.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Linker can insert server links"
+  ON public.discord_server_links FOR INSERT
+  WITH CHECK (auth.uid() = linked_by);
+
+CREATE POLICY "Linker can update server links"
+  ON public.discord_server_links FOR UPDATE
+  USING (auth.uid() = linked_by);
+
+CREATE POLICY "Linker can delete server links"
+  ON public.discord_server_links FOR DELETE
+  USING (auth.uid() = linked_by);
+
+-- ============================================================================
+-- VOICE PROFILES
+-- ============================================================================
+
+CREATE TABLE public.voice_profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  campaign_id UUID REFERENCES public.campaigns(id) ON DELETE CASCADE,
+  entity_type TEXT NOT NULL CHECK (entity_type IN ('agent', 'npc')),
+  entity_id TEXT NOT NULL,
+  voice_provider TEXT DEFAULT 'openai' CHECK (voice_provider IN ('openai', 'elevenlabs')),
+  voice_id TEXT NOT NULL,
+  speed FLOAT DEFAULT 1.0,
+  pitch FLOAT DEFAULT 1.0
+);
+
+ALTER TABLE public.voice_profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Campaign members can view voice profiles"
+  ON public.voice_profiles FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.campaign_members cm
+      WHERE cm.campaign_id = campaign_id AND cm.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Campaign owner can insert voice profiles"
+  ON public.voice_profiles FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.campaigns c
+      WHERE c.id = campaign_id AND c.owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Campaign owner can update voice profiles"
+  ON public.voice_profiles FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.campaigns c
+      WHERE c.id = campaign_id AND c.owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Campaign owner can delete voice profiles"
+  ON public.voice_profiles FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.campaigns c
+      WHERE c.id = campaign_id AND c.owner_id = auth.uid()
+    )
+  );
+
+-- ============================================================================
+-- AUTO-INSERT TRIGGER: Add campaign creator as DM member
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.handle_new_campaign()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  INSERT INTO public.campaign_members (campaign_id, user_id, role)
+  VALUES (NEW.id, NEW.owner_id, 'dm');
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_campaign_created
+  AFTER INSERT ON public.campaigns
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_campaign();
+
+-- ============================================================================
+-- UPDATE CAMPAIGNS SELECT POLICY: Members can also view joined campaigns
+-- ============================================================================
+
+-- Replace the SELECT policy from 001_initial_schema.sql so members can also view
+DROP POLICY IF EXISTS "Users can view own campaigns" ON public.campaigns;
+
+CREATE POLICY "Members can view joined campaigns"
+  ON public.campaigns FOR SELECT
+  USING (
+    auth.uid() = owner_id
+    OR EXISTS (
+      SELECT 1 FROM public.campaign_members cm
+      WHERE cm.campaign_id = id AND cm.user_id = auth.uid()
+    )
+  );
