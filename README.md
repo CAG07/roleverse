@@ -2,6 +2,31 @@
 
 A tabletop RPG companion that brings **AI-powered DM assistance**, **Fantasy Grounds integration**, and **voice-enabled gameplay** for your solo RPG campaigns.
 
+## 🖼️ Demo
+
+### Web App — Session View
+The three-column session layout with sidebar navigation, AI chat with scene display, and character sheet panel.
+
+![RoleVerse Web App Session View](assets/demo/web-app-session.svg)
+
+### Fantasy Grounds Integration
+Real-time sync with Fantasy Grounds Unity — combat tracker, character sheets, dice rolls, and battle maps flow seamlessly to the web app.
+
+<a href="https://www.fantasygrounds.com">
+  <img src="https://github.com/user-attachments/assets/3a4b905f-182d-4f56-ae52-af336e83528c" alt="Fantasy Grounds Unity" />
+</a>
+
+> [Fantasy Grounds Unity](https://www.fantasygrounds.com) is a virtual tabletop by SmiteWorks. RoleVerse syncs character data, combat state, and dice rolls in real time via a local bridge application.
+
+### Discord Integration
+Voice chat via Discord is transcribed and displayed in the web app chat. The RoleVerse Bot relays AI agent responses as rich embeds.
+
+<a href="https://discord.com">
+  <img src="https://github.com/user-attachments/assets/96f0267a-e371-45d6-8880-bb68ee66c9fe" alt="Discord" />
+</a>
+
+> [Discord](https://discord.com) voice channels connect to RoleVerse for speech-to-text transcription. Player voice is captured, transcribed, and displayed as chat messages in the web app with a 🎤 indicator.
+
 ## ✨ Features
 
 ### AI Dungeon Master (5 Specialized Agents)
