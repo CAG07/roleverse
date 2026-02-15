@@ -13,7 +13,7 @@ The three-column session layout with sidebar navigation, AI chat with scene disp
 Real-time sync with Fantasy Grounds Unity — combat tracker, character sheets, dice rolls, and battle maps flow seamlessly to the web app.
 
 <a href="https://www.fantasygrounds.com">
-  <img src="assets/demo/fantasy-grounds.svg" alt="Fantasy Grounds Integration Diagram" />
+  <img src="https://github.com/user-attachments/assets/3a4b905f-182d-4f56-ae52-af336e83528c" alt="Fantasy Grounds Unity" />
 </a>
 
 > [Fantasy Grounds Unity](https://www.fantasygrounds.com) is a virtual tabletop by SmiteWorks. RoleVerse syncs character data, combat state, and dice rolls in real time via a local bridge application.
