@@ -57,7 +57,7 @@ export async function updateSession(request: NextRequest) {
         .map((e) => e.trim().toLowerCase());
       const userEmail = (user.email ?? '').toLowerCase();
       if (!allowedEmails.includes(userEmail)) {
-        if (request.nextUrl.pathname !== '/unauthorized' && !request.nextUrl.pathname.startsWith('/auth')) {
+        if (!isPublicRoute) {
           const url = request.nextUrl.clone();
           url.pathname = '/unauthorized';
           return NextResponse.redirect(url);

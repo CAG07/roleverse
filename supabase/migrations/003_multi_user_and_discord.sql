@@ -192,6 +192,7 @@ CREATE TRIGGER on_campaign_created
 -- UPDATE CAMPAIGNS SELECT POLICY: Members can also view joined campaigns
 -- ============================================================================
 
+-- Replace the SELECT policy from 001_initial_schema.sql so members can also view
 DROP POLICY IF EXISTS "Users can view own campaigns" ON public.campaigns;
 
 CREATE POLICY "Members can view joined campaigns"
