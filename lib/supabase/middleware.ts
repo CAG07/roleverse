@@ -35,11 +35,36 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Public routes that don't require auth
+  const isPublicRoute =
+    request.nextUrl.pathname === '/' ||
+    request.nextUrl.pathname === '/unauthorized' ||
+    request.nextUrl.pathname.startsWith('/auth');
+
   // Protect authenticated routes under /(app)/
-  if (!user && !request.nextUrl.pathname.startsWith('/auth') && request.nextUrl.pathname !== '/') {
+  if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);
+  }
+
+  // Email allowlist check
+  if (user) {
+    const allowedEmailsEnv = process.env.ALLOWED_EMAILS;
+    if (allowedEmailsEnv && allowedEmailsEnv.trim() !== '') {
+      const allowedEmails = allowedEmailsEnv
+        .split(',')
+        .map((e) => e.trim().toLowerCase());
+      const userEmail = (user.email ?? '').toLowerCase();
+      if (!allowedEmails.includes(userEmail)) {
+        if (request.nextUrl.pathname !== '/unauthorized' && !request.nextUrl.pathname.startsWith('/auth')) {
+          const url = request.nextUrl.clone();
+          url.pathname = '/unauthorized';
+          return NextResponse.redirect(url);
+        }
+        return supabaseResponse;
+      }
+    }
   }
 
   // Redirect to dashboard if already logged in and trying to access landing
