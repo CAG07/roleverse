@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, type ChangeEvent, type KeyboardEvent } from 'react';
 import { Send, Mic, Keyboard, Image as ImageIcon } from 'lucide-react';
 import type { ChatMessage, SceneMedia, AgentType } from '@/lib/types/session';
 
@@ -177,7 +177,7 @@ export default function ChatWindow({ onSceneMediaUpdate }: ChatWindowProps) {
     setInput('');
   }, [input]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -247,7 +247,7 @@ export default function ChatWindow({ onSceneMediaUpdate }: ChatWindowProps) {
         <div className="relative flex-1">
           <textarea
             value={input}
-            onChange={(e: { target: { value: string } }) => setInput(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="What do you do..."
             rows={1}

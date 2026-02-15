@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type ChangeEvent } from 'react';
 
 interface SessionNotesProps {
   campaignId: string;
@@ -16,7 +16,7 @@ export default function SessionNotes({ campaignId }: SessionNotesProps) {
   }, [storageKey]);
 
   const handleChange = useCallback(
-    (e: { target: { value: string } }) => {
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
       const value = e.target.value;
       setNotes(value);
       localStorage.setItem(storageKey, value);

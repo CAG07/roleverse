@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { X, Maximize2, Image as ImageIcon } from 'lucide-react';
 import type { SceneMedia } from '@/lib/types/session';
 
@@ -77,7 +77,7 @@ export default function SceneDisplay({ media, onClose }: SceneDisplayProps) {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
           onClick={() => setExpanded(false)}
         >
-          <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+          <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e: MouseEvent<HTMLDivElement>) => e.stopPropagation()}>
             <button
               onClick={() => setExpanded(false)}
               className="absolute -right-3 -top-3 rounded-full bg-brown p-1 text-cream hover:text-gold"
