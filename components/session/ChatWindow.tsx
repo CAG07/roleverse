@@ -244,20 +244,15 @@ export default function ChatWindow({ onSceneMediaUpdate }: ChatWindowProps) {
 
       {/* Input bar */}
       <div className="flex items-end gap-2 border-t border-gold/20 bg-brown-dark/80 p-2">
-        <div className="relative flex-1">
+        <div className="flex-1">
           <textarea
             value={input}
             onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="What do you do..."
             rows={1}
-            className="w-full resize-none rounded border border-gold/30 bg-brown/60 px-3 py-2 pr-8 text-sm text-cream placeholder:text-cream/30 focus:outline-none focus:ring-1 focus:ring-teal"
+            className="w-full resize-none rounded border border-gold/30 bg-brown/60 px-3 py-2 text-sm text-cream placeholder:text-cream/30 focus:outline-none focus:ring-1 focus:ring-teal"
           />
-          <span title="Voice input (coming soon)">
-            <Mic
-              className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-cream/20"
-            />
-          </span>
         </div>
         <button
           onClick={handleSend}

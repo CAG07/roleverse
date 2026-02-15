@@ -1,6 +1,6 @@
 'use client';
 
-type VoiceState = 'inactive' | 'discord' | 'web';
+type VoiceState = 'inactive' | 'discord';
 
 interface VoiceStatusProps {
   status?: VoiceState;
@@ -10,7 +10,6 @@ interface VoiceStatusProps {
 const statusConfig: Record<VoiceState, { label: string; dotClass: string }> = {
   inactive: { label: 'Voice Inactive', dotClass: 'bg-gray-400' },
   discord: { label: 'Voice Active (Discord)', dotClass: 'bg-green-500' },
-  web: { label: 'Voice Active (Web)', dotClass: 'bg-green-500' },
 };
 
 export default function VoiceStatus({ status = 'inactive', users = [] }: VoiceStatusProps) {

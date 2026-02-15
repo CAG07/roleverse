@@ -14,7 +14,7 @@ export interface SceneMedia {
   timestamp: Date;
 }
 
-export type MessageSource = 'typed' | 'discord_voice' | 'web_voice';
+export type MessageSource = 'typed' | 'discord_voice';
 
 export type AgentType =
   | 'narrator'
