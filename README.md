@@ -12,12 +12,20 @@ The three-column session layout with sidebar navigation, AI chat with scene disp
 ### Fantasy Grounds Integration
 Real-time sync with Fantasy Grounds Unity — combat tracker, character sheets, dice rolls, and battle maps flow seamlessly to the web app.
 
-![Fantasy Grounds Integration](assets/demo/fantasy-grounds.svg)
+<a href="https://www.fantasygrounds.com">
+  <img src="assets/demo/fantasy-grounds.svg" alt="Fantasy Grounds Integration Diagram" />
+</a>
+
+> [Fantasy Grounds Unity](https://www.fantasygrounds.com) is a virtual tabletop by SmiteWorks. RoleVerse syncs character data, combat state, and dice rolls in real time via a local bridge application.
 
 ### Discord Integration
 Voice chat via Discord is transcribed and displayed in the web app chat. The RoleVerse Bot relays AI agent responses as rich embeds.
 
-![Discord Integration](assets/demo/discord-integration.svg)
+<a href="https://discord.com">
+  <img src="assets/demo/discord-integration.svg" alt="Discord Integration Diagram" />
+</a>
+
+> [Discord](https://discord.com) voice channels connect to RoleVerse for speech-to-text transcription. Player voice is captured, transcribed, and displayed as chat messages in the web app with a 🎤 indicator.
 
 ## ✨ Features
 

@@ -17,12 +17,12 @@ export default function SceneDisplay({ media, onClose }: SceneDisplayProps) {
   return (
     <>
       {/* Scene Panel */}
-      <div className="relative flex flex-col overflow-hidden rounded border-2 border-gold bg-brown-dark">
+      <div className="relative flex h-full flex-col overflow-hidden rounded border-2 border-gold bg-brown-dark">
         {/* Ornate frame effect via CSS */}
         <div className="absolute inset-0 pointer-events-none rounded border-4 border-double border-gold/30" />
 
-        {/* Media container — 16:9 aspect ratio, max ~35vh */}
-        <div className="relative aspect-video max-h-[35vh] w-full overflow-hidden bg-black">
+        {/* Media container — fills available height */}
+        <div className="relative flex-1 min-h-0 w-full overflow-hidden bg-black">
           {media.type === 'image' ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
