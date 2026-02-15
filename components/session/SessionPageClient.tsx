@@ -177,7 +177,7 @@ export default function SessionPageClient({
           <div className="mb-3">
             <h3 className="mb-2 font-medieval text-sm text-gold">Party</h3>
             <div className="flex gap-2">
-              {mockPartyStatus.map((member, i) => {
+              {mockPartyStatus.map((member, index) => {
                 const initials = member.characterName
                   .split(' ')
                   .map((n) => n[0])
@@ -199,7 +199,7 @@ export default function SessionPageClient({
                   >
                     <Avatar className="h-10 w-10">
                       <AvatarFallback
-                        className={`${avatarColors[i % avatarColors.length]} text-xs font-bold text-cream`}
+                        className={`${avatarColors[index % avatarColors.length]} text-xs font-bold text-cream`}
                       >
                         {initials}
                       </AvatarFallback>
