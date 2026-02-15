@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { getGameSystem } from '@/lib/game-systems/registry';
 import SessionPageClient from '@/components/session/SessionPageClient';
 
 interface SessionPageProps {
@@ -23,14 +22,6 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
   if (!campaign || campaign.owner_id !== user?.id) {
     notFound();
-  }
-
-  let systemName = campaign.game_system;
-  try {
-    const system = getGameSystem(campaign.game_system);
-    systemName = system.name;
-  } catch {
-    // Use raw slug if system is not registered
   }
 
   return (

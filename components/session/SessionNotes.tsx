@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, type ChangeEvent } from 'react';
+import { useState, useCallback, type ChangeEvent } from 'react';
 
 interface SessionNotesProps {
   campaignId: string;
@@ -8,12 +8,10 @@ interface SessionNotesProps {
 
 export default function SessionNotes({ campaignId }: SessionNotesProps) {
   const storageKey = `roleverse-notes-${campaignId}`;
-  const [notes, setNotes] = useState('');
-
-  useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) setNotes(saved);
-  }, [storageKey]);
+  const [notes, setNotes] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem(storageKey) ?? '';
+  });
 
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
