@@ -22,7 +22,7 @@ Real-time sync with Fantasy Grounds Unity — combat tracker, character sheets, 
 Voice chat via Discord is transcribed and displayed in the web app chat. The RoleVerse Bot relays AI agent responses as rich embeds.
 
 <a href="https://discord.com">
-  <img src="assets/demo/discord-integration.svg" alt="Discord Integration Diagram" />
+  <img src="https://github.com/user-attachments/assets/96f0267a-e371-45d6-8880-bb68ee66c9fe" alt="Discord" />
 </a>
 
 > [Discord](https://discord.com) voice channels connect to RoleVerse for speech-to-text transcription. Player voice is captured, transcribed, and displayed as chat messages in the web app with a 🎤 indicator.
