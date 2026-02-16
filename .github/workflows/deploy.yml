@@ -42,15 +42,20 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
-      # Use --db-url with the direct connection (*.db.supabase.com, not *.pooler.supabase.com)
-      # because migrations require DDL/transactional consistency not supported by the pooler.
+      # Use --db-url with the direct connection (db.<ref>.supabase.co, not the pooler).
+      # The default --linked mode falls back to the connection pooler when the direct host
+      # is unreachable (common on CI runners), which breaks DDL operations in migrations.
       - name: Run Migrations (Production)
         run: |
-          supabase db push --db-url "$SUPABASE_DB_URL" --dry-run
-          supabase db push --db-url "$SUPABASE_DB_URL"
+          ENCODED_PASSWORD=$(python3 -c "import urllib.parse, os; print(urllib.parse.quote(os.environ['SUPABASE_DB_PASSWORD'], safe=''))")
+          DB_URL="postgresql://postgres.${SUPABASE_PROJECT_REF}:${ENCODED_PASSWORD}@db.${SUPABASE_PROJECT_REF}.supabase.co:5432/postgres"
+          echo "::add-mask::${DB_URL}"
+          supabase db push --db-url "$DB_URL" --dry-run
+          supabase db push --db-url "$DB_URL"
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
       - name: Deploy to Vercel (Production)
         id: deploy
