@@ -49,6 +49,39 @@ jobs:
       - name: Type Check
         run: npx tsc --noEmit
 
+  validate-migrations:
+    name: Validate Migrations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - run: npm ci
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase
+        run: supabase start
+
+      - name: Apply Migrations
+        run: supabase db reset
+
+      - name: Lint Migrations
+        run: supabase db lint
+
+      - name: Test RLS Policies
+        run: supabase test db
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+
   test:
     name: Test
     runs-on: ubuntu-latest
