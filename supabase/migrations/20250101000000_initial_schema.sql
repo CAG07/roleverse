@@ -11,7 +11,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- USERS & AUTH (Managed by Supabase Auth, these are additional profiles)
 -- ============================================================================
 
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   full_name TEXT,
@@ -23,10 +23,12 @@ CREATE TABLE public.profiles (
 -- RLS Policies for profiles
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
 CREATE POLICY "Users can view own profile"
   ON public.profiles FOR SELECT
   USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id);
@@ -36,7 +38,7 @@ CREATE POLICY "Users can update own profile"
 -- ============================================================================
 
 -- Add game system fields to campaigns table
-CREATE TABLE public.campaigns (
+CREATE TABLE IF NOT EXISTS public.campaigns (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -55,41 +57,48 @@ CREATE TABLE public.campaigns (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Add constraint for valid game systems
-ALTER TABLE public.campaigns 
-  ADD CONSTRAINT valid_game_system 
-  CHECK (game_system IN (
-    'ADD1E', 'ADD2E', '3_5E', '4E', '5E_2014', '5E_2024',
-    'PATHFINDER', 'PATHFINDER_2E', 'DCC', 'TOR1E', 'TOR2E', 'CYBERPUNK_2020'
-  ));
+-- Add constraint for valid game systems (idempotent: skip if already exists)
+DO $$ BEGIN
+  ALTER TABLE public.campaigns
+    ADD CONSTRAINT valid_game_system
+    CHECK (game_system IN (
+      'ADD1E', 'ADD2E', '3_5E', '4E', '5E_2014', '5E_2024',
+      'PATHFINDER', 'PATHFINDER_2E', 'DCC', 'TOR1E', 'TOR2E', 'CYBERPUNK_2020'
+    ));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- RLS Policies for campaigns
 ALTER TABLE public.campaigns ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own campaigns" ON public.campaigns;
 CREATE POLICY "Users can view own campaigns"
   ON public.campaigns FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create own campaigns" ON public.campaigns;
 CREATE POLICY "Users can create own campaigns"
   ON public.campaigns FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own campaigns" ON public.campaigns;
 CREATE POLICY "Users can update own campaigns"
   ON public.campaigns FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own campaigns" ON public.campaigns;
 CREATE POLICY "Users can delete own campaigns"
   ON public.campaigns FOR DELETE
   USING (auth.uid() = user_id);
 
 -- Index for faster queries
-CREATE INDEX campaigns_user_id_idx ON public.campaigns(user_id);
+CREATE INDEX IF NOT EXISTS campaigns_user_id_idx ON public.campaigns(user_id);
 
 -- ============================================================================
 -- CHARACTERS (Synced from Fantasy Grounds)
 -- ============================================================================
 
-CREATE TABLE public.characters (
+CREATE TABLE IF NOT EXISTS public.characters (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   campaign_id UUID NOT NULL REFERENCES public.campaigns(id) ON DELETE CASCADE,
@@ -129,32 +138,36 @@ CREATE TABLE public.characters (
 -- RLS Policies for characters
 ALTER TABLE public.characters ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own characters" ON public.characters;
 CREATE POLICY "Users can view own characters"
   ON public.characters FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create own characters" ON public.characters;
 CREATE POLICY "Users can create own characters"
   ON public.characters FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own characters" ON public.characters;
 CREATE POLICY "Users can update own characters"
   ON public.characters FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own characters" ON public.characters;
 CREATE POLICY "Users can delete own characters"
   ON public.characters FOR DELETE
   USING (auth.uid() = user_id);
 
 -- Indexes
-CREATE INDEX characters_user_id_idx ON public.characters(user_id);
-CREATE INDEX characters_campaign_id_idx ON public.characters(campaign_id);
-CREATE INDEX characters_fg_id_idx ON public.characters(fg_character_id) WHERE fg_character_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS characters_user_id_idx ON public.characters(user_id);
+CREATE INDEX IF NOT EXISTS characters_campaign_id_idx ON public.characters(campaign_id);
+CREATE INDEX IF NOT EXISTS characters_fg_id_idx ON public.characters(fg_character_id) WHERE fg_character_id IS NOT NULL;
 
 -- ============================================================================
 -- SESSIONS (Game Sessions)
 -- ============================================================================
 
-CREATE TABLE public.sessions (
+CREATE TABLE IF NOT EXISTS public.sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   campaign_id UUID NOT NULL REFERENCES public.campaigns(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -168,28 +181,31 @@ CREATE TABLE public.sessions (
 -- RLS Policies for sessions
 ALTER TABLE public.sessions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own sessions" ON public.sessions;
 CREATE POLICY "Users can view own sessions"
   ON public.sessions FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create own sessions" ON public.sessions;
 CREATE POLICY "Users can create own sessions"
   ON public.sessions FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own sessions" ON public.sessions;
 CREATE POLICY "Users can update own sessions"
   ON public.sessions FOR UPDATE
   USING (auth.uid() = user_id);
 
 -- Indexes
-CREATE INDEX sessions_campaign_id_idx ON public.sessions(campaign_id);
-CREATE INDEX sessions_user_id_idx ON public.sessions(user_id);
-CREATE INDEX sessions_started_at_idx ON public.sessions(started_at DESC);
+CREATE INDEX IF NOT EXISTS sessions_campaign_id_idx ON public.sessions(campaign_id);
+CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON public.sessions(user_id);
+CREATE INDEX IF NOT EXISTS sessions_started_at_idx ON public.sessions(started_at DESC);
 
 -- ============================================================================
 -- COMBAT STATE (Real-time combat tracking)
 -- ============================================================================
 
-CREATE TABLE public.combat_state (
+CREATE TABLE IF NOT EXISTS public.combat_state (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   session_id UUID NOT NULL REFERENCES public.sessions(id) ON DELETE CASCADE,
   round INTEGER DEFAULT 1,
@@ -203,6 +219,7 @@ CREATE TABLE public.combat_state (
 -- RLS Policies for combat_state
 ALTER TABLE public.combat_state ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own combat state" ON public.combat_state;
 CREATE POLICY "Users can view own combat state"
   ON public.combat_state FOR SELECT
   USING (
@@ -213,6 +230,7 @@ CREATE POLICY "Users can view own combat state"
     )
   );
 
+DROP POLICY IF EXISTS "Users can manage own combat state" ON public.combat_state;
 CREATE POLICY "Users can manage own combat state"
   ON public.combat_state FOR ALL
   USING (
@@ -224,13 +242,13 @@ CREATE POLICY "Users can manage own combat state"
   );
 
 -- Index
-CREATE INDEX combat_state_session_id_idx ON public.combat_state(session_id);
+CREATE INDEX IF NOT EXISTS combat_state_session_id_idx ON public.combat_state(session_id);
 
 -- ============================================================================
 -- CAMPAIGN EMBEDDINGS (RAG - Rules & Lore)
 -- ============================================================================
 
-CREATE TABLE public.campaign_embeddings (
+CREATE TABLE IF NOT EXISTS public.campaign_embeddings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   campaign_id UUID NOT NULL REFERENCES public.campaigns(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -244,27 +262,29 @@ CREATE TABLE public.campaign_embeddings (
 -- RLS Policies for campaign_embeddings
 ALTER TABLE public.campaign_embeddings ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own embeddings" ON public.campaign_embeddings;
 CREATE POLICY "Users can view own embeddings"
   ON public.campaign_embeddings FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create own embeddings" ON public.campaign_embeddings;
 CREATE POLICY "Users can create own embeddings"
   ON public.campaign_embeddings FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
 -- Vector similarity search index (HNSW for better performance)
-CREATE INDEX campaign_embeddings_vector_idx ON public.campaign_embeddings 
+CREATE INDEX IF NOT EXISTS campaign_embeddings_vector_idx ON public.campaign_embeddings 
 USING hnsw (embedding vector_cosine_ops);
 
 -- Indexes
-CREATE INDEX campaign_embeddings_campaign_id_idx ON public.campaign_embeddings(campaign_id);
-CREATE INDEX campaign_embeddings_user_id_idx ON public.campaign_embeddings(user_id);
+CREATE INDEX IF NOT EXISTS campaign_embeddings_campaign_id_idx ON public.campaign_embeddings(campaign_id);
+CREATE INDEX IF NOT EXISTS campaign_embeddings_user_id_idx ON public.campaign_embeddings(user_id);
 
 -- ============================================================================
 -- FANTASY GROUNDS SYNC COMMANDS (Desktop App Communication)
 -- ============================================================================
 
-CREATE TABLE public.fg_commands (
+CREATE TABLE IF NOT EXISTS public.fg_commands (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   campaign_id UUID REFERENCES public.campaigns(id) ON DELETE CASCADE,
@@ -279,22 +299,25 @@ CREATE TABLE public.fg_commands (
 -- RLS Policies for fg_commands
 ALTER TABLE public.fg_commands ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own FG commands" ON public.fg_commands;
 CREATE POLICY "Users can view own FG commands"
   ON public.fg_commands FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create own FG commands" ON public.fg_commands;
 CREATE POLICY "Users can create own FG commands"
   ON public.fg_commands FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own FG commands" ON public.fg_commands;
 CREATE POLICY "Users can update own FG commands"
   ON public.fg_commands FOR UPDATE
   USING (auth.uid() = user_id);
 
 -- Indexes
-CREATE INDEX fg_commands_user_id_idx ON public.fg_commands(user_id);
-CREATE INDEX fg_commands_status_idx ON public.fg_commands(status) WHERE status = 'pending';
-CREATE INDEX fg_commands_created_at_idx ON public.fg_commands(created_at DESC);
+CREATE INDEX IF NOT EXISTS fg_commands_user_id_idx ON public.fg_commands(user_id);
+CREATE INDEX IF NOT EXISTS fg_commands_status_idx ON public.fg_commands(status) WHERE status = 'pending';
+CREATE INDEX IF NOT EXISTS fg_commands_created_at_idx ON public.fg_commands(created_at DESC);
 
 -- ============================================================================
 -- FUNCTIONS
@@ -337,18 +360,22 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Triggers for auto-updating updated_at
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_campaigns_updated_at ON public.campaigns;
 CREATE TRIGGER update_campaigns_updated_at
   BEFORE UPDATE ON public.campaigns
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_characters_updated_at ON public.characters;
 CREATE TRIGGER update_characters_updated_at
   BEFORE UPDATE ON public.characters
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_combat_state_updated_at ON public.combat_state;
 CREATE TRIGGER update_combat_state_updated_at
   BEFORE UPDATE ON public.combat_state
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -374,6 +401,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS character_game_system_sync ON public.characters;
 CREATE TRIGGER character_game_system_sync
   BEFORE INSERT OR UPDATE OF campaign_id ON public.characters
   FOR EACH ROW 
@@ -389,6 +417,7 @@ VALUES ('campaign-pdfs', 'campaign-pdfs', false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage policy: Users can only upload to their own folder
+DROP POLICY IF EXISTS "Users can upload to own folder" ON storage.objects;
 CREATE POLICY "Users can upload to own folder"
   ON storage.objects FOR INSERT
   WITH CHECK (
@@ -397,6 +426,7 @@ CREATE POLICY "Users can upload to own folder"
   );
 
 -- Storage policy: Users can only read their own files
+DROP POLICY IF EXISTS "Users can read own files" ON storage.objects;
 CREATE POLICY "Users can read own files"
   ON storage.objects FOR SELECT
   USING (
@@ -405,6 +435,7 @@ CREATE POLICY "Users can read own files"
   );
 
 -- Storage policy: Users can delete their own files
+DROP POLICY IF EXISTS "Users can delete own files" ON storage.objects;
 CREATE POLICY "Users can delete own files"
   ON storage.objects FOR DELETE
   USING (
@@ -418,10 +449,12 @@ VALUES ('character-avatars', 'character-avatars', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage policy for avatars (public read, user write)
+DROP POLICY IF EXISTS "Anyone can view avatars" ON storage.objects;
 CREATE POLICY "Anyone can view avatars"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'character-avatars');
 
+DROP POLICY IF EXISTS "Users can upload avatars to own folder" ON storage.objects;
 CREATE POLICY "Users can upload avatars to own folder"
   ON storage.objects FOR INSERT
   WITH CHECK (

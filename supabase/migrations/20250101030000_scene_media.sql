@@ -1,7 +1,7 @@
--- supabase/migrations/20250101000003_scene_media.sql
+-- supabase/migrations/20250101030000_scene_media.sql
 -- Scene media storage for campaign assets and AI-generated content
 
-CREATE TABLE public.scene_media (
+CREATE TABLE IF NOT EXISTS public.scene_media (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   campaign_id uuid NOT NULL REFERENCES public.campaigns(id) ON DELETE CASCADE,
   session_id uuid,
@@ -16,12 +16,13 @@ CREATE TABLE public.scene_media (
 );
 
 -- Index for efficient campaign-scoped queries
-CREATE INDEX idx_scene_media_campaign_id ON public.scene_media(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_scene_media_campaign_id ON public.scene_media(campaign_id);
 
 -- RLS
 ALTER TABLE public.scene_media ENABLE ROW LEVEL SECURITY;
 
 -- SELECT: DM (campaign owner) or players with characters in the campaign
+DROP POLICY IF EXISTS "scene_media_select_member" ON public.scene_media;
 CREATE POLICY "scene_media_select_member"
   ON public.scene_media
   FOR SELECT
@@ -42,6 +43,7 @@ CREATE POLICY "scene_media_select_member"
   );
 
 -- INSERT: user is the campaign owner (DM presents media)
+DROP POLICY IF EXISTS "scene_media_insert_owner" ON public.scene_media;
 CREATE POLICY "scene_media_insert_owner"
   ON public.scene_media
   FOR INSERT
@@ -54,6 +56,7 @@ CREATE POLICY "scene_media_insert_owner"
   );
 
 -- DELETE: user is the campaign owner
+DROP POLICY IF EXISTS "scene_media_delete_owner" ON public.scene_media;
 CREATE POLICY "scene_media_delete_owner"
   ON public.scene_media
   FOR DELETE

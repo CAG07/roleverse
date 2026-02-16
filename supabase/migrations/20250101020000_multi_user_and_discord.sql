@@ -1,5 +1,5 @@
 -- ============================================================================
--- 003: Multi-User and Discord Tables
+-- Multi-User and Discord Tables
 -- Adds campaign membership, Discord integration, and voice profile tables.
 -- ============================================================================
 
@@ -45,7 +45,7 @@ CREATE POLICY "Users can delete own campaigns"
 -- CAMPAIGN MEMBERS
 -- ============================================================================
 
-CREATE TABLE public.campaign_members (
+CREATE TABLE IF NOT EXISTS public.campaign_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   campaign_id UUID REFERENCES public.campaigns(id) ON DELETE CASCADE,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -56,6 +56,7 @@ CREATE TABLE public.campaign_members (
 
 ALTER TABLE public.campaign_members ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Members can view fellow members" ON public.campaign_members;
 CREATE POLICY "Members can view fellow members"
   ON public.campaign_members FOR SELECT
   USING (
@@ -65,6 +66,7 @@ CREATE POLICY "Members can view fellow members"
     )
   );
 
+DROP POLICY IF EXISTS "Campaign owner can add members" ON public.campaign_members;
 CREATE POLICY "Campaign owner can add members"
   ON public.campaign_members FOR INSERT
   WITH CHECK (
@@ -74,6 +76,7 @@ CREATE POLICY "Campaign owner can add members"
     )
   );
 
+DROP POLICY IF EXISTS "Owner can remove or member can leave" ON public.campaign_members;
 CREATE POLICY "Owner can remove or member can leave"
   ON public.campaign_members FOR DELETE
   USING (
@@ -88,7 +91,7 @@ CREATE POLICY "Owner can remove or member can leave"
 -- DISCORD USER LINKS
 -- ============================================================================
 
-CREATE TABLE public.discord_user_links (
+CREATE TABLE IF NOT EXISTS public.discord_user_links (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   discord_user_id TEXT UNIQUE NOT NULL,
@@ -98,18 +101,22 @@ CREATE TABLE public.discord_user_links (
 
 ALTER TABLE public.discord_user_links ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users manage own discord links (select)" ON public.discord_user_links;
 CREATE POLICY "Users manage own discord links (select)"
   ON public.discord_user_links FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users manage own discord links (insert)" ON public.discord_user_links;
 CREATE POLICY "Users manage own discord links (insert)"
   ON public.discord_user_links FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users manage own discord links (update)" ON public.discord_user_links;
 CREATE POLICY "Users manage own discord links (update)"
   ON public.discord_user_links FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users manage own discord links (delete)" ON public.discord_user_links;
 CREATE POLICY "Users manage own discord links (delete)"
   ON public.discord_user_links FOR DELETE
   USING (auth.uid() = user_id);
@@ -118,7 +125,7 @@ CREATE POLICY "Users manage own discord links (delete)"
 -- DISCORD SERVER LINKS
 -- ============================================================================
 
-CREATE TABLE public.discord_server_links (
+CREATE TABLE IF NOT EXISTS public.discord_server_links (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   guild_id TEXT UNIQUE NOT NULL,
   campaign_id UUID REFERENCES public.campaigns(id) ON DELETE CASCADE,
@@ -130,6 +137,7 @@ CREATE TABLE public.discord_server_links (
 
 ALTER TABLE public.discord_server_links ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Campaign members can view server links" ON public.discord_server_links;
 CREATE POLICY "Campaign members can view server links"
   ON public.discord_server_links FOR SELECT
   USING (
@@ -139,14 +147,17 @@ CREATE POLICY "Campaign members can view server links"
     )
   );
 
+DROP POLICY IF EXISTS "Linker can insert server links" ON public.discord_server_links;
 CREATE POLICY "Linker can insert server links"
   ON public.discord_server_links FOR INSERT
   WITH CHECK (auth.uid() = linked_by);
 
+DROP POLICY IF EXISTS "Linker can update server links" ON public.discord_server_links;
 CREATE POLICY "Linker can update server links"
   ON public.discord_server_links FOR UPDATE
   USING (auth.uid() = linked_by);
 
+DROP POLICY IF EXISTS "Linker can delete server links" ON public.discord_server_links;
 CREATE POLICY "Linker can delete server links"
   ON public.discord_server_links FOR DELETE
   USING (auth.uid() = linked_by);
@@ -155,7 +166,7 @@ CREATE POLICY "Linker can delete server links"
 -- VOICE PROFILES
 -- ============================================================================
 
-CREATE TABLE public.voice_profiles (
+CREATE TABLE IF NOT EXISTS public.voice_profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   campaign_id UUID REFERENCES public.campaigns(id) ON DELETE CASCADE,
   entity_type TEXT NOT NULL CHECK (entity_type IN ('agent', 'npc')),
@@ -168,6 +179,7 @@ CREATE TABLE public.voice_profiles (
 
 ALTER TABLE public.voice_profiles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Campaign members can view voice profiles" ON public.voice_profiles;
 CREATE POLICY "Campaign members can view voice profiles"
   ON public.voice_profiles FOR SELECT
   USING (
@@ -177,6 +189,7 @@ CREATE POLICY "Campaign members can view voice profiles"
     )
   );
 
+DROP POLICY IF EXISTS "Campaign owner can insert voice profiles" ON public.voice_profiles;
 CREATE POLICY "Campaign owner can insert voice profiles"
   ON public.voice_profiles FOR INSERT
   WITH CHECK (
@@ -186,6 +199,7 @@ CREATE POLICY "Campaign owner can insert voice profiles"
     )
   );
 
+DROP POLICY IF EXISTS "Campaign owner can update voice profiles" ON public.voice_profiles;
 CREATE POLICY "Campaign owner can update voice profiles"
   ON public.voice_profiles FOR UPDATE
   USING (
@@ -195,6 +209,7 @@ CREATE POLICY "Campaign owner can update voice profiles"
     )
   );
 
+DROP POLICY IF EXISTS "Campaign owner can delete voice profiles" ON public.voice_profiles;
 CREATE POLICY "Campaign owner can delete voice profiles"
   ON public.voice_profiles FOR DELETE
   USING (
@@ -221,6 +236,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS on_campaign_created ON public.campaigns;
 CREATE TRIGGER on_campaign_created
   AFTER INSERT ON public.campaigns
   FOR EACH ROW
@@ -230,9 +246,10 @@ CREATE TRIGGER on_campaign_created
 -- UPDATE CAMPAIGNS SELECT POLICY: Members can also view joined campaigns
 -- ============================================================================
 
--- Replace the SELECT policy from 001_initial_schema.sql so members can also view
+-- Replace the SELECT policy from initial_schema so members can also view
 DROP POLICY IF EXISTS "Users can view own campaigns" ON public.campaigns;
 
+DROP POLICY IF EXISTS "Members can view joined campaigns" ON public.campaigns;
 CREATE POLICY "Members can view joined campaigns"
   ON public.campaigns FOR SELECT
   USING (
