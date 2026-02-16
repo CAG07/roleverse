@@ -71,11 +71,11 @@ jobs:
       - name: Start Supabase
         run: supabase start
 
-      - name: Apply Migrations
-        run: supabase db reset
-
       - name: Lint Migrations
         run: supabase db lint
+
+      - name: Apply Migrations
+        run: supabase db reset
 
       - name: Test RLS Policies
         run: supabase test db
