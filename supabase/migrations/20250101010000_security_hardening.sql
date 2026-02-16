@@ -1,5 +1,5 @@
 -- ============================================================================
--- 002: Security Hardening Migration
+-- Security Hardening Migration
 -- Fixes existing security vulnerabilities BEFORE adding new tables.
 -- ============================================================================
 

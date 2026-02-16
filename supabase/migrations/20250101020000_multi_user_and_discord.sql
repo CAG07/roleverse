@@ -1,5 +1,5 @@
 -- ============================================================================
--- 003: Multi-User and Discord Tables
+-- Multi-User and Discord Tables
 -- Adds campaign membership, Discord integration, and voice profile tables.
 -- ============================================================================
 
@@ -246,7 +246,7 @@ CREATE TRIGGER on_campaign_created
 -- UPDATE CAMPAIGNS SELECT POLICY: Members can also view joined campaigns
 -- ============================================================================
 
--- Replace the SELECT policy from 001_initial_schema.sql so members can also view
+-- Replace the SELECT policy from initial_schema so members can also view
 DROP POLICY IF EXISTS "Users can view own campaigns" ON public.campaigns;
 
 DROP POLICY IF EXISTS "Members can view joined campaigns" ON public.campaigns;
