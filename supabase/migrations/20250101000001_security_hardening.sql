@@ -48,6 +48,7 @@ END;
 $$;
 
 -- 3. match_campaign_embeddings — needs extensions schema for vector operations
+-- Use plpgsql to defer operator resolution to runtime when search_path applies
 CREATE OR REPLACE FUNCTION public.match_campaign_embeddings(
   query_embedding extensions.vector(1536),
   query_campaign_id UUID,
@@ -60,17 +61,20 @@ RETURNS TABLE (
   metadata JSONB,
   similarity FLOAT
 )
-LANGUAGE SQL STABLE
+LANGUAGE plpgsql STABLE
 SET search_path = 'public, extensions'
 AS $$
+BEGIN
+  RETURN QUERY
   SELECT
     ce.id,
     ce.content,
     ce.metadata,
-    1 - (ce.embedding <=> query_embedding) AS similarity
+    (1 - (ce.embedding <=> query_embedding))::FLOAT AS similarity
   FROM public.campaign_embeddings ce
   WHERE ce.campaign_id = query_campaign_id
     AND 1 - (ce.embedding <=> query_embedding) > match_threshold
-  ORDER BY similarity DESC
+  ORDER BY ce.embedding <=> query_embedding
   LIMIT match_count;
+END;
 $$;

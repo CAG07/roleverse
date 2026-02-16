@@ -1,4 +1,4 @@
--- supabase/migrations/004_scene_media.sql
+-- supabase/migrations/20250101000003_scene_media.sql
 -- Scene media storage for campaign assets and AI-generated content
 
 CREATE TABLE public.scene_media (
@@ -21,15 +21,23 @@ CREATE INDEX idx_scene_media_campaign_id ON public.scene_media(campaign_id);
 -- RLS
 ALTER TABLE public.scene_media ENABLE ROW LEVEL SECURITY;
 
--- SELECT: user is a member of the associated campaign
+-- SELECT: DM (campaign owner) or players with characters in the campaign
 CREATE POLICY "scene_media_select_member"
   ON public.scene_media
   FOR SELECT
   USING (
+    -- DM can see their campaign's media
     EXISTS (
-      SELECT 1 FROM public.campaign_members cm
-      WHERE cm.campaign_id = public.scene_media.campaign_id
-        AND cm.user_id = auth.uid()
+      SELECT 1 FROM public.campaigns c
+      WHERE c.id = public.scene_media.campaign_id
+        AND c.owner_id = auth.uid()
+    )
+    OR
+    -- Players can see media from campaigns where they have characters
+    EXISTS (
+      SELECT 1 FROM public.characters ch
+      WHERE ch.campaign_id = public.scene_media.campaign_id
+        AND ch.user_id = auth.uid()
     )
   );
 
@@ -56,3 +64,14 @@ CREATE POLICY "scene_media_delete_owner"
         AND c.owner_id = auth.uid()
     )
   );
+
+-- ============================================================================
+-- VERIFICATION: After migrations, confirm owner_id column exists:
+--
+--   SELECT column_name
+--   FROM information_schema.columns
+--   WHERE table_name = 'campaigns'
+--     AND table_schema = 'public';
+--
+-- Expected: 'owner_id' column present, no 'user_id' column.
+-- ============================================================================

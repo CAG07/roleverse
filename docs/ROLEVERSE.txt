@@ -164,8 +164,9 @@ roleverse/
 │           └── ...
 │
 ├── supabase/
+│   ├── config.toml                 # Supabase CLI configuration
 │   ├── migrations/
-│   │   └── 001_initial_schema.sql  # Base schema 
+│   │   └── YYYYMMDDHHMMSS_*.sql    # Timestamped migrations
 │   │   
 │   └── seed.sql                    # Sample campaigns for all systems
 │
