@@ -40,7 +40,7 @@ CREATE POLICY "Users can update own profile"
 -- Add game system fields to campaigns table
 CREATE TABLE IF NOT EXISTS public.campaigns (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   description TEXT,
   
@@ -74,25 +74,25 @@ ALTER TABLE public.campaigns ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own campaigns" ON public.campaigns;
 CREATE POLICY "Users can view own campaigns"
   ON public.campaigns FOR SELECT
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = owner_id);
 
 DROP POLICY IF EXISTS "Users can create own campaigns" ON public.campaigns;
 CREATE POLICY "Users can create own campaigns"
   ON public.campaigns FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (auth.uid() = owner_id);
 
 DROP POLICY IF EXISTS "Users can update own campaigns" ON public.campaigns;
 CREATE POLICY "Users can update own campaigns"
   ON public.campaigns FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = owner_id);
 
 DROP POLICY IF EXISTS "Users can delete own campaigns" ON public.campaigns;
 CREATE POLICY "Users can delete own campaigns"
   ON public.campaigns FOR DELETE
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = owner_id);
 
 -- Index for faster queries
-CREATE INDEX IF NOT EXISTS campaigns_user_id_idx ON public.campaigns(user_id);
+CREATE INDEX IF NOT EXISTS campaigns_owner_id_idx ON public.campaigns(owner_id);
 
 -- ============================================================================
 -- CHARACTERS (Synced from Fantasy Grounds)
