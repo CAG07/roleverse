@@ -64,3 +64,14 @@ CREATE POLICY "scene_media_delete_owner"
         AND c.owner_id = auth.uid()
     )
   );
+
+-- ============================================================================
+-- VERIFICATION: After migrations, confirm owner_id column exists:
+--
+--   SELECT column_name
+--   FROM information_schema.columns
+--   WHERE table_name = 'campaigns'
+--     AND table_schema = 'public';
+--
+-- Expected: 'owner_id' column present, no 'user_id' column.
+-- ============================================================================

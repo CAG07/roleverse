@@ -6,13 +6,24 @@
 -- ============================================================================
 -- RENAME campaigns.user_id → owner_id
 -- The app code and all downstream migrations reference owner_id.
+-- Idempotent: skips rename if already done (safe for fresh or re-created DB).
 -- ============================================================================
 
-ALTER TABLE public.campaigns RENAME COLUMN user_id TO owner_id;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'campaigns'
+      AND column_name = 'user_id'
+  ) THEN
+    ALTER TABLE public.campaigns RENAME COLUMN user_id TO owner_id;
+  END IF;
+END $$;
 
 -- Recreate the index on the renamed column
 DROP INDEX IF EXISTS campaigns_user_id_idx;
-CREATE INDEX campaigns_owner_id_idx ON public.campaigns(owner_id);
+CREATE INDEX IF NOT EXISTS campaigns_owner_id_idx ON public.campaigns(owner_id);
 
 -- Update existing campaigns RLS policies to use owner_id
 DROP POLICY IF EXISTS "Users can create own campaigns" ON public.campaigns;
