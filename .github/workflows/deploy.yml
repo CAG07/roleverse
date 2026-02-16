@@ -42,13 +42,15 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
+      # Use --db-url with the direct connection (*.db.supabase.com, not *.pooler.supabase.com)
+      # because migrations require DDL/transactional consistency not supported by the pooler.
       - name: Run Migrations (Production)
         run: |
-          supabase db push --dry-run
-          supabase db push
+          supabase db push --db-url "$SUPABASE_DB_URL" --dry-run
+          supabase db push --db-url "$SUPABASE_DB_URL"
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
 
       - name: Deploy to Vercel (Production)
         id: deploy
