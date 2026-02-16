@@ -11,73 +11,73 @@ SELECT plan(28);
 -- ============================================================================
 
 SELECT is(
-  (SELECT relforcerowsecurity FROM pg_class WHERE relname = 'profiles' AND relnamespace = 'public'::regnamespace),
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'profiles' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on profiles'
 );
 
 SELECT is(
-  (SELECT relforcerowsecurity FROM pg_class WHERE relname = 'campaigns' AND relnamespace = 'public'::regnamespace),
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'campaigns' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on campaigns'
 );
 
 SELECT is(
-  (SELECT relforcerowsecurity FROM pg_class WHERE relname = 'characters' AND relnamespace = 'public'::regnamespace),
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'characters' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on characters'
 );
 
 SELECT is(
-  (SELECT relforcerowsecurity FROM pg_class WHERE relname = 'sessions' AND relnamespace = 'public'::regnamespace),
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'sessions' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on sessions'
 );
 
 SELECT is(
-  (SELECT relforcerowsecurity FROM pg_class WHERE relname = 'combat_state' AND relnamespace = 'public'::regnamespace),
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'combat_state' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on combat_state'
 );
 
 SELECT is(
-  (SELECT relforcerowsecurity FROM pg_class WHERE relname = 'campaign_embeddings' AND relnamespace = 'public'::regnamespace),
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'campaign_embeddings' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on campaign_embeddings'
 );
 
 SELECT is(
-  (SELECT relforcerowsecurity FROM pg_class WHERE relname = 'fg_commands' AND relnamespace = 'public'::regnamespace),
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'fg_commands' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on fg_commands'
 );
 
 SELECT is(
-  (SELECT relforcerowsecurity FROM pg_class WHERE relname = 'campaign_members' AND relnamespace = 'public'::regnamespace),
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'campaign_members' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on campaign_members'
 );
 
 SELECT is(
-  (SELECT relforcerowsecurity FROM pg_class WHERE relname = 'discord_user_links' AND relnamespace = 'public'::regnamespace),
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'discord_user_links' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on discord_user_links'
 );
 
 SELECT is(
-  (SELECT relforcerowsecurity FROM pg_class WHERE relname = 'discord_server_links' AND relnamespace = 'public'::regnamespace),
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'discord_server_links' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on discord_server_links'
 );
 
 SELECT is(
-  (SELECT relforcerowsecurity FROM pg_class WHERE relname = 'voice_profiles' AND relnamespace = 'public'::regnamespace),
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'voice_profiles' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on voice_profiles'
 );
 
 SELECT is(
-  (SELECT relforcerowsecurity FROM pg_class WHERE relname = 'scene_media' AND relnamespace = 'public'::regnamespace),
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'scene_media' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on scene_media'
 );
