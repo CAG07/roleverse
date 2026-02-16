@@ -4,6 +4,33 @@
 -- ============================================================================
 
 -- ============================================================================
+-- RENAME campaigns.user_id → owner_id
+-- The app code and all downstream migrations reference owner_id.
+-- ============================================================================
+
+ALTER TABLE public.campaigns RENAME COLUMN user_id TO owner_id;
+
+-- Recreate the index on the renamed column
+DROP INDEX IF EXISTS campaigns_user_id_idx;
+CREATE INDEX campaigns_owner_id_idx ON public.campaigns(owner_id);
+
+-- Update existing campaigns RLS policies to use owner_id
+DROP POLICY IF EXISTS "Users can create own campaigns" ON public.campaigns;
+CREATE POLICY "Users can create own campaigns"
+  ON public.campaigns FOR INSERT
+  WITH CHECK (auth.uid() = owner_id);
+
+DROP POLICY IF EXISTS "Users can update own campaigns" ON public.campaigns;
+CREATE POLICY "Users can update own campaigns"
+  ON public.campaigns FOR UPDATE
+  USING (auth.uid() = owner_id);
+
+DROP POLICY IF EXISTS "Users can delete own campaigns" ON public.campaigns;
+CREATE POLICY "Users can delete own campaigns"
+  ON public.campaigns FOR DELETE
+  USING (auth.uid() = owner_id);
+
+-- ============================================================================
 -- CAMPAIGN MEMBERS
 -- ============================================================================
 
