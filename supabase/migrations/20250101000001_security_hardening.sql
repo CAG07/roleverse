@@ -48,6 +48,9 @@ END;
 $$;
 
 -- 3. match_campaign_embeddings — needs extensions schema for vector operations
+-- Set search_path so the <=> operator resolves during function creation
+SET search_path = 'public, extensions';
+
 CREATE OR REPLACE FUNCTION public.match_campaign_embeddings(
   query_embedding extensions.vector(1536),
   query_campaign_id UUID,
@@ -74,3 +77,6 @@ AS $$
   ORDER BY similarity DESC
   LIMIT match_count;
 $$;
+
+-- Reset search_path to default
+RESET search_path;
