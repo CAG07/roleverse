@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS public.campaigns (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Add constraint for valid game systems
+-- Add constraint for valid game systems (idempotent: skip if already exists)
 DO $$ BEGIN
   ALTER TABLE public.campaigns
     ADD CONSTRAINT valid_game_system
