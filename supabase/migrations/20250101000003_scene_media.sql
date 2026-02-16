@@ -1,4 +1,4 @@
--- supabase/migrations/004_scene_media.sql
+-- supabase/migrations/20250101000003_scene_media.sql
 -- Scene media storage for campaign assets and AI-generated content
 
 CREATE TABLE public.scene_media (
