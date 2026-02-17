@@ -1,10 +1,10 @@
 # <img src="assets/dice-d20-svgrepo-com.svg" width="28" height="28"> RoleVerse - AI-Powered RPG Companion
 
-A tabletop RPG companion that brings **AI-powered DM assistance**, **Fantasy Grounds integration**, and **voice-enabled gameplay** for your solo RPG campaigns.
+A tabletop RPG companion that brings **AI-powered DM assistance**, **Fantasy Grounds integration**, and **voice-enabled gameplay** to your solo RPG campaigns.
 
-## 🖼️ Demo
+## 🖥️ Demo
 
-### Web App — Session View
+### Web App
 The three-column session layout with sidebar navigation, AI chat with scene display, and character sheet panel.
 
 ![RoleVerse Web App Session View](assets/demo/web-app-session.svg)
@@ -89,7 +89,7 @@ Placeholder for user setup instructions. See [SETUP.md](./SETUP.md) for full det
 
 ## 📖 Documentation
 
-- **[SETUP.md](./SETUP.md)** - Complete setup guide and user instructions
+- **[SETUP.md](docs/SETUP.md)** - Complete setup guide and user instructions
 - **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System architecture
 - **[API.md](./docs/API.md)** - API endpoints reference
 - **[AGENTS.md](./docs/AGENTS.md)** - AI agent implementation details
@@ -120,8 +120,8 @@ GNU AFFERO GENERAL PUBLIC LICENSE Version 3
 
 ## 📞 Support
 
-- [SETUP.md](./SETUP.md) - Setup troubleshooting
-- [GitHub Issues](link-to-issues) - Report bugs
+- [SETUP.md](docs/SETUP.md) - Setup troubleshooting
+- [GitHub Issues](https://github.com/CAG07/roleverse/issues) - Report bugs
 
 ## <img src="assets/dice-d20-svgrepo-com.svg" width="22" height="22"> Happy Adventuring!
 
