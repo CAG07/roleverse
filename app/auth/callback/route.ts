@@ -12,8 +12,10 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(`${origin}/dashboard`);
     }
+
+    // Log the actual error so we can see it in Vercel logs
+    console.error('Auth code exchange failed:', error.message, error);
   }
 
-  // Redirect to landing page if code is missing or exchange failed
   return NextResponse.redirect(`${origin}/`);
 }
