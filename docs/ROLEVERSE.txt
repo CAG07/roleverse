@@ -1,201 +1,180 @@
+================================================================================
+RoleVerse — Project Structure & Branch Reference
+================================================================================
+
+This file documents the current state of the RoleVerse repository, including
+the actual files present on disk and the branch history.
+
+Last updated: 2026-02-17
+
+================================================================================
+BRANCHES
+================================================================================
+
+Active branches:
+  - main                                (default / production)
+
+Merged feature & fix branches (chronological):
+  - Create-workflow-actions              — Initial GitHub Actions CI/CD setup
+  - chore/tailwind-v4-upgrade           — Tailwind CSS v4.1.18 upgrade
+  - eslint-upgrade                      — ESLint flat config upgrade
+  - bug/circular-reference              — Fix circular reference
+  - copilot/finish-auth-pages-completion — Auth callback route and signout page
+  - copilot/review-new-pull-requests    — Resolve Dependabot PR conflicts
+  - copilot/add-supabase-client-library — Game-systems types/registry + Supabase middleware refactor
+  - copilot/build-protected-app-shell   — Self-host fonts, fix build in offline/CI
+  - copilot/fix-security-vulnerabilities — Security hardening, multi-user schema, email allowlist
+  - copilot/add-session-sidebar-and-scene-display — Session UI: three-column layout, chat, scene display
+  - copilot/troubleshoot-supabase-pipeline — Supabase migration pipeline: config, schema, RLS tests, CI
+  - copilot/investigate-supabase-migrations — Deploy workflow: use setup-cli action
+  - copilot/fix-db-authentication-issue — Deploy pipeline: align CI action versions, DB password
+  - copilot/update-direct-connection-url — Build direct DB URL from existing secrets
+  - copilot/fix-supabase-connection-error — Fix IPv6 failure: use Supabase Management API
+  - copilot/fix-deployment-errors       — Idempotent migrations, history repair, timestamp formatting
+  - copilot/fix-smoke-test-failure      — Add /api/health endpoint for deployment smoke test
+  - copilot/make-health-check-public    — Restore middleware and make /api/health public
+  - copilot/fix-health-check-issue      — Fix smoke test 401 by bypassing Vercel Deployment Protection
+
+Dependabot branches (merged):
+  - dependabot/github_actions/actions/checkout-6
+  - dependabot/github_actions/actions/setup-node-6
+  - dependabot/github_actions/actions/upload-artifact-6
+  - dependabot/github_actions/actions/labeler-6
+  - dependabot/github_actions/actions/github-script-8
+  - dependabot/npm_and_yarn/npm_and_yarn-c2faeb1381   (tar 7.5.7)
+  - dependabot/npm_and_yarn/npm_and_yarn-66fcce4dc2   (axios 1.13.5)
+  - dependabot/npm_and_yarn/npm_and_yarn-dea2cac87d   (next 15.5.10)
+  - dependabot/npm_and_yarn/next-ecosystem-a457705a35
+  - dependabot/npm_and_yarn/supabase-d6df06076d       (@supabase/ssr 0.8.0)
+  - dependabot/npm_and_yarn/anthropic-5b378edfa8      (@anthropic-ai/sdk 0.74.0)
+  - dependabot/npm_and_yarn/typescript-e54e79bca8
+  - dependabot/npm_and_yarn/pdf-parse-2.4.5
+  - dependabot/npm_and_yarn/zod-4.3.6
+  - dependabot/npm_and_yarn/lint-staged-16.2.7
+  - dependabot/npm_and_yarn/husky-9.1.7
+  - dependabot/npm_and_yarn/tailwind-merge-3.4.0
+  - dependabot/npm_and_yarn/tailwind-merge-3.4.1
+  - dependabot/npm_and_yarn/openai-6.22.0
+  - dependabot/npm_and_yarn/supabase-c67ec10d49       (supabase 2.76.9)
+  - dependabot/npm_and_yarn/lucide-react-0.564.0
+
+================================================================================
+PROJECT TREE (files currently on disk)
+================================================================================
+
 roleverse/
-├── README.md                       
+├── README.md
 ├── package.json
+├── package-lock.json
 ├── next.config.js
-├── .env.local             
+├── tsconfig.json
+├── middleware.ts                        # Auth session refresh + route protection
+├── eslint.config.mjs
+├── postcss.config.js
+├── components.json                      # shadcn/ui configuration
+├── .prettierrc
+├── .prettierignore
+├── LICENSE                              # GNU AGPL v3
 │
 ├── app/
-│   ├── layout.tsx
-│   ├── page.tsx                    # Landing: "Sign in with Google"
+│   ├── layout.tsx                       # Root layout (fonts, global styles)
+│   ├── page.tsx                         # Landing page: "Sign in with Google"
+│   ├── unauthorized/page.tsx            # Shown when email not in allowlist
 │   │
 │   ├── auth/
-│   │   ├── callback/route.ts       # Google OAuth callback
-│   │   └── signout/page.tsx
+│   │   ├── callback/route.ts            # Google OAuth code → session exchange
+│   │   └── signout/page.tsx             # Sign-out confirmation
 │   │
-│   ├── (app)/                      # Protected routes
-│   │   ├── layout.tsx              # Check auth
-│   │   ├── dashboard/page.tsx      # "Your Campaigns"
+│   ├── (app)/                           # Protected routes (auth-gated via layout)
+│   │   ├── layout.tsx                   # Sidebar nav, user avatar, auth check
+│   │   ├── dashboard/page.tsx           # "Your Campaigns" list
 │   │   │
-│   │   ├── campaigns/
-│   │   │   ├── new/page.tsx        # Create campaign + SELECT GAME SYSTEM
-│   │   │   └── [id]/
-│   │   │       ├── page.tsx        # Campaign overview
-│   │   │       ├── upload/page.tsx # Upload game system PDFs (drag & drop)
-│   │   │       └── session/page.tsx # Live game session
-│   │   │
-│   │   ├── characters/
-│   │   │   ├── page.tsx            # Character list (filtered by campaign/system)
-│   │   │   ├── new/page.tsx        # Create character (inherits campaign system)
-│   │   │   └── [id]/page.tsx       # Dynamic character sheet (system-specific)
-│   │   │
-│   │   └── settings/
-│   │       ├── profile/page.tsx
-│   │       ├── discord/page.tsx    # Link Discord account, configure voice prefs
-│   │       └── fg-desktop/page.tsx # Download desktop app
+│   │   └── campaigns/
+│   │       ├── new/page.tsx             # Create campaign + select game system
+│   │       └── [id]/
+│   │           ├── page.tsx             # Campaign overview (actions, details)
+│   │           └── session/page.tsx     # Live game session (three-column layout)
 │   │
 │   └── api/
-│       ├── auth/
-│       │   └── [...supabase]/route.ts # Google OAuth handler
-│       │
-│       ├── session/
-│       │   ├── start/route.ts
-│       │   └── process/route.ts    # Process player action (system-aware)
-│       │
-│       ├── agents/
-│       │   └── orchestrate/route.ts # Main agent coordinator (uses system prompts)
-│       │
-│       ├── mcp/
-│       │   └── route.ts            # MCP server endpoint
-│       │
-│       ├── voice/
-│       │   ├── transcribe/route.ts # Whisper STT (uses shared lib/voice/whisper.ts)
-│       │   └── synthesize/route.ts # TTS (uses shared lib/voice/tts.ts)
-│       │
-│       ├── discord/
-│       │   ├── interactions/route.ts  # Discord interaction webhook endpoint
-│       │   └── link/route.ts          # Link Discord account to RoleVerse account
-│       │
-│       ├── campaigns/
-│       │   └── upload-pdf/route.ts # Process user PDF → RAG (system-tagged)
-│       │
-│       └── fg-bridge/
-│           └── sync/route.ts       # Receive from desktop app (auto-detect system)
+│       └── health/route.ts              # GET → { status: 'ok' }
 │
 ├── components/
 │   ├── auth/
-│   │   └── GoogleSignInButton.tsx  # One-click sign in
+│   │   └── GoogleSignInButton.tsx       # One-click Google sign-in
 │   │
 │   ├── session/
-│   │   ├── ChatWindow.tsx          # Game narrative feed
-│   │   ├── VoiceControls.tsx       # Push-to-talk button
-│   │   ├── DiceRoller.tsx
-│   │   ├── CombatDisplay.tsx       # Shows FG combat if connected
-│   │   └── InitiativeTracker.tsx
+│   │   ├── SessionPageClient.tsx        # Client wrapper for session page
+│   │   ├── SessionSidebar.tsx           # Left sidebar (notes, party, FG status)
+│   │   ├── ChatWindow.tsx               # Game narrative / chat feed
+│   │   ├── SceneDisplay.tsx             # Scene image/media display
+│   │   ├── SessionNotes.tsx             # Session notes panel
+│   │   ├── VoiceStatus.tsx              # Voice connection indicator
+│   │   ├── FGConnectionStatus.tsx       # Fantasy Grounds connection indicator
+│   │   └── PartyStatus.tsx              # Party members status display
 │   │
 │   ├── campaign/
-│   │   ├── CampaignCard.tsx        # Shows game system badge
-│   │   ├── CampaignList.tsx        # Can filter by system
-│   │   ├── PDFUploader.tsx         
-│   │   └── GameSystemSelector.tsx  
+│   │   ├── CampaignCard.tsx             # Campaign card with game system badge
+│   │   ├── CampaignList.tsx             # Grid of campaign cards
+│   │   └── GameSystemSelector.tsx       # Dropdown to pick game system
 │   │
 │   ├── character/
-│   │   ├── CharacterSheet.tsx      # Dynamic based on game_system
-│   │   ├── CharacterCard.tsx
-│   │   └── sheets/                 # System-specific sheets
-│   │       ├── ADD2ESheet.tsx      # AD&D 2E
-│   │       ├── DND5ESheet.tsx      # D&D 5E
-│   │       ├── PathfinderSheet.tsx # Pathfinder
-│   │       └── GenericSheet.tsx    # Other systems
+│   │   ├── CharacterSheet.tsx           # Dynamic sheet (routes to system-specific)
+│   │   └── sheets/
+│   │       ├── ADD2ESheet.tsx           # AD&D 2nd Edition sheet
+│   │       ├── DND5ESheet.tsx           # D&D 5E sheet
+│   │       └── GenericSheet.tsx         # Fallback for other systems
 │   │
-│   └── ui/                         # shadcn/ui components
+│   └── ui/                              # shadcn/ui primitives
+│       ├── avatar.tsx
+│       ├── badge.tsx
 │       ├── button.tsx
 │       ├── card.tsx
-│       ├── dialog.tsx
-│       ├── select.tsx              # For game system dropdown
-│       └── ...
+│       ├── input.tsx
+│       ├── label.tsx
+│       ├── select.tsx
+│       └── textarea.tsx
 │
 ├── lib/
+│   ├── utils.ts                         # cn() helper (clsx + tailwind-merge)
+│   │
 │   ├── supabase/
-│   │   ├── client.ts               # Browser client (RLS-protected)
-│   │   ├── server.ts               # Server client
-│   │   └── middleware.ts           # Auth middleware
+│   │   ├── client.ts                    # Browser Supabase client (RLS-protected)
+│   │   ├── server.ts                    # Server-side Supabase client
+│   │   └── middleware.ts                # Auth token refresh + route protection
 │   │
-│   ├── auth/
-│   │   └── google.ts               # Google OAuth setup
+│   ├── game-systems/
+│   │   ├── types.ts                     # GameSystem, CharacterData, DiceNotation types
+│   │   └── registry.ts                 # Central registry for all 11 game systems
 │   │
-│   ├── game-systems/               
-│   │   ├── types.ts                # GameSystem, CharacterData types
-│   │   ├── registry.ts             # Central system registry + FG mapping
-│   │   ├── add1e.ts                # AD&D 1st Edition
-│   │   ├── add2e.ts                # AD&D 2nd Edition 
-│   │   ├── 3-5e.ts                 # D&D 3.5
-│   │   ├── 4e.ts                   # D&D 4E
-│   │   ├── 5e-2014.ts              # D&D 5E 2014 
-│   │   ├── 5e-2024.ts              # D&D 5E 2024
-│   │   ├── pathfinder.ts           # Pathfinder 1E
-│   │   ├── pathfinder-2e.ts        # Pathfinder 2E
-│   │   ├── dcc.ts                  # Dungeon Crawl Classics
-│   │   ├── tor1e.ts                # The One Ring 1E
-│   │   ├── tor2e.ts                # The One Ring 2E
-│   │   └── cyberpunk-2020.ts       # Cyberpunk 2020
-│   │
-│   ├── agents/
-│   │   ├── coordinator.ts          # Main orchestrator (uses game system)
-│   │   ├── rules-arbiter.ts        # Uses system.rulesPrompt
-│   │   ├── lore-keeper.ts
-│   │   ├── encounter-builder.ts
-│   │   ├── narrator.ts             
-│   │   └── npc-dialogue.ts
-│   │
-│   ├── mcp/
-│   │   ├── server.ts               # MCP protocol
-│   │   ├── types.ts                # MCPContext includes game_system
-│   │   └── tools/
-│   │       ├── roll-dice.ts        # System-aware (uses system.primaryDie)
-│   │       ├── query-rules.ts      # Filters by game_system 
-│   │       ├── get-character.ts    # Returns system schema 
-│   │       └── get-lore.ts         
-│   │
-│   ├── voice/                      # Shared voice lib (used by both web UI + Discord)
-│   │   ├── whisper.ts              # OpenAI Whisper STT client
-│   │   ├── tts.ts                  # TTS client (OpenAI TTS / ElevenLabs)
-│   │   └── voice-profiles.ts      # Named voice configs (DM voice, NPC voices)
-│   │
-│   ├── discord/
-│   │   ├── bot.ts                  # Discord.js bot setup, event handlers
-│   │   ├── voice-session.ts        # Manages voice channel connection per campaign
-│   │   ├── audio-pipeline.ts       # Capture stream → Whisper → Agent → TTS → playback
-│   │   ├── user-mapping.ts         # Discord user ↔ RoleVerse user linking
-│   │   ├── text-commands.ts        # Slash commands (/roll, /status, /initiative)
-│   │   └── tts-voices.ts          # Voice profiles per agent/NPC (voice ID mapping)
-│   │
-│   ├── rag/
-│   │   ├── ingest-pdf.ts           # PDF → embeddings (tags with game_system)
-│   │   ├── query.ts                # Similarity search
-│   │   ├── embeddings.ts           # OpenAI embedding generation
-│   │   └── chunking.ts
-│   │
-│   └── fg-bridge/
-│       ├── desktop-protocol.ts     # Communication protocol
-│       ├── sync-handler.ts         # Maps FG ruleset → game_system
-│       └── parsers/                # FG parsers per system
-│           ├── add2e-parser.ts     # Parse 2E XML → CharacterData
-│           ├── 5e-parser.ts        # Parse 5E XML → CharacterData
-│           └── ...
+│   └── types/
+│       └── session.ts                   # SceneMedia, ChatMessage, AgentType types
+│
+├── assets/
+│   └── dice-d20-svgrepo-com.svg         # D20 icon used in branding
+│
+├── public/
+│   └── dice-d20.svg                     # D20 icon (public static)
 │
 ├── supabase/
-│   ├── config.toml                 # Supabase CLI configuration
+│   ├── config.toml                      # Supabase CLI configuration
 │   ├── migrations/
-│   │   └── YYYYMMDDHHMMSS_*.sql    # Timestamped migrations
-│   │   
-│   └── seed.sql                    # Sample campaigns for all systems
-│
-├── discord-bot/                    # Standalone bot process (runs separately from Next.js)
-│   ├── index.ts                    # Bot entry point
-│   ├── Dockerfile                  # For deployment
-│   └── package.json
-│
-├── desktop/                        # Electron app (Phase 9)
-│   ├── main.js                     # Main process
-│   ├── preload.js
-│   ├── fg-detector.js              # Auto-detect FG + ruleset
-│   ├── fg-sync.js                  # Sync FG → Cloud (system-aware)
-│   └── tray-menu.js                # System tray UI
+│   │   ├── 20250101000000_initial_schema.sql        # Core tables, RLS, pgvector, storage
+│   │   ├── 20250101010000_security_hardening.sql    # Fix mutable search paths
+│   │   ├── 20250101020000_multi_user_and_discord.sql # Multi-user, Discord linking, voice profiles
+│   │   └── 20250101030000_scene_media.sql           # Scene media storage
+│   └── tests/
+│       └── rls_policies.sql             # RLS policy tests
 │
 ├── docs/
-│   ├── SETUP.md                    # Setup instructions
-│   ├── ROLEVERSE.txt               # Project skeleton
-│   ├── ARCHITECTURE.md             # System architecture
-│   ├── GAME_SYSTEMS.md             # Supported game systems details
-│   ├── API.md                      # API reference
-│   ├── AGENTS.md                   # AI agent designs
-│   └── DISCORD.md                  # Discord bot setup & voice architecture
-│   
-└── .github/                        # GitHub Actions CI/CD
-    ├── workflows/
-    │   ├── ci.yml                  
-    │   ├── deploy.yml              
-    │   ├── security.yml            
-    │   └── pr-labeler.yml          
-    ├── dependabot.yml             
-    └── labeler.yml
+│   ├── ROLEVERSE.txt                    # This file — project tree + branch reference
+│   ├── SETUP.md                         # Complete setup guide
+│   └── API.md                           # API endpoints reference
+│
+└── .github/
+    ├── dependabot.yml                   # Automated dependency updates
+    ├── labeler.yml                      # PR label rules
+    └── workflows/
+        ├── ci.yml                       # Lint, typecheck, migrations, test, build
+        ├── deploy.yml                   # Supabase migration push + Vercel deploy
+        ├── security.yml                 # TruffleHog + npm audit
+        └── pr-labeler.yml              # Auto-label PRs by size/path
