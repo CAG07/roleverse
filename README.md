@@ -85,7 +85,7 @@ Voice chat via Discord is transcribed and displayed in the web app chat. The Rol
 
 ## 🚀 Quick Start
 
-Placeholder for user setup instructions. See [SETUP.md](./SETUP.md) for full details.
+Placeholder for user setup instructions. See [SETUP.md](docs/SETUP.md) for full details.
 
 ## 📖 Documentation
 
