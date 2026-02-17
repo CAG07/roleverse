@@ -67,10 +67,16 @@ jobs:
       - name: Smoke Test
         run: |
           sleep 10
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ steps.deploy.outputs.url }}/api/health")
+          if [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "x-vercel-protection-bypass: ${VERCEL_AUTOMATION_BYPASS_SECRET}" "${{ steps.deploy.outputs.url }}/api/health")
+          else
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ steps.deploy.outputs.url }}/api/health")
+          fi
           if [ "$STATUS" != "200" ]; then
             echo "Smoke test failed with status $STATUS"
             exit 1
           fi
           echo "Smoke test passed"
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
