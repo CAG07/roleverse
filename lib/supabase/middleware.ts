@@ -39,7 +39,8 @@ export async function updateSession(request: NextRequest) {
   const isPublicRoute =
     request.nextUrl.pathname === '/' ||
     request.nextUrl.pathname === '/unauthorized' ||
-    request.nextUrl.pathname.startsWith('/auth');
+    request.nextUrl.pathname.startsWith('/auth') ||
+    request.nextUrl.pathname === '/api/health';
 
   // Protect authenticated routes under /(app)/
   if (!user && !isPublicRoute) {
