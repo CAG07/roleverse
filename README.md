@@ -76,7 +76,7 @@ Voice chat via Discord is transcribed and displayed in the web app chat. The Rol
 | -------------- | -------------------------------- |
 | **Frontend**   | Next.js 15 + React 19            |
 | **Backend**    | Next.js API Routes (serverless)  |
-| **Database**   | Supabase (PostgreSQL + pgvector) |
+| **Database**   | PostgreSQL + pgvector            |
 | **AI**         | Anthropic Claude                 |
 | **Embeddings** | OpenAI ada-002                   |
 | **Voice**      | OpenAI Whisper + ElevenLabs      |
