@@ -91,7 +91,6 @@ Placeholder for user setup instructions. See [SETUP.md](docs/SETUP.md) for full 
 
 - **[SETUP.md](docs/SETUP.md)** - Complete setup guide and user instructions
 - **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System architecture
-- **[API.md](./docs/API.md)** - API endpoints reference
 - **[AGENTS.md](./docs/AGENTS.md)** - AI agent implementation details
 - **[FG_INTEGRATION.md](./docs/FG_INTEGRATION.md)** - Fantasy Grounds sync protocol
 
