@@ -187,7 +187,6 @@ roleverse/
 │   ├── ROLEVERSE.txt               # Project skeleton
 │   ├── ARCHITECTURE.md             # System architecture
 │   ├── GAME_SYSTEMS.md             # Supported game systems details
-│   ├── API.md                      # API reference
 │   ├── AGENTS.md                   # AI agent designs
 │   └── DISCORD.md                  # Discord bot setup & voice architecture
 │   
