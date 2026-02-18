@@ -74,7 +74,7 @@ Voice chat via Discord is transcribed and displayed in the web app chat. The Rol
 
 | Layer          | Technology                       |
 | -------------- | -------------------------------- |
-| **Frontend**   | Next.js 15 + React 19            |
+| **Frontend**   | Next.js 16 + React 19            |
 | **Backend**    | Next.js API Routes (serverless)  |
 | **Database**   | PostgreSQL + pgvector            |
 | **AI**         | Anthropic Claude                 |
