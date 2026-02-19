@@ -89,20 +89,10 @@ Placeholder for user setup instructions. See [SETUP.md](docs/SETUP.md) for full 
 
 ## 📖 Documentation
 
-- **[SETUP.md](docs/SETUP.md)** - Complete setup guide and user instructions
+- **[SETUP.md](docs/SETUP.md)** - Complete user instructions and troubleshooting
 - **[ARCHITECTURE.md](./docs/ARCHITECTURE.png)** - System architecture
 - **[AGENTS.md](./docs/AGENTS.md)** - AI agent implementation details
 - **[FG_INTEGRATION.md](./docs/FG_INTEGRATION.md)** - Fantasy Grounds sync protocol
-
-## 🤝 Contributing
-
-Contributions and submitting issues are welcome:
-
-1. Fork the repo
-2. Create a branch (`git checkout -b feature/amazing-feature or bug/important-fix`)
-3. Commit changes
-4. Push to branch
-5. Open Pull Request
 
 ## 📝 License
 
@@ -116,11 +106,6 @@ GNU AFFERO GENERAL PUBLIC LICENSE Version 3
 - **Vercel** - Hosting and deployment
 - **SmiteWorks** - Fantasy Grounds VTT
 - **Kanka.io** - Campaign management
-
-## 📞 Support
-
-- [SETUP.md](docs/SETUP.md) - Setup troubleshooting
-- [GitHub Issues](https://github.com/CAG07/roleverse/issues) - Report bugs
 
 ## <img src="assets/dice-d20-svgrepo-com.svg" width="22" height="22"> Happy Adventuring!
 
