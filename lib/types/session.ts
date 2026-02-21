@@ -33,3 +33,30 @@ export interface ChatMessage {
   sceneMedia?: SceneMedia; // attached media if agent sent one
   timestamp: Date;
 }
+
+/** A member of a campaign (from campaign_members joined with profiles) */
+export interface PartyMember {
+  id: string;
+  user_id: string;
+  campaign_id: string;
+  role: 'dm' | 'player';
+  joined_at: string;
+  display_name?: string | null;
+}
+
+/** A character belonging to a campaign */
+export interface Character {
+  id: string;
+  user_id: string;
+  campaign_id: string;
+  name: string;
+  game_system: string;
+  level?: number | null;
+  class?: string | null;
+  race?: string | null;
+  hp?: number | null;
+  max_hp?: number | null;
+  game_data_stats?: Record<string, unknown>;
+  game_data_combat?: Record<string, unknown>;
+  created_at: string;
+}

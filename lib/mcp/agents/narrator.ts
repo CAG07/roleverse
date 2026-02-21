@@ -14,10 +14,13 @@ const MAX_TOKENS = 1024;
 function buildSystemPrompt(context: MCPContext): string {
   const system = getGameSystem(context.gameSystem);
 
+  const systemName = system?.name ?? context.gameSystem;
+  const rulesPrompt = system?.rulesPrompt ?? '';
+
   return [
     'You are the Narrator for a tabletop RPG session.',
-    `Game system: ${system.name}.`,
-    system.rulesPrompt,
+    `Game system: ${systemName}.`,
+    rulesPrompt,
     '',
     'Your responsibilities:',
     '- Describe scenes, environments, and NPC actions vividly.',

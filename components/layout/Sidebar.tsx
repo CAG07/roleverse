@@ -108,9 +108,12 @@ export function Sidebar({ userName, userInitials, userRole }: SidebarProps) {
         .nav {
           flex: 1;
           padding: 0.5rem 0;
+          display: flex;
+          flex-direction: column;
         }
 
         .nav-section-label {
+          display: block;
           font-family: var(--font-heading);
           font-size: 0.55rem;
           font-weight: 600;

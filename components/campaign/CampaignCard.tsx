@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { getGameSystem } from '@/lib/game-systems/registry';
 
 export interface CampaignData {
   id: string;
@@ -8,6 +9,13 @@ export interface CampaignData {
   description: string | null;
   game_system: string;
   created_at: string;
+}
+
+function formatSystemBadge(gameSystem: string): string {
+  const system = getGameSystem(gameSystem);
+  if (system) return system.name;
+  // Fallback: replace underscores/hyphens with spaces for display
+  return gameSystem.replace(/[_-]/g, ' ');
 }
 
 export function CampaignCard({ campaign }: { campaign: CampaignData }) {
@@ -111,7 +119,7 @@ export function CampaignCard({ campaign }: { campaign: CampaignData }) {
       <span className="corner bl" />
       <span className="corner br" />
 
-      <span className="system-badge">{campaign.game_system.replace('-', ' ')}</span>
+      <span className="system-badge">{formatSystemBadge(campaign.game_system)}</span>
       <h2 className="card-name">{campaign.name}</h2>
       <p className="card-desc">{campaign.description || 'No description yet.'}</p>
       <span className="card-date">{formattedDate}</span>

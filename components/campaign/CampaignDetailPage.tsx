@@ -1,6 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 interface CampaignDetailPageProps {
   id: string;
@@ -17,6 +20,20 @@ export function CampaignDetailPage({
   systemName,
   systemDescription,
 }: CampaignDetailPageProps) {
+  const router = useRouter();
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Delete campaign "${name}"? This cannot be undone.`)) return;
+    setDeleteError(null);
+    const supabase = createClient();
+    const { error } = await supabase.from('campaigns').delete().eq('id', id);
+    if (error) {
+      setDeleteError(error.message);
+    } else {
+      router.push('/dashboard');
+    }
+  };
   return (
     <div className="campaign-detail-root">
       <style jsx>{`
@@ -214,6 +231,36 @@ export function CampaignDetailPage({
           color: var(--ivory-dim);
           margin: 0;
         }
+
+        .btn-delete {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: transparent;
+          border: 1px solid var(--crimson-dim);
+          font-family: var(--font-heading);
+          font-size: 0.75rem;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--crimson-bright);
+          cursor: pointer;
+          transition: all 0.2s;
+          margin-top: 0.75rem;
+        }
+        .btn-delete:hover {
+          background: rgba(176, 32, 32, 0.15);
+          border-color: var(--crimson-bright);
+          box-shadow: 0 0 12px var(--crimson-glow);
+        }
+
+        .delete-error {
+          font-family: var(--font-body);
+          font-size: 0.875rem;
+          color: var(--crimson-bright);
+          margin-top: 0.5rem;
+        }
       `}</style>
 
       <Link href="/dashboard" className="back-link">
@@ -227,9 +274,15 @@ export function CampaignDetailPage({
         </div>
         {description && <p className="campaign-description">{description}</p>}
         {systemDescription && <p className="campaign-system-info">{systemDescription}</p>}
-        <Link href={`/campaigns/${id}/session`} className="btn-start-session">
-          ▶ Start Session
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <Link href={`/campaigns/${id}/session`} className="btn-start-session">
+            ▶ Start Session
+          </Link>
+          <button type="button" className="btn-delete" onClick={handleDelete}>
+            ✕ Delete Campaign
+          </button>
+        </div>
+        {deleteError && <p className="delete-error">{deleteError}</p>}
       </div>
 
       <div className="section-label">

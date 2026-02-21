@@ -4,7 +4,7 @@
 
 BEGIN;
 
-SELECT plan(28);
+SELECT plan(30);
 
 -- ============================================================================
 -- 1. Verify RLS is enabled on all tables
@@ -158,6 +158,28 @@ SELECT ok(
       AND policyname = 'Members can view fellow members'
   ),
   'campaign_members has SELECT policy'
+);
+
+-- ============================================================================
+-- 6. Verify get_my_campaign_ids() helper function exists (RLS recursion fix)
+-- ============================================================================
+
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE proname = 'get_my_campaign_ids'
+      AND pronamespace = 'public'::regnamespace
+  ),
+  'get_my_campaign_ids() function exists in public schema'
+);
+
+SELECT ok(
+  (
+    SELECT prosecdef FROM pg_proc
+    WHERE proname = 'get_my_campaign_ids'
+      AND pronamespace = 'public'::regnamespace
+  ),
+  'get_my_campaign_ids() is SECURITY DEFINER'
 );
 
 SELECT ok(

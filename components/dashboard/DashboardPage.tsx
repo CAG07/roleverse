@@ -2,7 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getGameSystem } from '@/lib/game-systems/registry';
 import type { CampaignData } from '@/components/campaign/CampaignCard';
+
+function formatSystemBadge(gameSystem: string): string {
+  const system = getGameSystem(gameSystem);
+  if (system) return system.name;
+  return gameSystem.replace(/[_-]/g, ' ');
+}
 
 interface DashboardPageProps {
   campaigns: CampaignData[];
@@ -275,7 +282,7 @@ export function DashboardPage({ campaigns }: DashboardPageProps) {
               <span className="corner tr" />
               <span className="corner bl" />
               <span className="corner br" />
-              <span className="card-system-badge">{campaign.game_system.replace('-', ' ')}</span>
+              <span className="card-system-badge">{formatSystemBadge(campaign.game_system)}</span>
               <h2 className="card-name">{campaign.name}</h2>
               <p className="card-description">{campaign.description || 'No description yet.'}</p>
               <span className="card-date">
