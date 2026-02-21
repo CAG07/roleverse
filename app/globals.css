@@ -39,9 +39,9 @@
   --sidebar-width: 220px;
 
   /* Fonts — reference CSS variables injected by next/font (see app/layout.tsx) */
-  --font-display: var(--font-display-loaded, 'Cinzel Decorative', Georgia, serif);
-  --font-heading: var(--font-heading-loaded, 'Cinzel', Georgia, serif);
-  --font-body: var(--font-body-loaded, 'EB Garamond', Georgia, serif);
+  --font-display: var(--font-display-loaded, Georgia, serif);
+  --font-heading: var(--font-heading-loaded, Georgia, serif);
+  --font-body: var(--font-body-loaded, Georgia, serif);
 }
 
 /* ── Tailwind theme mapping ──────────────────────────────────────── */
