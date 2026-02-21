@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, type ChangeEvent, type KeyboardEvent } from 'react';
 import { Send, Mic, Keyboard, Image as ImageIcon } from 'lucide-react';
 import type { ChatMessage, SceneMedia, AgentType } from '@/lib/types/session';
+import type { AgentMessage } from '@/lib/mcp/types';
 
 // Agent color/label mapping — matches design spec
 const agentConfig: Record<AgentType, { accent: string; label: string }> = {
@@ -43,96 +44,23 @@ function relativeTime(date: Date): string {
   return date.toLocaleDateString();
 }
 
-// Mock data
-const mockSceneMedia: SceneMedia = {
-  id: 'scene-1',
-  type: 'image',
-  url: '/images/placeholder-scene.jpg',
-  caption: 'The cavern opens before you, stalactites dripping with phosphorescent moss',
-  source: 'ai_generated',
-  generatedBy: 'narrator',
-  timestamp: new Date(Date.now() - 300000),
-};
-
-const mockMessages: ChatMessage[] = [
-  {
-    id: 'msg-1',
-    role: 'system',
-    content: 'Session started. Welcome, adventurers!',
-    timestamp: new Date(Date.now() - 600000),
-  },
-  {
-    id: 'msg-2',
-    role: 'agent',
-    agentType: 'narrator',
-    content:
-      '**The evening air is thick with the scent of pine** as your party arrives at the edge of the *Mistwood Forest*. The ancient trees tower above you, their gnarled branches twisting like skeletal fingers against the darkening sky.\n\nA narrow path leads deeper into the woods, barely visible in the fading light.',
-    sceneMedia: mockSceneMedia,
-    timestamp: new Date(Date.now() - 540000),
-  },
-  {
-    id: 'msg-3',
-    role: 'player',
-    playerName: 'Thorin',
-    content: 'I light a torch and take the lead down the path, keeping my shield ready.',
-    source: 'typed',
-    timestamp: new Date(Date.now() - 480000),
-  },
-  {
-    id: 'msg-4',
-    role: 'agent',
-    agentType: 'rules_arbiter',
-    content:
-      'Thorin lights a torch, providing **bright light in a 20-foot radius** and dim light for an additional 20 feet. His AC remains unchanged with shield equipped.',
-    timestamp: new Date(Date.now() - 420000),
-  },
-  {
-    id: 'msg-5',
-    role: 'player',
-    playerName: 'Elara',
-    content: 'I cast Detect Magic as we walk and look for any magical auras in the forest.',
-    source: 'discord_voice',
-    timestamp: new Date(Date.now() - 360000),
-  },
-  {
-    id: 'msg-6',
-    role: 'agent',
-    agentType: 'lore_keeper',
-    content:
-      'The *Mistwood Forest* was once sacred to the elven druids of the **Third Age**. Ancient wards may still linger here — Detect Magic would certainly reveal them.',
-    timestamp: new Date(Date.now() - 300000),
-  },
-  {
-    id: 'msg-7',
-    role: 'agent',
-    agentType: 'npc_dialogue',
-    content:
-      'A raspy voice calls from the shadows: "*Who dares enter the Mistwood at this hour? Turn back, or face what sleeps beneath the roots...*"',
-    timestamp: new Date(Date.now() - 240000),
-  },
-  {
-    id: 'msg-8',
-    role: 'system',
-    content: 'FG Sync: Combat encounter data received.',
-    timestamp: new Date(Date.now() - 180000),
-  },
-  {
-    id: 'msg-9',
-    role: 'agent',
-    agentType: 'encounter_builder',
-    content:
-      'Two **Shadow Wolves** emerge from the undergrowth, their eyes glowing with an unnatural amber light. Roll for initiative!',
-    timestamp: new Date(Date.now() - 120000),
-  },
-];
-
 interface ChatWindowProps {
   onSceneMediaUpdate?: (media: SceneMedia) => void;
+  campaignId: string;
+  gameSystem: string;
 }
 
-export default function ChatWindow({ onSceneMediaUpdate }: ChatWindowProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>(mockMessages);
+export default function ChatWindow({ onSceneMediaUpdate, campaignId, gameSystem }: ChatWindowProps) {
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 'msg-init',
+      role: 'system',
+      content: 'Session started.',
+      timestamp: new Date(),
+    },
+  ]);
   const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -141,17 +69,11 @@ export default function ChatWindow({ onSceneMediaUpdate }: ChatWindowProps) {
     }
   }, [messages]);
 
-  useEffect(() => {
-    if (onSceneMediaUpdate) {
-      onSceneMediaUpdate(mockSceneMedia);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     const text = input.trim();
-    if (!text) return;
-    const newMsg: ChatMessage = {
+    if (!text || isLoading) return;
+
+    const playerMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
       role: 'player',
       playerName: 'You',
@@ -159,14 +81,92 @@ export default function ChatWindow({ onSceneMediaUpdate }: ChatWindowProps) {
       source: 'typed',
       timestamp: new Date(),
     };
-    setMessages((prev: ChatMessage[]) => [...prev, newMsg]);
+
+    setMessages((prev) => [...prev, playerMsg]);
     setInput('');
-  }, [input]);
+    setIsLoading(true);
+
+    // Build conversation history for Claude context (user/assistant pairs only)
+    const history: AgentMessage[] = [];
+    setMessages((prev) => {
+      for (const m of prev) {
+        if (m.role === 'player') {
+          history.push({ role: 'user', content: m.content });
+        } else if (m.role === 'agent') {
+          history.push({ role: 'assistant', content: m.content });
+        }
+      }
+      return prev;
+    });
+
+    try {
+      const res = await fetch('/api/agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentRole: 'narrator',
+          message: text,
+          context: { campaignId, gameSystem },
+          conversationHistory: history,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `msg-err-${Date.now()}`,
+            role: 'system',
+            content: `Error: ${err.error ?? 'Request failed'}`,
+            timestamp: new Date(),
+          },
+        ]);
+        return;
+      }
+
+      const data = await res.json();
+      const narratorMsg: ChatMessage = {
+        id: `msg-${Date.now()}`,
+        role: 'agent',
+        agentType: 'narrator',
+        content: data.content,
+        timestamp: new Date(),
+      };
+
+      if (data.sceneMedia && onSceneMediaUpdate) {
+        const media: SceneMedia = {
+          id: `scene-${Date.now()}`,
+          type: data.sceneMedia.type,
+          url: data.sceneMedia.url,
+          caption: data.sceneMedia.caption,
+          source: data.sceneMedia.source,
+          timestamp: new Date(),
+        };
+        narratorMsg.sceneMedia = media;
+        onSceneMediaUpdate(media);
+      }
+
+      setMessages((prev) => [...prev, narratorMsg]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `msg-err-${Date.now()}`,
+          role: 'system',
+          content: 'Error: Could not reach the narrator. Please try again.',
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [input, isLoading, campaignId, gameSystem, onSceneMediaUpdate]);
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      void handleSend();
     }
   };
 
@@ -208,6 +208,9 @@ export default function ChatWindow({ onSceneMediaUpdate }: ChatWindowProps) {
           font-style: italic;
           color: var(--ivory-dim);
         }
+        .msg-system-inner.error {
+          color: var(--crimson-bright);
+        }
 
         /* Agent message */
         .msg-agent {
@@ -236,6 +239,11 @@ export default function ChatWindow({ onSceneMediaUpdate }: ChatWindowProps) {
           font-size: 0.875rem;
           color: var(--ivory);
           line-height: 1.5;
+        }
+        .agent-bubble.loading {
+          font-family: var(--font-body);
+          font-size: 1rem;
+          color: var(--ivory-dim);
         }
         .scene-indicator {
           display: flex;
@@ -330,9 +338,13 @@ export default function ChatWindow({ onSceneMediaUpdate }: ChatWindowProps) {
           transition: all 0.15s;
           flex-shrink: 0;
         }
-        .send-btn:hover {
+        .send-btn:hover:not(:disabled) {
           background: var(--crimson-bright);
           box-shadow: 0 0 10px var(--crimson-glow);
+        }
+        .send-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
       `}</style>
 
@@ -340,9 +352,10 @@ export default function ChatWindow({ onSceneMediaUpdate }: ChatWindowProps) {
       <div ref={feedRef} className="feed">
         {messages.map((msg: ChatMessage) => {
           if (msg.role === 'system') {
+            const isError = msg.content.startsWith('Error:');
             return (
               <div key={msg.id} className="msg-system">
-                <span className="msg-system-inner">{msg.content}</span>
+                <span className={`msg-system-inner${isError ? ' error' : ''}`}>{msg.content}</span>
               </div>
             );
           }
@@ -387,6 +400,19 @@ export default function ChatWindow({ onSceneMediaUpdate }: ChatWindowProps) {
             </div>
           );
         })}
+
+        {/* Loading indicator */}
+        {isLoading && (
+          <div className="msg-agent">
+            <span
+              className="agent-label"
+              style={{ color: agentConfig.narrator.accent, borderColor: agentConfig.narrator.accent + '40' }}
+            >
+              Narrator
+            </span>
+            <div className="agent-bubble loading">▍</div>
+          </div>
+        )}
       </div>
 
       {/* Input bar */}
@@ -398,11 +424,13 @@ export default function ChatWindow({ onSceneMediaUpdate }: ChatWindowProps) {
           onKeyDown={handleKeyDown}
           placeholder="What do you do..."
           rows={1}
+          disabled={isLoading}
         />
-        <button className="send-btn" onClick={handleSend} type="button" aria-label="Send">
+        <button className="send-btn" onClick={() => void handleSend()} type="button" aria-label="Send" disabled={isLoading}>
           <Send size={16} />
         </button>
       </div>
     </div>
   );
 }
+

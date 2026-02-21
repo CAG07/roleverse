@@ -78,8 +78,10 @@ async function handleRollDice(
     };
   }
 
-  // Validate the game system exists (throws if unknown)
+  // Validate the game system exists
   const system = getGameSystem(context.gameSystem);
+  const systemName = system?.name ?? context.gameSystem;
+  const systemId = system?.id ?? context.gameSystem;
 
   let dice: DiceNotation;
   try {
@@ -97,7 +99,7 @@ async function handleRollDice(
   const reasonStr = reason ? ` for ${reason}` : '';
 
   const content =
-    `🎲 Rolled ${dice.notation}${reasonStr} (${system.name}): ` +
+    `🎲 Rolled ${dice.notation}${reasonStr} (${systemName}): ` +
     `[${rollsStr}]${modStr} = **${result.total}**`;
 
   return {
@@ -108,7 +110,7 @@ async function handleRollDice(
       modifier: dice.modifier,
       total: result.total,
       reason: reason ?? null,
-      gameSystem: system.id,
+      gameSystem: systemId,
     },
   };
 }

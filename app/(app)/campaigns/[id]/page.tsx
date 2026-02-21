@@ -27,12 +27,10 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
 
   let systemName = campaign.game_system as string;
   let systemDescription = '';
-  try {
-    const system = getGameSystem(campaign.game_system as string);
+  const system = getGameSystem(campaign.game_system as string);
+  if (system) {
     systemName = system.name;
     systemDescription = system.description;
-  } catch {
-    // Use raw slug if system is not registered
   }
 
   return (

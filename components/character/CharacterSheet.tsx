@@ -11,9 +11,9 @@ interface CharacterSheetProps {
 
 export default function CharacterSheet({ gameSystem, characterData }: CharacterSheetProps) {
   switch (gameSystem) {
-    case 'add-2e':
+    case 'ADD2E':
       return <ADD2ESheet data={characterData} />;
-    case 'dnd-5e-2014':
+    case '5E_2014':
       return <DND5ESheet data={characterData} />;
     default:
       return <GenericSheet data={characterData} systemName={gameSystem} />;

@@ -7,83 +7,7 @@ import ChatWindow from '@/components/session/ChatWindow';
 import CharacterSheet from '@/components/character/CharacterSheet';
 import PartyStatus from '@/components/session/PartyStatus';
 import SessionNotes from '@/components/session/SessionNotes';
-import type { SceneMedia } from '@/lib/types/session';
-
-// ── Mock data for testing ──────────────────────────────────────────────
-
-const mockPartyNav = [
-  { id: '1', name: 'Thorin Ironforge', role: 'dm' as const },
-  { id: '2', name: 'Elara Moonshadow', role: 'player' as const },
-  { id: '3', name: 'Grog the Mighty', role: 'player' as const },
-];
-
-const mockPartyStatus = [
-  { id: '1', characterName: 'Thorin Ironforge', characterClass: 'Fighter', currentHp: 45, maxHp: 52, status: 'active' as const },
-  { id: '2', characterName: 'Elara Moonshadow', characterClass: 'Wizard', currentHp: 22, maxHp: 28, status: 'active' as const },
-  { id: '3', characterName: 'Grog the Mighty', characterClass: 'Barbarian', currentHp: 0, maxHp: 67, status: 'unconscious' as const },
-];
-
-const mockCharacters: Record<string, Record<string, unknown>> = {
-  '1': {
-    name: 'Thorin Ironforge',
-    race: 'Mountain Dwarf',
-    class: 'Fighter',
-    subclass: 'Champion',
-    level: 5,
-    background: 'Soldier',
-    alignment: 'Lawful Good',
-    proficiencyBonus: 3,
-    ac: 18,
-    hp: 45,
-    maxHp: 52,
-    hitDice: '5d10',
-    abilityScores: { Strength: 18, Dexterity: 12, Constitution: 16, Intelligence: 10, Wisdom: 13, Charisma: 8 },
-    savingThrowProficiencies: ['Strength', 'Constitution'],
-    skillProficiencies: ['Athletics', 'Intimidation', 'Perception', 'Survival'],
-    features: ['Second Wind', 'Action Surge', 'Improved Critical', 'Extra Attack'],
-    spellSaveDC: null,
-  },
-  '2': {
-    name: 'Elara Moonshadow',
-    race: 'High Elf',
-    class: 'Wizard',
-    subclass: 'School of Evocation',
-    level: 5,
-    background: 'Sage',
-    alignment: 'Chaotic Good',
-    proficiencyBonus: 3,
-    ac: 13,
-    hp: 22,
-    maxHp: 28,
-    hitDice: '5d6',
-    abilityScores: { Strength: 8, Dexterity: 14, Constitution: 12, Intelligence: 18, Wisdom: 13, Charisma: 10 },
-    savingThrowProficiencies: ['Intelligence', 'Wisdom'],
-    skillProficiencies: ['Arcana', 'History', 'Investigation', 'Perception'],
-    features: ['Arcane Recovery', 'Evocation Savant', 'Sculpt Spells'],
-    spellSaveDC: 14,
-    spellAttackModifier: 6,
-    spellSlots: { '1': 4, '2': 3, '3': 2 },
-  },
-  '3': {
-    name: 'Grog the Mighty',
-    race: 'Half-Orc',
-    class: 'Barbarian',
-    subclass: 'Path of the Berserker',
-    level: 5,
-    background: 'Outlander',
-    alignment: 'Chaotic Neutral',
-    proficiencyBonus: 3,
-    ac: 15,
-    hp: 0,
-    maxHp: 67,
-    hitDice: '5d12',
-    abilityScores: { Strength: 20, Dexterity: 14, Constitution: 18, Intelligence: 8, Wisdom: 10, Charisma: 12 },
-    savingThrowProficiencies: ['Strength', 'Constitution'],
-    skillProficiencies: ['Athletics', 'Intimidation', 'Survival', 'Animal Handling'],
-    features: ['Rage', 'Reckless Attack', 'Danger Sense', 'Extra Attack', 'Frenzy'],
-    spellSaveDC: null,
-  },
-};
+import type { SceneMedia, PartyMember, Character } from '@/lib/types/session';
 
 // ── Component ──────────────────────────────────────────────────────────
 
@@ -93,16 +17,51 @@ export default function SessionPageClient({
   campaignId,
   campaignName,
   gameSystem,
+  partyMembers,
+  characters,
 }: {
   campaignId: string;
   campaignName: string;
   gameSystem: string;
+  partyMembers: PartyMember[];
+  characters: Character[];
 }) {
   const [sceneMedia, setSceneMedia] = useState<SceneMedia | null>(null);
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
 
-  const selectedCharacter = selectedCharacterId ? mockCharacters[selectedCharacterId] : null;
+  const selectedCharacter = characters.find((c) => c.id === selectedCharacterId) ?? null;
+
+  // Build party nav entries for SessionSidebar
+  const partyNav = partyMembers.map((m) => ({
+    id: m.id,
+    name: m.display_name ?? m.user_id,
+    role: m.role,
+  }));
+
+  // Build party status entries for PartyStatus
+  const partyStatus = characters.map((c) => ({
+    id: c.id,
+    characterName: c.name,
+    characterClass: c.class ?? 'Unknown',
+    currentHp: c.hp ?? 0,
+    maxHp: c.max_hp ?? 0,
+    status: (c.hp ?? 0) <= 0 ? ('unconscious' as const) : ('active' as const),
+  }));
+
+  // Build character data record for CharacterSheet
+  const selectedCharacterData: Record<string, unknown> | null = selectedCharacter
+    ? {
+        name: selectedCharacter.name,
+        race: selectedCharacter.race,
+        class: selectedCharacter.class,
+        level: selectedCharacter.level,
+        hp: selectedCharacter.hp,
+        maxHp: selectedCharacter.max_hp,
+        ...((selectedCharacter.game_data_stats as Record<string, unknown> | null | undefined) ?? {}),
+        ...((selectedCharacter.game_data_combat as Record<string, unknown> | null | undefined) ?? {}),
+      }
+    : null;
 
   return (
     <div className="session-root">
@@ -338,7 +297,7 @@ export default function SessionPageClient({
           <SessionSidebar
             campaignName={campaignName}
             gameSystem={gameSystem}
-            partyMembers={mockPartyNav}
+            partyMembers={partyNav}
             isDM
             campaignId={campaignId}
           />
@@ -350,7 +309,11 @@ export default function SessionPageClient({
             <SceneDisplay media={sceneMedia} onClose={() => setSceneMedia(null)} />
           </div>
           <div className={`chat-panel${!sceneMedia ? ' full' : ''}`}>
-            <ChatWindow onSceneMediaUpdate={setSceneMedia} />
+            <ChatWindow
+              onSceneMediaUpdate={setSceneMedia}
+              campaignId={campaignId}
+              gameSystem={gameSystem}
+            />
           </div>
         </div>
 
@@ -359,48 +322,56 @@ export default function SessionPageClient({
           {/* Party avatar selector */}
           <div>
             <div className="section-label">Party</div>
-            <div className="party-avatars">
-              {mockPartyStatus.map((member) => {
-                const initials = member.characterName
-                  .split(' ')
-                  .map((n) => n[0])
-                  .join('')
-                  .slice(0, 2);
-                const isSelected = selectedCharacterId === member.id;
-                const dotColor =
-                  member.status === 'active'
-                    ? '#4a9a5a'
-                    : member.status === 'unconscious'
-                      ? '#c8873a'
-                      : '#b02020';
-                return (
-                  <button
-                    key={member.id}
-                    className={`avatar-btn${isSelected ? ' selected' : ''}`}
-                    onClick={() => setSelectedCharacterId(isSelected ? null : member.id)}
-                    title={member.characterName}
-                    type="button"
-                  >
-                    <div className="avatar-circle">{initials}</div>
-                    <span className="avatar-name">{member.characterName.split(' ')[0]}</span>
-                    <span className="hp-dot" style={{ backgroundColor: dotColor }} />
-                  </button>
-                );
-              })}
-            </div>
+            {characters.length === 0 ? (
+              <p className="no-character-text">No characters in this campaign yet.</p>
+            ) : (
+              <div className="party-avatars">
+                {partyStatus.map((member) => {
+                  const initials = member.characterName
+                    .split(' ')
+                    .map((n) => n[0])
+                    .join('')
+                    .slice(0, 2);
+                  const isSelected = selectedCharacterId === member.id;
+                  const dotColor =
+                    member.status === 'active' ? '#4a9a5a' : '#c8873a';
+                  return (
+                    <button
+                      key={member.id}
+                      className={`avatar-btn${isSelected ? ' selected' : ''}`}
+                      onClick={() => setSelectedCharacterId(isSelected ? null : member.id)}
+                      title={member.characterName}
+                      type="button"
+                    >
+                      <div className="avatar-circle">{initials}</div>
+                      <span className="avatar-name">{member.characterName.split(' ')[0]}</span>
+                      <span className="hp-dot" style={{ backgroundColor: dotColor }} />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Character sheet */}
-          {selectedCharacter ? (
-            <CharacterSheet gameSystem={gameSystem} characterData={selectedCharacter} />
+          {selectedCharacterData ? (
+            <CharacterSheet gameSystem={gameSystem} characterData={selectedCharacterData} />
           ) : (
             <div className="no-character">
-              <p className="no-character-text">Select a character above to view their sheet</p>
+              <p className="no-character-text">
+                {characters.length === 0
+                  ? 'No characters in this campaign yet.'
+                  : 'Select a character above to view their sheet'}
+              </p>
             </div>
           )}
 
           <div className="panel-divider" />
-          <PartyStatus members={mockPartyStatus} />
+          {partyStatus.length > 0 ? (
+            <PartyStatus members={partyStatus} />
+          ) : (
+            <p className="no-character-text">No party members besides the DM yet.</p>
+          )}
           <div className="panel-divider" />
           <SessionNotes campaignId={campaignId} />
         </div>
@@ -408,3 +379,4 @@ export default function SessionPageClient({
     </div>
   );
 }
+
