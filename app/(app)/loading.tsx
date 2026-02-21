@@ -1,3 +1,5 @@
 export default function Loading() {
-  return null;
+  return (
+    <div style={{ minHeight: '100vh', background: '#08090b' }} />
+  );
 }
