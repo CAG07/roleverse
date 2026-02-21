@@ -140,11 +140,11 @@ export default function SessionPageClient({
 
         /* Scene panel */
         .scene-panel {
-          flex: 2;
-          min-height: 0;
+          height: 42%;
+          flex-shrink: 0;
           padding: 0.5rem 0.5rem 0;
+          position: relative;
         }
-        .scene-panel.hidden { display: none; }
 
         /* Chat panel */
         .chat-panel {
@@ -155,7 +155,6 @@ export default function SessionPageClient({
           padding: 0.5rem;
           overflow: hidden;
         }
-        .chat-panel.full { flex: 1; }
 
         /* Right panel */
         .col-right {
@@ -305,10 +304,10 @@ export default function SessionPageClient({
 
         {/* Center column */}
         <div className={`col-center${mobileTab === 'chat' ? ' mobile-active' : ''}`}>
-          <div className={`scene-panel${!sceneMedia ? ' hidden' : ''}`}>
+          <div className="scene-panel">
             <SceneDisplay media={sceneMedia} onClose={() => setSceneMedia(null)} />
           </div>
-          <div className={`chat-panel${!sceneMedia ? ' full' : ''}`}>
+          <div className="chat-panel">
             <ChatWindow
               onSceneMediaUpdate={setSceneMedia}
               campaignId={campaignId}

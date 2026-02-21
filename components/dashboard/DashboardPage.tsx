@@ -171,19 +171,19 @@ export function DashboardPage({ campaigns }: DashboardPageProps) {
         .corner.bl { bottom: 4px; left: 4px; border-bottom: 1px solid var(--gold-dim); border-left: 1px solid var(--gold-dim); }
         .corner.br { bottom: 4px; right: 4px; border-bottom: 1px solid var(--gold-dim); border-right: 1px solid var(--gold-dim); }
 
+        .card-header {
+          margin-bottom: 0.375rem;
+        }
+
         .card-name {
           font-family: var(--font-heading);
           font-size: 1rem;
           font-weight: 600;
           color: var(--ivory);
           margin: 0 0 0.5rem;
-          padding-right: 4rem;
         }
 
         .card-system-badge {
-          position: absolute;
-          top: 1.25rem;
-          right: 1.25rem;
           font-family: var(--font-heading);
           font-size: 0.6rem;
           font-weight: 600;
@@ -193,6 +193,7 @@ export function DashboardPage({ campaigns }: DashboardPageProps) {
           background: rgba(184, 136, 42, 0.1);
           border: 1px solid var(--gold-dim);
           padding: 0.2rem 0.5rem;
+          display: inline-block;
         }
 
         .card-description {
@@ -282,7 +283,9 @@ export function DashboardPage({ campaigns }: DashboardPageProps) {
               <span className="corner tr" />
               <span className="corner bl" />
               <span className="corner br" />
-              <span className="card-system-badge">{formatSystemBadge(campaign.game_system)}</span>
+              <div className="card-header">
+                <span className="card-system-badge">{formatSystemBadge(campaign.game_system)}</span>
+              </div>
               <h2 className="card-name">{campaign.name}</h2>
               <p className="card-description">{campaign.description || 'No description yet.'}</p>
               <span className="card-date">

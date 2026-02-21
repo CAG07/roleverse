@@ -12,7 +12,66 @@ interface SceneDisplayProps {
 export default function SceneDisplay({ media, onClose }: SceneDisplayProps) {
   const [expanded, setExpanded] = useState(false);
 
-  if (!media) return null;
+  if (!media) {
+    return (
+      <div className="scene-panel scene-empty">
+        <style jsx>{`
+          .scene-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: var(--void);
+            border: var(--rule-thin);
+            flex-direction: column;
+            gap: 0.75rem;
+            position: relative;
+          }
+          .scene-empty::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--crimson), var(--gold-dim), var(--crimson), transparent);
+          }
+          .corner {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+          }
+          .corner.tl { top: 6px; left: 6px; border-top: 1px solid var(--gold); border-left: 1px solid var(--gold); }
+          .corner.tr { top: 6px; right: 6px; border-top: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+          .corner.bl { bottom: 6px; left: 6px; border-bottom: 1px solid var(--gold); border-left: 1px solid var(--gold); }
+          .corner.br { bottom: 6px; right: 6px; border-bottom: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+          .empty-icon {
+            color: var(--crimson-dim);
+            opacity: 0.5;
+          }
+          .empty-label {
+            font-family: var(--font-heading);
+            font-size: 0.625rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--ivory-dim);
+          }
+          .empty-sub {
+            font-family: var(--font-body);
+            font-size: 0.775rem;
+            color: var(--ivory-dim);
+            font-style: italic;
+          }
+        `}</style>
+        <span className="corner tl" />
+        <span className="corner tr" />
+        <span className="corner bl" />
+        <span className="corner br" />
+        <ImageIcon size={32} className="empty-icon" />
+        <span className="empty-label">Scene Display</span>
+        <span className="empty-sub">AI-generated scenes and campaign art will appear here</span>
+      </div>
+    );
+  }
 
   return (
     <>

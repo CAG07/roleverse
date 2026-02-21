@@ -14,7 +14,6 @@ interface SidebarProps {
 const navItems = [
   { href: '/dashboard', label: 'Home' },
   { href: '/discover', label: 'Discover' },
-  { href: '/campaigns', label: 'Campaigns' },
   { href: '/workshop', label: 'Workshop' },
   { href: '/image-studio', label: 'Image Studio' },
   { href: '/credits', label: 'Claim Credits' },
@@ -32,7 +31,12 @@ export function Sidebar({ userName, userInitials, userRole }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
+  const isActive = (href: string) => {
+    if (href === '/dashboard') {
+      return pathname === '/dashboard' || pathname.startsWith('/campaigns');
+    }
+    return pathname === href || pathname.startsWith(href + '/');
+  };
 
   const handleSignOut = async () => {
     const supabase = createClient();
