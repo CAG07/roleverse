@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import FGConnectionStatus from './FGConnectionStatus';
 import VoiceStatus from './VoiceStatus';
 
@@ -25,7 +26,7 @@ function CollapsibleSection({
   defaultOpen = true,
 }: {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);

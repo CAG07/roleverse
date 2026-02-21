@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { getAllGameSystems } from '@/lib/game-systems/registry';
@@ -15,7 +16,7 @@ export default function NewCampaignPage() {
 
   const systems = getAllGameSystems();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
 

@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation';
+import type { ReactNode } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -13,8 +14,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   const fullName = user.user_metadata?.full_name ?? user.email ?? 'Adventurer';
-  const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
-  void avatarUrl; // available for future use
 
   const initials = fullName
     .split(' ')

@@ -265,7 +265,7 @@ export function DashboardPage({ campaigns }: DashboardPageProps) {
           {filtered.map((campaign, i) => (
             <div
               key={campaign.id}
-              className={`campaign-card animate-fade-rise delay-${Math.min(i + 1, 4)}`}
+              className={`campaign-card animate-fade-rise${i === 0 ? ' delay-1' : i === 1 ? ' delay-2' : i === 2 ? ' delay-3' : ' delay-4'}`}
               onClick={() => router.push(`/campaigns/${campaign.id}`)}
               role="button"
               tabIndex={0}
