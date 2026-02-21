@@ -62,6 +62,11 @@ export default function ChatWindow({ onSceneMediaUpdate, campaignId, gameSystem 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
+  // Keep a ref to messages so handleSend can read the latest without being in deps
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     if (feedRef.current) {
@@ -86,18 +91,14 @@ export default function ChatWindow({ onSceneMediaUpdate, campaignId, gameSystem 
     setInput('');
     setIsLoading(true);
 
-    // Build conversation history for Claude context (user/assistant pairs only)
-    const history: AgentMessage[] = [];
-    setMessages((prev) => {
-      for (const m of prev) {
-        if (m.role === 'player') {
-          history.push({ role: 'user', content: m.content });
-        } else if (m.role === 'agent') {
-          history.push({ role: 'assistant', content: m.content });
-        }
-      }
-      return prev;
-    });
+    // Build conversation history for Claude context from current messages + new player message
+    const currentMessages = [...messagesRef.current, playerMsg];
+    const history: AgentMessage[] = currentMessages
+      .filter((m) => m.role === 'player' || m.role === 'agent')
+      .map((m) => ({
+        role: m.role === 'player' ? ('user' as const) : ('assistant' as const),
+        content: m.content,
+      }));
 
     try {
       const res = await fetch('/api/agent', {

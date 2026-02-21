@@ -7,6 +7,15 @@ interface SessionPageProps {
   params: Promise<{ id: string }>;
 }
 
+type ProfileData = { full_name?: string | null } | null;
+
+function extractDisplayName(profiles: ProfileData | ProfileData[]): string | null {
+  if (Array.isArray(profiles)) {
+    return (profiles[0] as ProfileData)?.full_name ?? null;
+  }
+  return profiles?.full_name ?? null;
+}
+
 export default async function SessionPage({ params }: SessionPageProps) {
   const { id } = await params;
   const supabase = await createClient();
@@ -37,9 +46,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
     campaign_id: m.campaign_id,
     role: m.role as 'dm' | 'player',
     joined_at: m.joined_at,
-    display_name: Array.isArray(m.profiles)
-      ? ((m.profiles[0] as { full_name?: string | null } | undefined)?.full_name ?? null)
-      : ((m.profiles as { full_name?: string | null } | null)?.full_name ?? null),
+    display_name: extractDisplayName(m.profiles as ProfileData | ProfileData[]),
   }));
 
   // Fetch characters for this campaign
