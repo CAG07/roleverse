@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { MessageSquare, User, Sidebar } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import SessionSidebar from '@/components/session/SessionSidebar';
 import SceneDisplay from '@/components/session/SceneDisplay';
 import ChatWindow from '@/components/session/ChatWindow';
@@ -24,8 +22,6 @@ const mockPartyStatus = [
   { id: '2', characterName: 'Elara Moonshadow', characterClass: 'Wizard', currentHp: 22, maxHp: 28, status: 'active' as const },
   { id: '3', characterName: 'Grog the Mighty', characterClass: 'Barbarian', currentHp: 0, maxHp: 67, status: 'unconscious' as const },
 ];
-
-const avatarColors = ['bg-teal', 'bg-rust', 'bg-gold'];
 
 const mockCharacters: Record<string, Record<string, unknown>> = {
   '1': {
@@ -106,41 +102,239 @@ export default function SessionPageClient({
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
 
-  const tabButtonClass = (tab: MobileTab) =>
-    `flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medieval transition-colors ${
-      mobileTab === tab
-        ? 'bg-brown text-gold border-b-2 border-gold'
-        : 'bg-brown-dark text-cream/50 hover:text-cream/80'
-    }`;
-
   const selectedCharacter = selectedCharacterId ? mockCharacters[selectedCharacterId] : null;
 
   return (
-    <div className="flex h-screen flex-col bg-brown-dark">
+    <div className="session-root">
+      <style jsx>{`
+        .session-root {
+          display: flex;
+          height: 100vh;
+          flex-direction: column;
+          background: var(--void);
+          overflow: hidden;
+        }
+
+        /* Mobile tab bar */
+        .mobile-tabs {
+          display: flex;
+          border-bottom: var(--rule-thin);
+        }
+        @media (min-width: 768px) {
+          .mobile-tabs { display: none; }
+        }
+
+        .tab-btn {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.375rem;
+          padding: 0.5rem;
+          background: var(--void-mid);
+          border: none;
+          font-family: var(--font-heading);
+          font-size: 0.625rem;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ivory-dim);
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+        .tab-btn.active {
+          background: var(--void-surface);
+          color: var(--gold);
+          border-bottom: 2px solid var(--crimson);
+        }
+
+        /* Three-column layout */
+        .session-columns {
+          display: flex;
+          flex: 1;
+          overflow: hidden;
+        }
+
+        /* Left sidebar */
+        .col-sidebar {
+          width: 240px;
+          flex-shrink: 0;
+          display: none;
+        }
+        .col-sidebar.mobile-active { display: flex; }
+        @media (min-width: 768px) {
+          .col-sidebar { display: flex !important; }
+        }
+
+        /* Center column */
+        .col-center {
+          flex: 1;
+          display: none;
+          flex-direction: column;
+          overflow: hidden;
+          min-width: 0;
+        }
+        .col-center.mobile-active { display: flex; }
+        @media (min-width: 768px) {
+          .col-center { display: flex !important; }
+        }
+
+        /* Scene panel */
+        .scene-panel {
+          flex: 2;
+          min-height: 0;
+          padding: 0.5rem 0.5rem 0;
+        }
+        .scene-panel.hidden { display: none; }
+
+        /* Chat panel */
+        .chat-panel {
+          flex: 1;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          padding: 0.5rem;
+          overflow: hidden;
+        }
+        .chat-panel.full { flex: 1; }
+
+        /* Right panel */
+        .col-right {
+          width: 320px;
+          flex-shrink: 0;
+          display: none;
+          flex-direction: column;
+          overflow-y: auto;
+          background: var(--void-mid);
+          border-left: var(--rule-thin);
+          padding: 0.75rem;
+          gap: 0.75rem;
+        }
+        .col-right.mobile-active { display: flex; }
+        @media (min-width: 768px) {
+          .col-right { display: flex !important; }
+        }
+
+        /* Section label */
+        .section-label {
+          font-family: var(--font-heading);
+          font-size: 0.575rem;
+          font-weight: 600;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: var(--gold);
+          margin-bottom: 0.375rem;
+        }
+
+        /* Party avatar buttons */
+        .party-avatars {
+          display: flex;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+        }
+        .avatar-btn {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.25rem;
+          padding: 0.375rem;
+          background: none;
+          border: 1px solid var(--void-border);
+          cursor: pointer;
+          transition: all 0.15s;
+          position: relative;
+        }
+        .avatar-btn:hover {
+          border-color: var(--crimson-dim);
+          background: var(--void-surface);
+        }
+        .avatar-btn.selected {
+          border-color: var(--gold);
+          background: rgba(184, 136, 42, 0.08);
+        }
+        .avatar-circle {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: var(--font-heading);
+          font-size: 0.65rem;
+          font-weight: 700;
+          color: var(--ivory);
+          background: var(--crimson-dim);
+          border: 1px solid var(--crimson);
+        }
+        .avatar-name {
+          font-family: var(--font-body);
+          font-size: 0.625rem;
+          color: var(--ivory-muted);
+          max-width: 52px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .hp-dot {
+          position: absolute;
+          top: 2px;
+          right: 2px;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          border: 1px solid var(--void-mid);
+        }
+
+        /* No character selected */
+        .no-character {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 1.5rem;
+          background: var(--surface-card);
+          border: var(--rule-thin);
+          text-align: center;
+        }
+        .no-character-text {
+          font-family: var(--font-body);
+          font-size: 0.775rem;
+          color: var(--ivory-dim);
+        }
+
+        /* Divider */
+        .panel-divider {
+          height: 1px;
+          background: linear-gradient(90deg, transparent, var(--crimson-dim), transparent);
+        }
+      `}</style>
+
       {/* Mobile tab bar */}
-      <div className="flex border-b border-gold/30 md:hidden">
-        <button onClick={() => setMobileTab('sidebar')} className={tabButtonClass('sidebar')}>
-          <Sidebar className="h-4 w-4" />
-          Session
+      <div className="mobile-tabs">
+        <button
+          className={`tab-btn${mobileTab === 'sidebar' ? ' active' : ''}`}
+          onClick={() => setMobileTab('sidebar')}
+        >
+          ≡ Session
         </button>
-        <button onClick={() => setMobileTab('chat')} className={tabButtonClass('chat')}>
-          <MessageSquare className="h-4 w-4" />
-          Chat
+        <button
+          className={`tab-btn${mobileTab === 'chat' ? ' active' : ''}`}
+          onClick={() => setMobileTab('chat')}
+        >
+          ✦ Chat
         </button>
-        <button onClick={() => setMobileTab('character')} className={tabButtonClass('character')}>
-          <User className="h-4 w-4" />
-          Character
+        <button
+          className={`tab-btn${mobileTab === 'character' ? ' active' : ''}`}
+          onClick={() => setMobileTab('character')}
+        >
+          ◆ Character
         </button>
       </div>
 
-      {/* Desktop three-column layout */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left sidebar ~240px */}
-        <div
-          className={`w-60 shrink-0 ${
-            mobileTab === 'sidebar' ? 'flex' : 'hidden'
-          } md:flex`}
-        >
+      {/* Three-column layout */}
+      <div className="session-columns">
+        {/* Left sidebar */}
+        <div className={`col-sidebar${mobileTab === 'sidebar' ? ' mobile-active' : ''}`}>
           <SessionSidebar
             campaignName={campaignName}
             gameSystem={gameSystem}
@@ -150,103 +344,64 @@ export default function SessionPageClient({
           />
         </div>
 
-        {/* Center column — flex-1, split vertically: scene 2/3, chat 1/3 */}
-        <div
-          className={`flex flex-1 flex-col overflow-hidden ${
-            mobileTab === 'chat' ? 'flex' : 'hidden'
-          } md:flex`}
-        >
-          {/* Scene display (top ~2/3) */}
-          <div className={`p-2 pb-0 ${sceneMedia ? 'flex-[2] min-h-0' : 'hidden'}`}>
+        {/* Center column */}
+        <div className={`col-center${mobileTab === 'chat' ? ' mobile-active' : ''}`}>
+          <div className={`scene-panel${!sceneMedia ? ' hidden' : ''}`}>
             <SceneDisplay media={sceneMedia} onClose={() => setSceneMedia(null)} />
           </div>
-
-          {/* Chat (bottom ~1/3, or full height when no scene) */}
-          <div className={`flex flex-col overflow-hidden p-2 ${sceneMedia ? 'flex-1 min-h-0' : 'flex-1'}`}>
+          <div className={`chat-panel${!sceneMedia ? ' full' : ''}`}>
             <ChatWindow onSceneMediaUpdate={setSceneMedia} />
           </div>
         </div>
 
-        {/* Right panel ~320px */}
-        <div
-          className={`w-80 shrink-0 flex-col overflow-y-auto border-l-2 border-gold bg-brown p-3 ${
-            mobileTab === 'character' ? 'flex' : 'hidden'
-          } md:flex`}
-        >
-          {/* PC avatar buttons */}
-          <div className="mb-3">
-            <h3 className="mb-2 font-medieval text-sm text-gold">Party</h3>
-            <div className="flex gap-2">
-              {mockPartyStatus.map((member, index) => {
+        {/* Right panel */}
+        <div className={`col-right${mobileTab === 'character' ? ' mobile-active' : ''}`}>
+          {/* Party avatar selector */}
+          <div>
+            <div className="section-label">Party</div>
+            <div className="party-avatars">
+              {mockPartyStatus.map((member) => {
                 const initials = member.characterName
                   .split(' ')
                   .map((n) => n[0])
                   .join('')
                   .slice(0, 2);
                 const isSelected = selectedCharacterId === member.id;
+                const dotColor =
+                  member.status === 'active'
+                    ? '#4a9a5a'
+                    : member.status === 'unconscious'
+                      ? '#c8873a'
+                      : '#b02020';
                 return (
                   <button
                     key={member.id}
-                    onClick={() =>
-                      setSelectedCharacterId(isSelected ? null : member.id)
-                    }
-                    className={`group relative flex flex-col items-center gap-1 rounded p-1.5 transition-colors ${
-                      isSelected
-                        ? 'bg-gold/20 ring-2 ring-gold'
-                        : 'hover:bg-brown-dark/50'
-                    }`}
+                    className={`avatar-btn${isSelected ? ' selected' : ''}`}
+                    onClick={() => setSelectedCharacterId(isSelected ? null : member.id)}
                     title={member.characterName}
+                    type="button"
                   >
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback
-                        className={`${avatarColors[index % avatarColors.length]} text-xs font-bold text-cream`}
-                      >
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="max-w-[60px] truncate text-[10px] text-cream/60">
-                      {member.characterName.split(' ')[0]}
-                    </span>
-                    {/* HP indicator dot */}
-                    <span
-                      className={`absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border border-brown ${
-                        member.status === 'active'
-                          ? 'bg-green-500'
-                          : member.status === 'unconscious'
-                            ? 'bg-amber-400'
-                            : 'bg-red-500'
-                      }`}
-                    />
+                    <div className="avatar-circle">{initials}</div>
+                    <span className="avatar-name">{member.characterName.split(' ')[0]}</span>
+                    <span className="hp-dot" style={{ backgroundColor: dotColor }} />
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Character sheet (shown when a PC is selected) */}
+          {/* Character sheet */}
           {selectedCharacter ? (
-            <div className="mb-3">
-              <CharacterSheet gameSystem={gameSystem} characterData={selectedCharacter} />
-            </div>
+            <CharacterSheet gameSystem={gameSystem} characterData={selectedCharacter} />
           ) : (
-            <div className="mb-3 rounded border border-gold/20 bg-brown-dark/30 p-4 text-center">
-              <User className="mx-auto mb-2 h-8 w-8 text-cream/20" />
-              <p className="text-xs text-cream/40">
-                Select a character above to view their sheet
-              </p>
+            <div className="no-character">
+              <p className="no-character-text">Select a character above to view their sheet</p>
             </div>
           )}
 
-          {/* Divider */}
-          <hr className="my-2 border-gold/20" />
-
-          {/* Party status */}
+          <div className="panel-divider" />
           <PartyStatus members={mockPartyStatus} />
-
-          {/* Divider */}
-          <hr className="my-2 border-gold/20" />
-
-          {/* Session Notes */}
+          <div className="panel-divider" />
           <SessionNotes campaignId={campaignId} />
         </div>
       </div>

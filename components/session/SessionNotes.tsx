@@ -23,13 +23,47 @@ export default function SessionNotes({ campaignId }: SessionNotesProps) {
   );
 
   return (
-    <div className="flex flex-col gap-2">
-      <h3 className="font-medieval text-sm text-gold">Session Notes</h3>
+    <div className="session-notes">
+      <style jsx>{`
+        .session-notes {
+          display: flex;
+          flex-direction: column;
+          gap: 0.375rem;
+        }
+        .section-label {
+          font-family: var(--font-heading);
+          font-size: 0.575rem;
+          font-weight: 600;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: var(--gold);
+        }
+        .notes-textarea {
+          min-height: 120px;
+          width: 100%;
+          resize: vertical;
+          background: var(--void-surface);
+          border: var(--rule-thin);
+          color: var(--ivory);
+          font-family: var(--font-body);
+          font-size: 0.85rem;
+          padding: 0.5rem 0.75rem;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+        .notes-textarea::placeholder {
+          color: var(--ivory-dim);
+        }
+        .notes-textarea:focus {
+          border-color: var(--crimson);
+        }
+      `}</style>
+      <div className="section-label">Session Notes</div>
       <textarea
+        className="notes-textarea"
         value={notes}
         onChange={handleChange}
         placeholder="Jot down notes during the session..."
-        className="min-h-[120px] w-full resize-y rounded border border-gold/40 bg-cream/80 px-3 py-2 font-body text-sm text-brown placeholder:text-brown/40 focus:outline-none focus:ring-1 focus:ring-teal"
       />
     </div>
   );

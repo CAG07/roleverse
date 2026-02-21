@@ -44,98 +44,241 @@ export default function DND5ESheet({ data }: DND5ESheetProps) {
   const statKeys = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
 
   return (
-    <div className="flex flex-col gap-3 overflow-y-auto rounded border border-gold/40 bg-cream/90 p-3 text-sm">
-      {/* Header */}
-      <div className="border-b border-gold/30 pb-2">
-        <h3 className="font-medieval text-lg text-rust">{name}</h3>
-        <p className="text-xs text-brown/70">
-          {race} {characterClass}
-          {subclass ? ` (${subclass})` : ''} · Level {level}
+    <div className="sheet-root">
+      <style jsx>{`
+        .sheet-root {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          overflow-y: auto;
+          background: var(--surface-card);
+          border: var(--rule-thin);
+          padding: 0.875rem;
+          font-size: 0.8125rem;
+        }
+
+        .sheet-header {
+          border-bottom: 1px solid var(--crimson-dim);
+          padding-bottom: 0.625rem;
+        }
+        .sheet-name {
+          font-family: var(--font-heading);
+          font-size: 1rem;
+          font-weight: 600;
+          color: var(--ivory);
+          margin: 0 0 0.2rem;
+        }
+        .sheet-meta {
+          font-family: var(--font-body);
+          font-size: 0.775rem;
+          color: var(--ivory-muted);
+          margin: 0;
+        }
+
+        .section-label {
+          font-family: var(--font-heading);
+          font-size: 0.575rem;
+          font-weight: 600;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: var(--gold);
+          margin: 0 0 0.375rem;
+        }
+
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 0.25rem;
+        }
+        .stat-box {
+          background: var(--void-raised);
+          border: var(--rule-thin);
+          padding: 0.375rem 0.25rem;
+          text-align: center;
+        }
+        .stat-abbr {
+          font-family: var(--font-heading);
+          font-size: 0.525rem;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ivory-muted);
+          display: block;
+        }
+        .stat-score {
+          font-family: var(--font-heading);
+          font-size: 0.925rem;
+          font-weight: 700;
+          color: var(--ivory);
+          display: block;
+        }
+        .stat-mod {
+          font-family: var(--font-heading);
+          font-size: 0.625rem;
+          color: var(--gold);
+          display: block;
+        }
+
+        .combat-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0.375rem;
+        }
+        .combat-box {
+          background: var(--void-raised);
+          border: var(--rule-thin);
+          padding: 0.5rem;
+          text-align: center;
+        }
+        .combat-label {
+          font-family: var(--font-heading);
+          font-size: 0.525rem;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--ivory-muted);
+          display: block;
+        }
+        .combat-value {
+          font-family: var(--font-heading);
+          font-size: 1rem;
+          font-weight: 700;
+        }
+        .combat-value.ac { color: var(--gold); }
+        .combat-value.hp { color: #4a9a5a; }
+        .combat-value.prof { color: var(--crimson-bright); }
+        .combat-value.dice { color: var(--ivory); font-size: 0.75rem; }
+
+        .prof-text {
+          font-family: var(--font-body);
+          font-size: 0.775rem;
+          color: var(--ivory-muted);
+          margin: 0;
+        }
+
+        .spell-info {
+          font-family: var(--font-body);
+          font-size: 0.775rem;
+          color: var(--ivory-muted);
+          display: flex;
+          gap: 0.75rem;
+          margin-bottom: 0.375rem;
+        }
+
+        .spell-slots {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.375rem;
+        }
+        .spell-slot {
+          background: rgba(184, 136, 42, 0.1);
+          border: 1px solid var(--gold-dim);
+          font-family: var(--font-heading);
+          font-size: 0.625rem;
+          font-weight: 600;
+          color: var(--gold);
+          padding: 0.2rem 0.5rem;
+        }
+
+        .features-list {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+        }
+        .feature-item {
+          font-family: var(--font-body);
+          font-size: 0.775rem;
+          color: var(--ivory-muted);
+          padding: 0.2rem 0;
+          border-bottom: 1px solid var(--void-border);
+        }
+        .feature-item:last-child { border-bottom: none; }
+        .feature-item::before { content: '◆ '; color: var(--crimson-dim); font-size: 0.6rem; }
+      `}</style>
+
+      <div className="sheet-header">
+        <h3 className="sheet-name">{name}</h3>
+        <p className="sheet-meta">
+          {race} {characterClass}{subclass ? ` (${subclass})` : ''} · Level {level}
         </p>
-        <p className="text-xs text-brown/50">
-          {background} · {alignment}
-        </p>
+        <p className="sheet-meta">{background} · {alignment}</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-6 gap-1 text-center">
-        {statLabels.map((label, i) => {
-          const score = (abilityScores[statKeys[i]] as number) ?? 10;
-          return (
-            <div key={label} className="rounded bg-brown/10 p-1">
-              <div className="text-[10px] font-medium text-brown/60">{label}</div>
-              <div className="font-medieval text-base text-brown">{score}</div>
-              <div className="text-[10px] text-teal">{abilityModifier(score)}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Combat */}
-      <div className="grid grid-cols-4 gap-2 text-center">
-        <div className="rounded bg-teal/10 p-1.5">
-          <div className="text-[10px] text-brown/60">AC</div>
-          <div className="font-medieval text-lg text-teal">{ac}</div>
+      <div>
+        <div className="section-label">Ability Scores</div>
+        <div className="stats-grid">
+          {statLabels.map((label, i) => {
+            const score = (abilityScores[statKeys[i]] as number) ?? 10;
+            return (
+              <div key={label} className="stat-box">
+                <span className="stat-abbr">{label}</span>
+                <span className="stat-score">{score}</span>
+                <span className="stat-mod">{abilityModifier(score)}</span>
+              </div>
+            );
+          })}
         </div>
-        <div className="rounded bg-green-600/10 p-1.5">
-          <div className="text-[10px] text-brown/60">HP</div>
-          <div className="font-medieval text-lg text-green-700">
-            {hp}/{maxHp}
+      </div>
+
+      <div>
+        <div className="section-label">Combat</div>
+        <div className="combat-grid">
+          <div className="combat-box">
+            <span className="combat-label">AC</span>
+            <span className="combat-value ac">{ac}</span>
+          </div>
+          <div className="combat-box">
+            <span className="combat-label">HP</span>
+            <span className="combat-value hp">{hp}/{maxHp}</span>
+          </div>
+          <div className="combat-box">
+            <span className="combat-label">Hit Dice</span>
+            <span className="combat-value dice">{hitDice}</span>
+          </div>
+          <div className="combat-box">
+            <span className="combat-label">Prof.</span>
+            <span className="combat-value prof">+{proficiencyBonus}</span>
           </div>
         </div>
-        <div className="rounded bg-brown/10 p-1.5">
-          <div className="text-[10px] text-brown/60">Hit Dice</div>
-          <div className="text-xs text-brown">{hitDice}</div>
-        </div>
-        <div className="rounded bg-gold/10 p-1.5">
-          <div className="text-[10px] text-brown/60">Prof.</div>
-          <div className="font-medieval text-lg text-gold">+{proficiencyBonus}</div>
-        </div>
       </div>
 
-      {/* Saving Throws */}
       {savingThrowProf.length > 0 && (
         <div>
-          <h4 className="mb-1 text-xs font-medium text-brown/80">Saving Throw Proficiencies</h4>
-          <p className="text-xs text-brown/70">{savingThrowProf.join(', ')}</p>
+          <div className="section-label">Saving Throw Proficiencies</div>
+          <p className="prof-text">{savingThrowProf.join(', ')}</p>
         </div>
       )}
 
-      {/* Skills */}
       {skillProf.length > 0 && (
         <div>
-          <h4 className="mb-1 text-xs font-medium text-brown/80">Skill Proficiencies</h4>
-          <p className="text-xs text-brown/70">{skillProf.join(', ')}</p>
+          <div className="section-label">Skill Proficiencies</div>
+          <p className="prof-text">{skillProf.join(', ')}</p>
         </div>
       )}
 
-      {/* Spellcasting */}
       {spellSaveDC !== null && (
         <div>
-          <h4 className="mb-1 text-xs font-medium text-brown/80">Spellcasting</h4>
-          <div className="flex gap-3 text-xs text-brown/70">
+          <div className="section-label">Spellcasting</div>
+          <div className="spell-info">
             <span>Save DC: {spellSaveDC}</span>
             {spellAttackMod !== null && <span>Attack: +{spellAttackMod}</span>}
           </div>
           {Object.keys(spellSlots).length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-2">
+            <div className="spell-slots">
               {Object.entries(spellSlots).map(([lvl, count]) => (
-                <span key={lvl} className="rounded bg-gold/20 px-2 py-0.5 text-xs text-brown">
-                  Lv{lvl}: {count}
-                </span>
+                <span key={lvl} className="spell-slot">Lv{lvl}: {count}</span>
               ))}
             </div>
           )}
         </div>
       )}
 
-      {/* Features */}
       {features.length > 0 && (
         <div>
-          <h4 className="mb-1 text-xs font-medium text-brown/80">Features & Traits</h4>
-          <ul className="list-inside list-disc space-y-0.5 text-xs text-brown/70">
+          <div className="section-label">Features &amp; Traits</div>
+          <ul className="features-list">
             {features.map((f) => (
-              <li key={f}>{f}</li>
+              <li key={f} className="feature-item">{f}</li>
             ))}
           </ul>
         </div>
