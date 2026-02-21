@@ -5,21 +5,26 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        default: 'bg-brown text-cream shadow hover:bg-brown-dark',
-        destructive: 'bg-rust text-cream shadow-sm hover:bg-rust/90',
-        outline: 'border border-gold bg-transparent shadow-sm hover:bg-cream-dark text-brown',
-        secondary: 'bg-cream-dark text-brown shadow-sm hover:bg-cream-dark/80',
-        ghost: 'hover:bg-cream-dark text-brown',
-        link: 'text-teal underline-offset-4 hover:underline',
+        default:
+          'bg-[var(--crimson)] text-[var(--ivory)] border border-[var(--crimson-bright)] hover:bg-[var(--crimson-bright)] shadow-[0_0_0_transparent] hover:shadow-[0_0_16px_var(--crimson-glow)]',
+        destructive:
+          'bg-[var(--crimson-bright)] text-[var(--ivory)] border border-[var(--crimson-bright)] hover:bg-[var(--crimson)]',
+        outline:
+          'bg-transparent text-[var(--ivory)] border border-[var(--crimson-dim)] hover:bg-[var(--void-raised)] hover:border-[var(--crimson)]',
+        secondary:
+          'bg-[var(--void-raised)] text-[var(--ivory)] border border-[var(--crimson-dim)] hover:border-[var(--crimson)]',
+        ghost:
+          'bg-transparent text-[var(--ivory-muted)] hover:bg-[var(--void-surface)] hover:text-[var(--ivory)]',
+        link: 'text-[var(--gold)] underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-9 px-4 py-2',
-        sm: 'h-8 rounded-md px-3 text-xs',
-        lg: 'h-10 rounded-md px-8',
+        sm: 'h-8 px-3 text-xs',
+        lg: 'h-10 px-8',
         icon: 'h-9 w-9',
       },
     },
