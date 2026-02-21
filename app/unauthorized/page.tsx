@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -129,9 +130,9 @@ export default function UnauthorizedPage() {
         <button onClick={handleSignOut} className="btn-action" type="button">
           Sign Out
         </button>
-        <a href="/" className="return-link">
+        <Link href="/" className="return-link">
           Back to Home
-        </a>
+        </Link>
       </div>
     </main>
   );

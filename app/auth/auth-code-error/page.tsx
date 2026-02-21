@@ -1,3 +1,7 @@
+'use client';
+
+import Link from 'next/link';
+
 export default function AuthCodeErrorPage() {
   return (
     <main className="error-root">
@@ -97,9 +101,9 @@ export default function AuthCodeErrorPage() {
 
         <h1 className="error-title">Authentication Failed</h1>
         <p className="error-body">Something went wrong during sign in. Please try again.</p>
-        <a href="/" className="btn-return">
+        <Link href="/" className="btn-return">
           Back to Sign In
-        </a>
+        </Link>
       </div>
     </main>
   );
