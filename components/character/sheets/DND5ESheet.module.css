@@ -110,10 +110,19 @@
   font-size: 1rem;
   font-weight: 700;
 }
-.combatValue.ac { color: var(--gold); }
-.combatValue.hp { color: #4a9a5a; }
-.combatValue.prof { color: var(--crimson-bright); }
-.combatValue.dice { color: var(--ivory); font-size: 0.75rem; }
+.combatValue.ac {
+  color: var(--gold);
+}
+.combatValue.hp {
+  color: #4a9a5a;
+}
+.combatValue.prof {
+  color: var(--crimson-bright);
+}
+.combatValue.dice {
+  color: var(--ivory);
+  font-size: 0.75rem;
+}
 
 .profText {
   font-family: var(--font-body);
@@ -158,5 +167,11 @@
   padding: 0.2rem 0;
   border-bottom: 1px solid var(--void-border);
 }
-.featureItem:last-child { border-bottom: none; }
-.featureItem::before { content: '◆ '; color: var(--crimson-dim); font-size: 0.6rem; }
+.featureItem:last-child {
+  border-bottom: none;
+}
+.featureItem::before {
+  content: '◆ ';
+  color: var(--crimson-dim);
+  font-size: 0.6rem;
+}

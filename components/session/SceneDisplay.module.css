@@ -19,10 +19,30 @@
   height: 14px;
   z-index: 2;
 }
-.tl { top: 6px; left: 6px; border-top: 1px solid var(--gold); border-left: 1px solid var(--gold); }
-.tr { top: 6px; right: 6px; border-top: 1px solid var(--gold); border-right: 1px solid var(--gold); }
-.bl { bottom: 6px; left: 6px; border-bottom: 1px solid var(--gold); border-left: 1px solid var(--gold); }
-.br { bottom: 6px; right: 6px; border-bottom: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+.tl {
+  top: 6px;
+  left: 6px;
+  border-top: 1px solid var(--gold);
+  border-left: 1px solid var(--gold);
+}
+.tr {
+  top: 6px;
+  right: 6px;
+  border-top: 1px solid var(--gold);
+  border-right: 1px solid var(--gold);
+}
+.bl {
+  bottom: 6px;
+  left: 6px;
+  border-bottom: 1px solid var(--gold);
+  border-left: 1px solid var(--gold);
+}
+.br {
+  bottom: 6px;
+  right: 6px;
+  border-bottom: 1px solid var(--gold);
+  border-right: 1px solid var(--gold);
+}
 
 /* Empty state */
 .sceneEmpty {
@@ -39,9 +59,18 @@
 .sceneEmpty::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--crimson), var(--gold-dim), var(--crimson), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--crimson),
+    var(--gold-dim),
+    var(--crimson),
+    transparent
+  );
 }
 .emptyIcon {
   color: var(--crimson-dim);
@@ -81,7 +110,14 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--crimson), var(--gold-dim), var(--crimson), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--crimson),
+    var(--gold-dim),
+    var(--crimson),
+    transparent
+  );
   z-index: 2;
 }
 
@@ -105,7 +141,7 @@
   position: absolute;
   left: 0.5rem;
   top: 0.5rem;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   border: var(--rule-thin);
   font-family: var(--font-heading);
   font-size: 0.575rem;
@@ -131,11 +167,13 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   border: var(--rule-thin);
   color: var(--ivory-muted);
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 .ctrlBtn:hover {
   color: var(--gold);
@@ -170,7 +208,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0,0,0,0.88);
+  background: rgba(0, 0, 0, 0.88);
   padding: 1rem;
 }
 .lightboxInner {

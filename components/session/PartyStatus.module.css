@@ -39,7 +39,9 @@
   font-family: var(--font-body);
   font-size: 0.775rem;
 }
-.memberRow:last-child { border-bottom: none; }
+.memberRow:last-child {
+  border-bottom: none;
+}
 .statusDot {
   width: 7px;
   height: 7px;

@@ -109,9 +109,15 @@
   font-size: 1.125rem;
   font-weight: 700;
 }
-.combatValue.thac0 { color: var(--crimson-bright); }
-.combatValue.ac { color: var(--gold); }
-.combatValue.hp { color: #4a9a5a; }
+.combatValue.thac0 {
+  color: var(--crimson-bright);
+}
+.combatValue.ac {
+  color: var(--gold);
+}
+.combatValue.hp {
+  color: #4a9a5a;
+}
 
 /* Saves */
 .saveRow {
@@ -122,9 +128,16 @@
   padding: 0.25rem 0;
   border-bottom: 1px solid var(--void-border);
 }
-.saveRow:last-child { border-bottom: none; }
-.saveName { color: var(--ivory-muted); }
-.saveVal { color: var(--ivory); font-weight: 600; }
+.saveRow:last-child {
+  border-bottom: none;
+}
+.saveName {
+  color: var(--ivory-muted);
+}
+.saveVal {
+  color: var(--ivory);
+  font-weight: 600;
+}
 
 /* Prof text */
 .profText {

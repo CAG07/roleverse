@@ -22,7 +22,7 @@ const eslintConfig = defineConfig([
         {
           selector: "JSXOpeningElement[name.name='style'] > JSXAttribute[name.name='jsx']",
           message:
-            "Do not use <style jsx>. Use a CSS Module (.module.css) instead to prevent Flash of Unstyled Content (FOUC).",
+            'Do not use <style jsx>. Use a CSS Module (.module.css) instead to prevent Flash of Unstyled Content (FOUC).',
         },
       ],
     },
