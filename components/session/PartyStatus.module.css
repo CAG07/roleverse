@@ -1,0 +1,71 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ *
+ * This is a 'use client' component rendered inside a server layout.
+ * styled-jsx styles in client components are injected at runtime after JS hydration,
+ * causing a Flash of Unstyled Content (FOUC) — components briefly appear
+ * unstyled before styles are applied.
+ *
+ * CSS Modules are statically extracted at build time and injected as a <link> tag
+ * in the <head>, guaranteeing styles are present before the first paint.
+ *
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+.partyStatus {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.sectionLabel {
+  font-family: var(--font-heading);
+  font-size: 0.575rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.memberList {
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  padding: 0.5rem;
+}
+.memberRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--void-border);
+  font-family: var(--font-body);
+  font-size: 0.775rem;
+}
+.memberRow:last-child { border-bottom: none; }
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.memberName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ivory);
+  font-weight: 500;
+}
+.memberClass {
+  color: var(--ivory-muted);
+  font-size: 0.725rem;
+}
+.memberHp {
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  color: var(--ivory-dim);
+  white-space: nowrap;
+}
+.empty {
+  font-family: var(--font-body);
+  font-size: 0.775rem;
+  color: var(--ivory-dim);
+}

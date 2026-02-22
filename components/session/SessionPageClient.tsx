@@ -8,6 +8,7 @@ import CharacterSheet from '@/components/character/CharacterSheet';
 import PartyStatus from '@/components/session/PartyStatus';
 import SessionNotes from '@/components/session/SessionNotes';
 import type { SceneMedia, PartyMember, Character } from '@/lib/types/session';
+import styles from './SessionPageClient.module.css';
 
 // ── Component ──────────────────────────────────────────────────────────
 
@@ -64,225 +65,23 @@ export default function SessionPageClient({
     : null;
 
   return (
-    <div className="session-root">
-      <style jsx>{`
-        .session-root {
-          display: flex;
-          height: 100vh;
-          flex-direction: column;
-          background: var(--void);
-          overflow: hidden;
-        }
-
-        /* Mobile tab bar */
-        .mobile-tabs {
-          display: flex;
-          border-bottom: var(--rule-thin);
-        }
-        @media (min-width: 768px) {
-          .mobile-tabs { display: none; }
-        }
-
-        .tab-btn {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.375rem;
-          padding: 0.5rem;
-          background: var(--void-mid);
-          border: none;
-          font-family: var(--font-heading);
-          font-size: 0.625rem;
-          font-weight: 600;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--ivory-dim);
-          cursor: pointer;
-          transition: all 0.15s;
-        }
-        .tab-btn.active {
-          background: var(--void-surface);
-          color: var(--gold);
-          border-bottom: 2px solid var(--crimson);
-        }
-
-        /* Three-column layout */
-        .session-columns {
-          display: flex;
-          flex: 1;
-          overflow: hidden;
-        }
-
-        /* Left sidebar */
-        .col-sidebar {
-          width: 240px;
-          flex-shrink: 0;
-          display: none;
-        }
-        .col-sidebar.mobile-active { display: flex; }
-        @media (min-width: 768px) {
-          .col-sidebar { display: flex !important; }
-        }
-
-        /* Center column */
-        .col-center {
-          flex: 1;
-          display: none;
-          flex-direction: column;
-          overflow: hidden;
-          min-width: 0;
-        }
-        .col-center.mobile-active { display: flex; }
-        @media (min-width: 768px) {
-          .col-center { display: flex !important; }
-        }
-
-        /* Scene panel */
-        .scene-panel {
-          height: 42%;
-          flex-shrink: 0;
-          padding: 0.5rem 0.5rem 0;
-          position: relative;
-        }
-
-        /* Chat panel */
-        .chat-panel {
-          flex: 1;
-          min-height: 0;
-          display: flex;
-          flex-direction: column;
-          padding: 0.5rem;
-          overflow: hidden;
-        }
-
-        /* Right panel */
-        .col-right {
-          width: 320px;
-          flex-shrink: 0;
-          display: none;
-          flex-direction: column;
-          overflow-y: auto;
-          background: var(--void-mid);
-          border-left: var(--rule-thin);
-          padding: 0.75rem;
-          gap: 0.75rem;
-        }
-        .col-right.mobile-active { display: flex; }
-        @media (min-width: 768px) {
-          .col-right { display: flex !important; }
-        }
-
-        /* Section label */
-        .section-label {
-          font-family: var(--font-heading);
-          font-size: 0.575rem;
-          font-weight: 600;
-          letter-spacing: 0.15em;
-          text-transform: uppercase;
-          color: var(--gold);
-          margin-bottom: 0.375rem;
-        }
-
-        /* Party avatar buttons */
-        .party-avatars {
-          display: flex;
-          gap: 0.5rem;
-          flex-wrap: wrap;
-        }
-        .avatar-btn {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.25rem;
-          padding: 0.375rem;
-          background: none;
-          border: 1px solid var(--void-border);
-          cursor: pointer;
-          transition: all 0.15s;
-          position: relative;
-        }
-        .avatar-btn:hover {
-          border-color: var(--crimson-dim);
-          background: var(--void-surface);
-        }
-        .avatar-btn.selected {
-          border-color: var(--gold);
-          background: rgba(184, 136, 42, 0.08);
-        }
-        .avatar-circle {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-family: var(--font-heading);
-          font-size: 0.65rem;
-          font-weight: 700;
-          color: var(--ivory);
-          background: var(--crimson-dim);
-          border: 1px solid var(--crimson);
-        }
-        .avatar-name {
-          font-family: var(--font-body);
-          font-size: 0.625rem;
-          color: var(--ivory-muted);
-          max-width: 52px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .hp-dot {
-          position: absolute;
-          top: 2px;
-          right: 2px;
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          border: 1px solid var(--void-mid);
-        }
-
-        /* No character selected */
-        .no-character {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 1.5rem;
-          background: var(--surface-card);
-          border: var(--rule-thin);
-          text-align: center;
-        }
-        .no-character-text {
-          font-family: var(--font-body);
-          font-size: 0.775rem;
-          color: var(--ivory-dim);
-        }
-
-        /* Divider */
-        .panel-divider {
-          height: 1px;
-          background: linear-gradient(90deg, transparent, var(--crimson-dim), transparent);
-        }
-      `}</style>
-
+    <div className={styles.sessionRoot}>
       {/* Mobile tab bar */}
-      <div className="mobile-tabs">
+      <div className={styles.mobileTabs}>
         <button
-          className={`tab-btn${mobileTab === 'sidebar' ? ' active' : ''}`}
+          className={`${styles.tabBtn}${mobileTab === 'sidebar' ? ` ${styles.active}` : ''}`}
           onClick={() => setMobileTab('sidebar')}
         >
           ≡ Session
         </button>
         <button
-          className={`tab-btn${mobileTab === 'chat' ? ' active' : ''}`}
+          className={`${styles.tabBtn}${mobileTab === 'chat' ? ` ${styles.active}` : ''}`}
           onClick={() => setMobileTab('chat')}
         >
           ✦ Chat
         </button>
         <button
-          className={`tab-btn${mobileTab === 'character' ? ' active' : ''}`}
+          className={`${styles.tabBtn}${mobileTab === 'character' ? ` ${styles.active}` : ''}`}
           onClick={() => setMobileTab('character')}
         >
           ◆ Character
@@ -290,9 +89,9 @@ export default function SessionPageClient({
       </div>
 
       {/* Three-column layout */}
-      <div className="session-columns">
+      <div className={styles.sessionColumns}>
         {/* Left sidebar */}
-        <div className={`col-sidebar${mobileTab === 'sidebar' ? ' mobile-active' : ''}`}>
+        <div className={`${styles.colSidebar}${mobileTab === 'sidebar' ? ` ${styles.mobileActive}` : ''}`}>
           <SessionSidebar
             campaignName={campaignName}
             gameSystem={gameSystem}
@@ -303,11 +102,11 @@ export default function SessionPageClient({
         </div>
 
         {/* Center column */}
-        <div className={`col-center${mobileTab === 'chat' ? ' mobile-active' : ''}`}>
-          <div className="scene-panel">
+        <div className={`${styles.colCenter}${mobileTab === 'chat' ? ` ${styles.mobileActive}` : ''}`}>
+          <div className={styles.scenePanel}>
             <SceneDisplay media={sceneMedia} onClose={() => setSceneMedia(null)} />
           </div>
-          <div className="chat-panel">
+          <div className={styles.chatPanel}>
             <ChatWindow
               onSceneMediaUpdate={setSceneMedia}
               campaignId={campaignId}
@@ -317,14 +116,14 @@ export default function SessionPageClient({
         </div>
 
         {/* Right panel */}
-        <div className={`col-right${mobileTab === 'character' ? ' mobile-active' : ''}`}>
+        <div className={`${styles.colRight}${mobileTab === 'character' ? ` ${styles.mobileActive}` : ''}`}>
           {/* Party avatar selector */}
           <div>
-            <div className="section-label">Party</div>
+            <div className={styles.sectionLabel}>Party</div>
             {characters.length === 0 ? (
-              <p className="no-character-text">No characters in this campaign yet.</p>
+              <p className={styles.noCharacterText}>No characters in this campaign yet.</p>
             ) : (
-              <div className="party-avatars">
+              <div className={styles.partyAvatars}>
                 {partyStatus.map((member) => {
                   const initials = member.characterName
                     .split(' ')
@@ -337,14 +136,14 @@ export default function SessionPageClient({
                   return (
                     <button
                       key={member.id}
-                      className={`avatar-btn${isSelected ? ' selected' : ''}`}
+                      className={`${styles.avatarBtn}${isSelected ? ` ${styles.selected}` : ''}`}
                       onClick={() => setSelectedCharacterId(isSelected ? null : member.id)}
                       title={member.characterName}
                       type="button"
                     >
-                      <div className="avatar-circle">{initials}</div>
-                      <span className="avatar-name">{member.characterName.split(' ')[0]}</span>
-                      <span className="hp-dot" style={{ backgroundColor: dotColor }} />
+                      <div className={styles.avatarCircle}>{initials}</div>
+                      <span className={styles.avatarName}>{member.characterName.split(' ')[0]}</span>
+                      <span className={styles.hpDot} style={{ backgroundColor: dotColor }} />
                     </button>
                   );
                 })}
@@ -356,8 +155,8 @@ export default function SessionPageClient({
           {selectedCharacterData ? (
             <CharacterSheet gameSystem={gameSystem} characterData={selectedCharacterData} />
           ) : (
-            <div className="no-character">
-              <p className="no-character-text">
+            <div className={styles.noCharacter}>
+              <p className={styles.noCharacterText}>
                 {characters.length === 0
                   ? 'No characters in this campaign yet.'
                   : 'Select a character above to view their sheet'}
@@ -365,13 +164,13 @@ export default function SessionPageClient({
             </div>
           )}
 
-          <div className="panel-divider" />
+          <div className={styles.panelDivider} />
           {partyStatus.length > 0 ? (
             <PartyStatus members={partyStatus} />
           ) : (
-            <p className="no-character-text">No party members besides the DM yet.</p>
+            <p className={styles.noCharacterText}>No party members besides the DM yet.</p>
           )}
-          <div className="panel-divider" />
+          <div className={styles.panelDivider} />
           <SessionNotes campaignId={campaignId} />
         </div>
       </div>
