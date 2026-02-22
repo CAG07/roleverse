@@ -1,5 +1,6 @@
 'use client';
 
+import styles from './GoogleSignInButton.module.css';
 import { createClient } from '@/lib/supabase/client';
 
 export function GoogleSignInButton() {
@@ -14,36 +15,7 @@ export function GoogleSignInButton() {
   };
 
   return (
-    <>
-      <style jsx>{`
-        .btn-google {
-          display: flex;
-          width: 100%;
-          align-items: center;
-          justify-content: center;
-          gap: 0.75rem;
-          padding: 0.75rem 1.5rem;
-          background: var(--void-raised);
-          border: var(--rule-thin);
-          font-family: var(--font-heading);
-          font-size: 0.875rem;
-          font-weight: 600;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--ivory);
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .btn-google:hover {
-          background: var(--crimson);
-          border-color: var(--crimson-bright);
-          box-shadow: 0 0 20px var(--crimson-glow);
-        }
-        .btn-google:active {
-          transform: translateY(1px);
-        }
-      `}</style>
-      <button onClick={handleSignIn} className="btn-google" type="button">
+      <button onClick={handleSignIn} className={styles.btnGoogle} type="button">
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -64,6 +36,5 @@ export function GoogleSignInButton() {
         </svg>
         Sign in with Google
       </button>
-    </>
   );
 }
