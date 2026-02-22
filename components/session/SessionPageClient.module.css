@@ -47,7 +47,9 @@
   text-transform: uppercase;
   color: var(--ivory-dim);
   cursor: pointer;
-  transition: all 0.15s;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
 }
 .tabBtn.active {
   background: var(--void-surface);
@@ -159,7 +161,9 @@
   background: none;
   border: 1px solid var(--void-border);
   cursor: pointer;
-  transition: all 0.15s;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
   position: relative;
 }
 .avatarBtn:hover {

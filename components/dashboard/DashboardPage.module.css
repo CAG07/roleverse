@@ -79,7 +79,9 @@
   text-transform: uppercase;
   color: var(--ivory);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .btnNew:hover {
   background: var(--crimson-bright);
@@ -122,7 +124,10 @@
   border: var(--rule-thin);
   padding: 1.25rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .campaignCard::before {
   content: '';

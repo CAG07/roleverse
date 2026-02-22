@@ -115,7 +115,10 @@
   border: var(--rule-thin);
   padding: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 .systemOption:hover {
   border-color: var(--crimson-dim);
@@ -206,7 +209,9 @@
   text-transform: uppercase;
   color: var(--ivory);
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s;
 }
 .btnSubmit:hover:not(:disabled) {
   background: var(--crimson-bright);

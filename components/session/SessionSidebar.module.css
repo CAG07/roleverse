@@ -151,7 +151,9 @@
   text-transform: uppercase;
   color: var(--ivory-muted);
   cursor: pointer;
-  transition: all 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 .btnNotes:hover {
   color: var(--gold);
@@ -172,7 +174,9 @@
   text-transform: uppercase;
   color: var(--ivory-muted);
   text-decoration: none;
-  transition: all 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 .settingsLink:hover {
   color: var(--crimson-bright);

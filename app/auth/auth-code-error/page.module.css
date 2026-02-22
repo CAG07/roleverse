@@ -112,7 +112,9 @@
   text-transform: uppercase;
   color: var(--ivory);
   text-decoration: none;
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s;
 }
 .btnReturn:hover {
   background: var(--crimson-bright);

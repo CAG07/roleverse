@@ -111,7 +111,10 @@
   text-transform: uppercase;
   color: var(--ivory);
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
   margin-bottom: 0.75rem;
   text-align: center;
 }

@@ -65,7 +65,9 @@
   text-transform: uppercase;
   color: var(--ivory);
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s;
   text-decoration: none;
 }
 .btnNewCampaign:hover {
@@ -102,7 +104,9 @@
   letter-spacing: 0.08em;
   color: var(--ivory-muted);
   text-decoration: none;
-  transition: all 0.15s;
+  transition:
+    color 0.15s,
+    background-color 0.15s;
   cursor: pointer;
   border: none;
   background: transparent;
