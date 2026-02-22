@@ -1,0 +1,66 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ *
+ * This is a 'use client' component rendered inside a server layout.
+ * styled-jsx styles in client components are injected at runtime after JS hydration,
+ * causing a Flash of Unstyled Content (FOUC) — components briefly appear
+ * unstyled before styles are applied.
+ *
+ * CSS Modules are statically extracted at build time and injected as a <link> tag
+ * in the <head>, guaranteeing styles are present before the first paint.
+ *
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+.sheetRoot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  padding: 0.875rem;
+  font-size: 0.8125rem;
+}
+
+.sheetHeader {
+  border-bottom: 1px solid var(--crimson-dim);
+  padding-bottom: 0.625rem;
+}
+.sheetName {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ivory);
+  margin: 0 0 0.2rem;
+}
+.sheetSystem {
+  font-family: var(--font-body);
+  font-size: 0.725rem;
+  color: var(--ivory-dim);
+  margin: 0;
+}
+
+.entryRow {
+  display: flex;
+  gap: 0.5rem;
+  font-family: var(--font-body);
+  font-size: 0.775rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid var(--void-border);
+}
+.entryRow:last-child { border-bottom: none; }
+.entryKey {
+  min-width: 5rem;
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+}
+.entryVal {
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--ivory);
+}

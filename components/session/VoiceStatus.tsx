@@ -1,5 +1,7 @@
 'use client';
 
+import styles from './VoiceStatus.module.css';
+
 type VoiceState = 'inactive' | 'discord';
 
 interface VoiceStatusProps {
@@ -16,49 +18,15 @@ export default function VoiceStatus({ status = 'inactive', users = [] }: VoiceSt
   const config = statusConfig[status];
 
   return (
-    <div className="voice-status">
-      <style jsx>{`
-        .voice-status {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-          background: var(--void-raised);
-          border: var(--rule-thin);
-          padding: 0.375rem 0.625rem;
-        }
-        .status-row {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-family: var(--font-heading);
-          font-size: 0.625rem;
-          font-weight: 600;
-          letter-spacing: 0.08em;
-          color: var(--ivory-muted);
-        }
-        .dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          flex-shrink: 0;
-        }
-        .user-list {
-          padding-left: 1rem;
-        }
-        .user-item {
-          font-family: var(--font-body);
-          font-size: 0.7rem;
-          color: var(--ivory-dim);
-        }
-      `}</style>
-      <div className="status-row">
-        <span className="dot" style={{ backgroundColor: config.color }} />
+    <div className={styles.voiceStatus}>
+      <div className={styles.statusRow}>
+        <span className={styles.dot} style={{ backgroundColor: config.color }} />
         {config.label}
       </div>
       {status !== 'inactive' && users.length > 0 && (
-        <div className="user-list">
+        <div className={styles.userList}>
           {users.map((user) => (
-            <div key={user} className="user-item">• {user}</div>
+            <div key={user} className={styles.userItem}>• {user}</div>
           ))}
         </div>
       )}
