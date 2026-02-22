@@ -1,5 +1,7 @@
 'use client';
 
+import styles from './FGConnectionStatus.module.css';
+
 type FGStatus = 'not_connected' | 'connected' | 'syncing';
 
 interface FGConnectionStatusProps {
@@ -18,33 +20,9 @@ export default function FGConnectionStatus({
   const config = statusConfig[status];
 
   return (
-    <div className="fg-status">
-      <style jsx>{`
-        .fg-status {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          background: var(--void-raised);
-          border: var(--rule-thin);
-          padding: 0.375rem 0.625rem;
-          font-family: var(--font-heading);
-          font-size: 0.625rem;
-          font-weight: 600;
-          letter-spacing: 0.08em;
-          color: var(--ivory-muted);
-        }
-        .dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          flex-shrink: 0;
-        }
-        .dot.pulse {
-          animation: pulse-glow 1.5s ease-in-out infinite;
-        }
-      `}</style>
+    <div className={styles.fgStatus}>
       <span
-        className={`dot${config.pulse ? ' pulse' : ''}`}
+        className={`${styles.dot}${config.pulse ? ` ${styles.pulse}` : ''}`}
         style={{ backgroundColor: config.color }}
       />
       {config.label}

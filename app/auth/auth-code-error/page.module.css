@@ -1,0 +1,122 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ *
+ * This is a 'use client' component rendered inside a server layout.
+ * styled-jsx styles in client components are injected at runtime after JS hydration,
+ * causing a Flash of Unstyled Content (FOUC) — components briefly appear
+ * unstyled before styles are applied.
+ *
+ * CSS Modules are statically extracted at build time and injected as a <link> tag
+ * in the <head>, guaranteeing styles are present before the first paint.
+ *
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+.errorRoot {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: var(--void);
+}
+
+.errorCard {
+  position: relative;
+  width: 100%;
+  max-width: 22rem;
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  padding: 2.5rem 2rem;
+  text-align: center;
+  animation: fadeRise 0.4s ease both;
+}
+
+.errorCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--crimson),
+    var(--gold-dim),
+    var(--crimson),
+    transparent
+  );
+}
+
+.corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+}
+.corner.tl {
+  top: 6px;
+  left: 6px;
+  border-top: 1px solid var(--gold);
+  border-left: 1px solid var(--gold);
+}
+.corner.tr {
+  top: 6px;
+  right: 6px;
+  border-top: 1px solid var(--gold);
+  border-right: 1px solid var(--gold);
+}
+.corner.bl {
+  bottom: 6px;
+  left: 6px;
+  border-bottom: 1px solid var(--gold);
+  border-left: 1px solid var(--gold);
+}
+.corner.br {
+  bottom: 6px;
+  right: 6px;
+  border-bottom: 1px solid var(--gold);
+  border-right: 1px solid var(--gold);
+}
+
+.errorTitle {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--crimson-bright);
+  margin: 0 0 1rem;
+}
+
+.errorBody {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--ivory-muted);
+  margin: 0 0 1.75rem;
+  line-height: 1.55;
+}
+
+.btnReturn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background: var(--crimson);
+  border: 1px solid var(--crimson-bright);
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  text-decoration: none;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s;
+}
+.btnReturn:hover {
+  background: var(--crimson-bright);
+  box-shadow: 0 0 16px var(--crimson-glow);
+}

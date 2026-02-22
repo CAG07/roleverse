@@ -1,0 +1,193 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ *
+ * This is a 'use client' component rendered inside a server layout.
+ * styled-jsx styles in client components are injected at runtime after JS hydration,
+ * causing a Flash of Unstyled Content (FOUC) — components briefly appear
+ * unstyled before styles are applied.
+ *
+ * CSS Modules are statically extracted at build time and injected as a <link> tag
+ * in the <head>, guaranteeing styles are present before the first paint.
+ *
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+/* ── CollapsibleSection ────────────────────────────────────────────── */
+
+.collapsible {
+  border-bottom: 1px solid var(--void-border);
+}
+.toggleBtn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: none;
+  border: none;
+  font-family: var(--font-heading);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.toggleBtn:hover {
+  color: var(--gold);
+}
+.toggleIcon {
+  font-size: 0.5rem;
+  color: var(--crimson-dim);
+}
+.sectionContent {
+  padding: 0 0.875rem 0.625rem;
+}
+
+/* ── SessionSidebar ────────────────────────────────────────────────── */
+
+.sessionSidebar {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex-direction: column;
+  background: var(--void-mid);
+  border-right: var(--rule-thin);
+  color: var(--ivory);
+}
+
+/* Campaign header */
+.sidebarHeader {
+  padding: 0.875rem;
+  border-bottom: var(--rule-thin);
+}
+.campaignName {
+  font-family: var(--font-heading);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--ivory);
+  margin: 0 0 0.375rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gameSystemBadge {
+  font-family: var(--font-heading);
+  font-size: 0.575rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--gold-tint);
+  border: 1px solid var(--gold-dim);
+  padding: 0.15rem 0.4rem;
+  display: inline-block;
+}
+
+/* Scrollable content */
+.sidebarContent {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Party member rows */
+.partyList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.partyMember {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: var(--font-body);
+  font-size: 0.775rem;
+  padding: 0.25rem 0;
+}
+.memberName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ivory-muted);
+}
+.roleBadge {
+  font-family: var(--font-heading);
+  font-size: 0.525rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid;
+}
+.roleBadge.dm {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+  background: var(--gold-tint);
+}
+.roleBadge.player {
+  color: var(--ivory-muted);
+  border-color: var(--void-border);
+  background: transparent;
+}
+.emptyText {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--ivory-dim);
+}
+
+/* Notes button */
+.btnNotes {
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  background: var(--void-surface);
+  border: var(--rule-thin);
+  font-family: var(--font-heading);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.btnNotes:hover {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+}
+
+/* Settings link */
+.settingsLink {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  background: var(--void-surface);
+  border: var(--rule-thin);
+  font-family: var(--font-heading);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+  text-decoration: none;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.settingsLink:hover {
+  color: var(--crimson-bright);
+  border-color: var(--crimson-dim);
+}
+
+/* Status area */
+.sidebarFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.625rem;
+  border-top: var(--rule-thin);
+}
