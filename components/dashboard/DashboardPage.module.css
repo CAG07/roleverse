@@ -150,25 +150,25 @@
   width: 8px;
   height: 8px;
 }
-.tl {
+.corner.tl {
   top: 4px;
   left: 4px;
   border-top: 1px solid var(--gold-dim);
   border-left: 1px solid var(--gold-dim);
 }
-.tr {
+.corner.tr {
   top: 4px;
   right: 4px;
   border-top: 1px solid var(--gold-dim);
   border-right: 1px solid var(--gold-dim);
 }
-.bl {
+.corner.bl {
   bottom: 4px;
   left: 4px;
   border-bottom: 1px solid var(--gold-dim);
   border-left: 1px solid var(--gold-dim);
 }
-.br {
+.corner.br {
   bottom: 4px;
   right: 4px;
   border-bottom: 1px solid var(--gold-dim);
@@ -194,7 +194,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--gold);
-  background: rgba(184, 136, 42, 0.1);
+  background: var(--gold-tint);
   border: 1px solid var(--gold-dim);
   padding: 0.2rem 0.5rem;
   display: inline-block;

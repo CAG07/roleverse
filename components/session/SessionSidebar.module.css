@@ -80,7 +80,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--gold);
-  background: rgba(184, 136, 42, 0.1);
+  background: var(--gold-tint);
   border: 1px solid var(--gold-dim);
   padding: 0.15rem 0.4rem;
   display: inline-block;
@@ -125,7 +125,7 @@
 .roleBadge.dm {
   color: var(--gold);
   border-color: var(--gold-dim);
-  background: rgba(184, 136, 42, 0.1);
+  background: var(--gold-tint);
 }
 .roleBadge.player {
   color: var(--ivory-muted);

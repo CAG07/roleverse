@@ -89,7 +89,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--gold);
-  background: rgba(184, 136, 42, 0.1);
+  background: var(--gold-tint);
   border: 1px solid var(--gold-dim);
   padding: 0.2rem 0.5rem;
   display: inline-block;

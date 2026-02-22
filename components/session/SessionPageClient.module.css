@@ -168,7 +168,7 @@
 }
 .avatarBtn.selected {
   border-color: var(--gold);
-  background: rgba(184, 136, 42, 0.08);
+  background: var(--gold-subtle);
 }
 .avatarCircle {
   width: 36px;

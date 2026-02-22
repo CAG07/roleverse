@@ -20,11 +20,16 @@
   --gold-light: #d4a843;
   --gold-dim: #7a5a1a;
   --gold-glow: rgba(184, 136, 42, 0.12);
+  --gold-tint: rgba(184, 136, 42, 0.1);
+  --gold-subtle: rgba(184, 136, 42, 0.08);
 
   /* Text */
   --ivory: #e4dfd0;
   --ivory-muted: #a09b8e;
   --ivory-dim: #6a6560;
+
+  /* Status */
+  --status-healthy: #4a9a5a;
 
   /* Cards */
   --surface-card: #14161d;
@@ -101,15 +106,28 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* ── Animation Utilities ─────────────────────────────────────────── */
 .animate-fade-rise {
   animation: fadeRise 0.4s ease both;
 }
-.delay-1 { animation-delay: 0.1s; }
-.delay-2 { animation-delay: 0.2s; }
-.delay-3 { animation-delay: 0.3s; }
-.delay-4 { animation-delay: 0.4s; }
+.delay-1 {
+  animation-delay: 0.1s;
+}
+.delay-2 {
+  animation-delay: 0.2s;
+}
+.delay-3 {
+  animation-delay: 0.3s;
+}
+.delay-4 {
+  animation-delay: 0.4s;
+}

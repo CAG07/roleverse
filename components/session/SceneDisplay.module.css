@@ -19,25 +19,25 @@
   height: 14px;
   z-index: 2;
 }
-.tl {
+.corner.tl {
   top: 6px;
   left: 6px;
   border-top: 1px solid var(--gold);
   border-left: 1px solid var(--gold);
 }
-.tr {
+.corner.tr {
   top: 6px;
   right: 6px;
   border-top: 1px solid var(--gold);
   border-right: 1px solid var(--gold);
 }
-.bl {
+.corner.bl {
   bottom: 6px;
   left: 6px;
   border-bottom: 1px solid var(--gold);
   border-left: 1px solid var(--gold);
 }
-.br {
+.corner.br {
   bottom: 6px;
   right: 6px;
   border-bottom: 1px solid var(--gold);
