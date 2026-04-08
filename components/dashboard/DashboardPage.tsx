@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getGameSystem } from '@/lib/game-systems/registry';
 import type { CampaignData } from '@/components/campaign/CampaignCard';
@@ -12,91 +11,192 @@ function formatSystemBadge(gameSystem: string): string {
   return gameSystem.replace(/[_-]/g, ' ');
 }
 
-interface DashboardPageProps {
-  campaigns: CampaignData[];
+export interface SessionSummary {
+  id: string;
+  campaign_id: string;
+  campaign_name: string | null;
+  started_at: string;
+  ended_at: string | null;
 }
 
-export function DashboardPage({ campaigns }: DashboardPageProps) {
-  const router = useRouter();
-  const [search, setSearch] = useState('');
+export interface CharacterSummary {
+  id: string;
+  name: string;
+  class: string | null;
+  level: number | null;
+  campaign_id: string;
+  campaign_name: string | null;
+}
 
-  const filtered = campaigns.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      (c.description ?? '').toLowerCase().includes(search.toLowerCase())
-  );
+interface DashboardStats {
+  campaigns: number;
+  sessions: number;
+  characters: number;
+}
+
+interface DashboardPageProps {
+  userName: string;
+  stats: DashboardStats;
+  recentCampaigns: CampaignData[];
+  recentSessions: SessionSummary[];
+  recentCharacters: CharacterSummary[];
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+export function DashboardPage({
+  userName,
+  stats,
+  recentCampaigns,
+  recentSessions,
+  recentCharacters,
+}: DashboardPageProps) {
+  const router = useRouter();
 
   return (
     <div className={styles.dashboardRoot}>
-      {/* Topbar */}
-      <div className={styles.topbar}>
+      {/* Header */}
+      <div className={styles.header}>
         <div>
-          <h1 className={styles.pageTitle}>Your Campaigns</h1>
-          <p className={styles.pageSubtitle}>Manage your tabletop RPG adventures</p>
+          <h1 className={styles.pageTitle}>Welcome back, {userName.split(' ')[0]}</h1>
+          <p className={styles.pageSubtitle}>Here&apos;s what&apos;s happening in your realm</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <input
-            className={styles.searchInput}
-            type="search"
-            placeholder="Search campaigns…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button className={styles.btnNew} onClick={() => router.push('/campaigns/new')}>
-            + New Campaign
+        <button className={styles.btnNew} onClick={() => router.push('/campaigns/new')}>
+          + New Campaign
+        </button>
+      </div>
+
+      {/* Stat tiles */}
+      <div className={styles.statGrid}>
+        <div className={styles.statTile}>
+          <span className={styles.statValue}>{stats.campaigns}</span>
+          <span className={styles.statLabel}>Campaigns</span>
+        </div>
+        <div className={styles.statTile}>
+          <span className={styles.statValue}>{stats.sessions}</span>
+          <span className={styles.statLabel}>Sessions</span>
+        </div>
+        <div className={styles.statTile}>
+          <span className={styles.statValue}>{stats.characters}</span>
+          <span className={styles.statLabel}>Characters</span>
+        </div>
+      </div>
+
+      {/* Recent Campaigns */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <div className={styles.sectionLabel}>
+            <span className={styles.sectionLabelText}>Recent Campaigns</span>
+            <span className={styles.sectionLabelLine} />
+          </div>
+          <button className={styles.sectionLink} onClick={() => router.push('/campaigns')}>
+            View all →
           </button>
         </div>
-      </div>
-
-      {/* Section label */}
-      <div className={styles.sectionLabel}>
-        <span className={styles.sectionLabelText}>Active Campaigns</span>
-        <span className={styles.sectionLabelLine} />
-      </div>
-
-      {/* Campaign grid or empty state */}
-      {filtered.length > 0 ? (
-        <div className={styles.campaignGrid}>
-          {filtered.map((campaign, i) => (
-            <div
-              key={campaign.id}
-              className={`${styles.campaignCard} animate-fade-rise${i === 0 ? ' delay-1' : i === 1 ? ' delay-2' : i === 2 ? ' delay-3' : ' delay-4'}`}
-              onClick={() => router.push(`/campaigns/${campaign.id}`)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => e.key === 'Enter' && router.push(`/campaigns/${campaign.id}`)}
-            >
-              <span className={`${styles.corner} ${styles.tl}`} />
-              <span className={`${styles.corner} ${styles.tr}`} />
-              <span className={`${styles.corner} ${styles.bl}`} />
-              <span className={`${styles.corner} ${styles.br}`} />
-              <div className={styles.cardHeader}>
-                <span className={styles.cardSystemBadge}>{formatSystemBadge(campaign.game_system)}</span>
+        {recentCampaigns.length > 0 ? (
+          <div className={styles.campaignGrid}>
+            {recentCampaigns.map((campaign) => (
+              <div
+                key={campaign.id}
+                className={styles.campaignCard}
+                onClick={() => router.push(`/campaigns/${campaign.id}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && router.push(`/campaigns/${campaign.id}`)}
+              >
+                <span className={`${styles.corner} ${styles.tl}`} />
+                <span className={`${styles.corner} ${styles.tr}`} />
+                <span className={`${styles.corner} ${styles.bl}`} />
+                <span className={`${styles.corner} ${styles.br}`} />
+                <div className={styles.cardHeader}>
+                  <span className={styles.cardSystemBadge}>{formatSystemBadge(campaign.game_system)}</span>
+                </div>
+                <h2 className={styles.cardName}>{campaign.name}</h2>
+                <p className={styles.cardDescription}>{campaign.description || 'No description yet.'}</p>
+                <span className={styles.cardDate}>{formatDate(campaign.created_at)}</span>
               </div>
-              <h2 className={styles.cardName}>{campaign.name}</h2>
-              <p className={styles.cardDescription}>{campaign.description || 'No description yet.'}</p>
-              <span className={styles.cardDate}>
-                {new Date(campaign.created_at).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
+        ) : (
+          <p className={styles.emptyHint}>No campaigns yet. <button className={styles.inlineLink} onClick={() => router.push('/campaigns/new')}>Create one →</button></p>
+        )}
+      </section>
+
+      {/* Recent Sessions */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <div className={styles.sectionLabel}>
+            <span className={styles.sectionLabelText}>Recent Sessions</span>
+            <span className={styles.sectionLabelLine} />
+          </div>
         </div>
-      ) : (
-        <div className={styles.emptyState}>
-          <p className={styles.emptyStateTitle}>No Campaigns Yet</p>
-          <p className={styles.emptyStateBody}>
-            Begin your first adventure by creating a new campaign. Choose your game system and
-            gather your party!
-          </p>
-          <button className={styles.btnNew} onClick={() => router.push('/campaigns/new')}>
-            + Create Your First Campaign
-          </button>
+        {recentSessions.length > 0 ? (
+          <div className={styles.listStack}>
+            {recentSessions.map((session) => (
+              <div
+                key={session.id}
+                className={styles.listRow}
+                onClick={() => router.push(`/campaigns/${session.campaign_id}/session`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) =>
+                  e.key === 'Enter' && router.push(`/campaigns/${session.campaign_id}/session`)
+                }
+              >
+                <div className={styles.listRowMain}>
+                  <span className={styles.listRowTitle}>{session.campaign_name ?? 'Unknown Campaign'}</span>
+                  <span className={styles.listRowMeta}>{formatDate(session.started_at)}</span>
+                </div>
+                <span className={styles.listRowBadge}>{session.ended_at ? 'Completed' : 'In Progress'}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className={styles.emptyHint}>No sessions recorded yet.</p>
+        )}
+      </section>
+
+      {/* Recent Characters */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <div className={styles.sectionLabel}>
+            <span className={styles.sectionLabelText}>Recent Characters</span>
+            <span className={styles.sectionLabelLine} />
+          </div>
         </div>
-      )}
+        {recentCharacters.length > 0 ? (
+          <div className={styles.listStack}>
+            {recentCharacters.map((char) => (
+              <div
+                key={char.id}
+                className={styles.listRow}
+                onClick={() => router.push(`/campaigns/${char.campaign_id}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && router.push(`/campaigns/${char.campaign_id}`)}
+              >
+                <div className={styles.listRowMain}>
+                  <span className={styles.listRowTitle}>{char.name}</span>
+                  <span className={styles.listRowMeta}>
+                    {[char.class, char.level != null ? `Lv ${char.level}` : null]
+                      .filter(Boolean)
+                      .join(' · ')}
+                    {char.campaign_name ? ` — ${char.campaign_name}` : ''}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className={styles.emptyHint}>No characters found yet.</p>
+        )}
+      </section>
     </div>
   );
 }
