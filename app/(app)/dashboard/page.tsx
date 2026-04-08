@@ -5,6 +5,8 @@ import {
   type CharacterSummary,
 } from '@/components/dashboard/DashboardPage';
 
+type CampaignReference = { name: string } | null;
+
 export default async function DashboardRoute() {
   const supabase = await createClient();
   const {
@@ -59,7 +61,7 @@ export default async function DashboardRoute() {
   const recentSessions: SessionSummary[] = (recentSessionsRaw ?? []).map((s) => ({
     id: s.id,
     campaign_id: s.campaign_id,
-    campaign_name: ((s.campaigns as unknown as { name: string } | null)?.name) ?? null,
+    campaign_name: ((s.campaigns as unknown as CampaignReference)?.name) ?? null,
     started_at: s.started_at,
     ended_at: s.ended_at,
   }));
@@ -70,7 +72,7 @@ export default async function DashboardRoute() {
     class: c.class,
     level: c.level,
     campaign_id: c.campaign_id,
-    campaign_name: ((c.campaigns as unknown as { name: string } | null)?.name) ?? null,
+    campaign_name: ((c.campaigns as unknown as CampaignReference)?.name) ?? null,
   }));
 
   return (
