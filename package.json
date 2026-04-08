@@ -36,7 +36,7 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.1",
     "@radix-ui/react-toast": "^1.2.2",
-    "@supabase/ssr": "^0.8.0",
+    "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.45.4",
     "axios": "^1.13.5",
     "class-variance-authority": "^0.7.0",
@@ -48,7 +48,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.4.1",
-    "tar": "7.5.9",
+    "tar": "7.5.11",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -65,7 +65,7 @@
     "postcss": "^8.4.47",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "supabase": "^2.76.9",
+    "supabase": "^2.87.2",
     "tailwindcss": "^4.1.18",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3",
