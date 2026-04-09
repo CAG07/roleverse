@@ -15,11 +15,23 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: campaign } = await supabase
-    .from('campaigns')
-    .select('*')
-    .eq('id', id)
-    .single();
+  const [
+    { data: campaign },
+    { data: characters },
+    { data: sessions, count: sessionCount },
+  ] = await Promise.all([
+    supabase.from('campaigns').select('*').eq('id', id).single(),
+    supabase
+      .from('characters')
+      .select('id, name, class, race, level, hp, max_hp')
+      .eq('campaign_id', id),
+    supabase
+      .from('sessions')
+      .select('id, started_at, ended_at', { count: 'exact' })
+      .eq('campaign_id', id)
+      .order('started_at', { ascending: false })
+      .limit(10),
+  ]);
 
   if (!campaign || campaign.owner_id !== user?.id) {
     notFound();
@@ -40,6 +52,9 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       description={campaign.description as string | null}
       systemName={systemName}
       systemDescription={systemDescription}
+      characters={characters ?? []}
+      sessions={sessions ?? []}
+      sessionCount={sessionCount ?? 0}
     />
   );
 }

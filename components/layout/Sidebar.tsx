@@ -15,7 +15,6 @@ interface SidebarProps {
 
 const navItems = [
   { href: '/dashboard', label: 'Home' },
-  { href: '/campaigns', label: 'Campaigns' },
   { href: '/discover', label: 'Discover' },
   { href: '/workshop', label: 'Workshop' },
   { href: '/image-studio', label: 'Image Studio' },
@@ -35,6 +34,7 @@ export function Sidebar({ userName, userInitials, userRole }: SidebarProps) {
   const router = useRouter();
 
   const isActive = (href: string) => {
+    if (href === '/dashboard') return pathname === '/dashboard';
     return pathname === href || pathname.startsWith(href + '/');
   };
 
