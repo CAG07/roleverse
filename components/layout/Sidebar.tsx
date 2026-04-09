@@ -14,12 +14,11 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { href: '/dashboard', label: 'Home' },
-  { href: '/campaigns', label: 'Campaigns' },
-  { href: '/discover', label: 'Discover' },
-  { href: '/workshop', label: 'Workshop' },
+  { href: '/dashboard',    label: 'Campaigns' },
+  { href: '/discover',     label: 'Discover' },
+  { href: '/workshop',     label: 'Workshop' },
   { href: '/image-studio', label: 'Image Studio' },
-  { href: '/credits', label: 'Claim Credits' },
+  { href: '/credits',      label: 'Claim Credits' },
 ] as const;
 
 const footerNavItems = [
@@ -36,9 +35,6 @@ export function Sidebar({ userName, userInitials, userRole }: SidebarProps) {
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard';
-    if (href === '/campaigns') {
-      return pathname === '/campaigns' || pathname.startsWith('/campaigns/');
-    }
     return pathname === href || pathname.startsWith(href + '/');
   };
 
@@ -52,8 +48,22 @@ export function Sidebar({ userName, userInitials, userRole }: SidebarProps) {
     <aside className={styles.sidebar}>
       {/* Logo */}
       <Link href="/dashboard" className={styles.sidebarLogo}>
-        <svg className={styles.logoIcon} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M12 2L9.5 9H2l5.5 4-2 7L12 16l6.5 4-2-7L22 9h-7.5z" />
+        <svg
+          className={styles.logoIcon}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
+          <path d="M12 2 L20 7 L20 17 L12 22 L4 17 L4 7 Z" />
+          <path d="M12 2 L12 9" />
+          <path d="M4 7 L12 9" />
+          <path d="M20 7 L12 9" />
+          <path d="M12 9 L4 17" />
+          <path d="M12 9 L20 17" />
         </svg>
         <span className={styles.sidebarLogoText}>RoleVerse</span>
       </Link>
