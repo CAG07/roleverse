@@ -15,6 +15,7 @@ interface SidebarProps {
 
 const navItems = [
   { href: '/dashboard', label: 'Home' },
+  { href: '/campaigns', label: 'Campaigns' },
   { href: '/discover', label: 'Discover' },
   { href: '/workshop', label: 'Workshop' },
   { href: '/image-studio', label: 'Image Studio' },
@@ -35,6 +36,9 @@ export function Sidebar({ userName, userInitials, userRole }: SidebarProps) {
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard';
+    if (href === '/campaigns') {
+      return pathname === '/campaigns' || pathname.startsWith('/campaigns/');
+    }
     return pathname === href || pathname.startsWith(href + '/');
   };
 
@@ -54,14 +58,8 @@ export function Sidebar({ userName, userInitials, userRole }: SidebarProps) {
         <span className={styles.sidebarLogoText}>RoleVerse</span>
       </Link>
 
-      {/* New Campaign button */}
-      <Link href="/campaigns/new" className={styles.btnNewCampaign}>
-        + New Campaign
-      </Link>
-
       {/* Main navigation */}
       <nav className={styles.nav}>
-        <div className={styles.navSectionLabel}>Navigation</div>
         {navItems.map((item) => (
           <Link
             key={item.href}
