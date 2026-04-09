@@ -33,7 +33,7 @@ export default async function CharactersRoute({ params }: CharactersRouteProps) 
   return (
     <CharactersPage
       campaignId={id}
-      campaignName={campaign.name as string}
+      campaignName={campaign.name ?? 'Campaign'}
       characters={characters ?? []}
     />
   );

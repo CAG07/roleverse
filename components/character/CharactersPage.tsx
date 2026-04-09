@@ -65,10 +65,12 @@ export function CharactersPage({ campaignId, campaignName, characters }: Charact
                 <span className={styles.characterName}>{char.name}</span>
                 <span className={styles.systemBadge}>{char.game_system}</span>
               </div>
-              <div className={styles.characterMeta}>
-                {[char.race, char.class].filter(Boolean).join(' ')}
-                {char.level != null ? ` · Lv ${char.level}` : ''}
-              </div>
+              {([char.race, char.class].some(Boolean) || char.level != null) && (
+                <div className={styles.characterMeta}>
+                  {[char.race, char.class].filter(Boolean).join(' ')}
+                  {char.level != null ? ` · Lv ${char.level}` : ''}
+                </div>
+              )}
               {char.hp != null && char.max_hp != null && (
                 <div className={styles.characterHp}>
                   {char.hp} / {char.max_hp} HP
