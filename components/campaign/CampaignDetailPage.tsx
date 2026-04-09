@@ -201,7 +201,7 @@ export function CampaignDetailPage({
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) =>
-                    e.key === 'Enter' && router.push(`/campaigns/${id}/session`)
+                    (e.key === 'Enter' || e.key === ' ') && router.push(`/campaigns/${id}/session`)
                   }
                 >
                   <span className={styles.sessionDate}>
