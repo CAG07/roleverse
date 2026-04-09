@@ -39,7 +39,7 @@ export default async function DashboardRoute() {
   // 3. No campaigns at all — onboarding.
   return (
     <DashboardOnboarding
-      userName={user?.user_metadata?.full_name ?? 'Adventurer'}
+      userName={(user?.user_metadata?.full_name as string | undefined)?.trim() || 'Adventurer'}
     />
   );
 }
