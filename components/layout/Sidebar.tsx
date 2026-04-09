@@ -34,9 +34,7 @@ export function Sidebar({ userName, userInitials, userRole }: SidebarProps) {
   const router = useRouter();
 
   const isActive = (href: string) => {
-    if (href === '/dashboard') {
-      return pathname === '/dashboard' || pathname.startsWith('/campaigns');
-    }
+    if (href === '/dashboard') return pathname === '/dashboard';
     return pathname === href || pathname.startsWith(href + '/');
   };
 

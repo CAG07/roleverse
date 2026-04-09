@@ -15,3 +15,4 @@ export default async function DashboardRoute() {
 
   return <DashboardPage campaigns={campaigns ?? []} />;
 }
+
