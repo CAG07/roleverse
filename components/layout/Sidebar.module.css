@@ -48,50 +48,12 @@
   color: var(--crimson);
 }
 
-/* New Campaign button */
-.btnNewCampaign {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin: 0.75rem;
-  padding: 0.5rem 1rem;
-  background: var(--crimson);
-  border: 1px solid var(--crimson-bright);
-  font-family: var(--font-heading);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ivory);
-  cursor: pointer;
-  transition:
-    background-color 0.2s,
-    box-shadow 0.2s;
-  text-decoration: none;
-}
-.btnNewCampaign:hover {
-  background: var(--crimson-bright);
-  box-shadow: 0 0 12px var(--crimson-glow);
-}
-
 /* Navigation */
 .nav {
   flex: 1;
   padding: 0.5rem 0;
   display: flex;
   flex-direction: column;
-}
-
-.navSectionLabel {
-  display: block;
-  font-family: var(--font-heading);
-  font-size: 0.55rem;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ivory-dim);
-  padding: 0.75rem 1rem 0.25rem;
 }
 
 .navItem {

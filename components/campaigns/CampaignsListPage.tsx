@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getGameSystem } from '@/lib/game-systems/registry';
 import type { CampaignData } from '@/components/campaign/CampaignCard';
-import styles from './DashboardPage.module.css';
+import styles from './CampaignsListPage.module.css';
 
 function formatSystemBadge(gameSystem: string): string {
   const system = getGameSystem(gameSystem);
@@ -12,11 +12,11 @@ function formatSystemBadge(gameSystem: string): string {
   return gameSystem.replace(/[_-]/g, ' ');
 }
 
-interface DashboardPageProps {
+interface CampaignsListPageProps {
   campaigns: CampaignData[];
 }
 
-export function DashboardPage({ campaigns }: DashboardPageProps) {
+export function CampaignsListPage({ campaigns }: CampaignsListPageProps) {
   const router = useRouter();
   const [search, setSearch] = useState('');
 
@@ -31,7 +31,7 @@ export function DashboardPage({ campaigns }: DashboardPageProps) {
       {/* Topbar */}
       <div className={styles.topbar}>
         <div>
-          <h1 className={styles.pageTitle}>Your Campaigns</h1>
+          <h1 className={styles.pageTitle}>Campaigns</h1>
           <p className={styles.pageSubtitle}>Manage your tabletop RPG adventures</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -100,4 +100,3 @@ export function DashboardPage({ campaigns }: DashboardPageProps) {
     </div>
   );
 }
-
