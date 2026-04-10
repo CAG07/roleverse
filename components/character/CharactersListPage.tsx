@@ -18,6 +18,7 @@ export interface CharacterSummary {
 interface CharactersListPageProps {
   campaignId: string;
   campaignName: string;
+  /** Passed for future use (e.g. system-specific character creation flows) */
   gameSystem: string;
   characters: CharacterSummary[];
 }
