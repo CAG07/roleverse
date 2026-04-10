@@ -79,7 +79,9 @@ export function chunkText(text: string, options: ChunkOptions = {}): string[] {
         }
       }
     } else {
-      current = current.length > 0 ? `${current.slice(-overlapChars)} ${trimmed}` : trimmed;
+      // current already holds the overlap suffix after the flush above;
+      // append the paragraph with a double newline separator.
+      current = current.length > 0 ? `${current}\n\n${trimmed}` : trimmed;
     }
   }
 

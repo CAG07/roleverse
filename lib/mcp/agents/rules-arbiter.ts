@@ -25,7 +25,7 @@ function buildSystemPrompt(context: MCPContext, ragContext: string): string {
   const system = getGameSystem(context.gameSystem);
   const systemName = system?.name ?? context.gameSystem;
   const rulesPrompt = system?.rulesPrompt ?? '';
-  const isOsricFallback = context.gameSystem === 'ADD2E' && ragContext.includes('OSRIC content');
+  const isOsricFallback = context.gameSystem === 'ADD2E' && ragContext.toLowerCase().includes('osric');
 
   const parts = [
     `You are the Rules Arbiter for a ${systemName} tabletop RPG session.`,

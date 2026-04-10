@@ -67,17 +67,21 @@ export async function* fetchPf2eChunks(
   }
 
   // Get the latest release to find the commit SHA / tag for stable content
-  const releaseResponse = await fetch(
-    `${GITHUB_API}/repos/${PF2E_REPO}/releases/latest`,
-    { headers, signal: AbortSignal.timeout(15_000) }
-  );
-
   let commitSha = 'master';
-  if (releaseResponse.ok) {
-    const release = (await releaseResponse.json()) as { tag_name?: string };
-    if (release.tag_name) {
-      commitSha = release.tag_name;
+  try {
+    const releaseResponse = await fetch(
+      `${GITHUB_API}/repos/${PF2E_REPO}/releases/latest`,
+      { headers, signal: AbortSignal.timeout(15_000) }
+    );
+
+    if (releaseResponse.ok) {
+      const release = (await releaseResponse.json()) as { tag_name?: string };
+      if (release.tag_name) {
+        commitSha = release.tag_name;
+      }
     }
+  } catch {
+    // Non-fatal: fall back to master if GitHub API is unreachable or slow
   }
 
   let totalYielded = 0;
@@ -91,13 +95,18 @@ export async function* fetchPf2eChunks(
 
     // Try .json first, then .db (which may be JSONL in older versions)
     for (const url of [jsonUrl, jsonlUrl]) {
-      const res = await fetch(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        signal: AbortSignal.timeout(60_000),
-      });
-      if (res.ok) {
-        packText = await res.text();
-        break;
+      try {
+        const res = await fetch(url, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          signal: AbortSignal.timeout(60_000),
+        });
+        if (res.ok) {
+          packText = await res.text();
+          break;
+        }
+      } catch {
+        // Timeout or network error — try next URL or skip pack
+        continue;
       }
     }
 

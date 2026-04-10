@@ -6,7 +6,7 @@ import type { RagChunk } from '../types';
 
 const BASE_URL = 'https://api.open5e.com';
 /** Page size for paginated endpoints */
-const PAGE_SIZE = 100;
+const PAGE_SIZE = 200;
 
 /** Endpoints to ingest and how to map them to chunks */
 interface Open5eEndpoint {

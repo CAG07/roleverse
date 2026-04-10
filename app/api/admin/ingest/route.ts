@@ -134,9 +134,23 @@ export async function POST(request: NextRequest) {
   }
 
   // Run ingestion asynchronously — fire and forget.
-  // The job row is polled by the client via GET /api/admin/ingest/[jobId].
-  void ingestSystem({ gameSystem: system, jobId: job.id }).catch((err: unknown) => {
+  // ingestSystem handles its own error state via the try-catch in its body,
+  // which marks the job as 'failed' in the DB. The outer .catch catches any
+  // synchronous throw (e.g., missing env vars) before that try-catch is reached.
+  void ingestSystem({ gameSystem: system, jobId: job.id }).catch(async (err: unknown) => {
     console.error(`Ingestion failed for ${system} (job ${job.id}):`, err);
+    // Belt-and-suspenders: ensure job is marked failed even if ingestSystem threw
+    // before its own error handler ran.
+    const supabase = await createClient();
+    await supabase
+      .from('ingestion_jobs')
+      .update({
+        status: 'failed',
+        error_message: err instanceof Error ? err.message : String(err),
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', job.id)
+      .eq('status', 'pending'); // only overwrite if still pending (not already handled)
   });
 
   return NextResponse.json({ jobId: job.id, status: 'pending' }, { status: 202 });

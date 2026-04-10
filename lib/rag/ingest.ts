@@ -161,8 +161,8 @@ async function* streamChunksForSystem(gameSystem: IngestableSystem): AsyncGenera
       break;
     }
     default: {
-      const _exhaustive: never = gameSystem;
-      throw new Error(`No fetcher configured for game system: ${String(_exhaustive)}`);
+      const _unreachable: never = gameSystem;
+      throw new Error(`No fetcher configured for game system: ${String(_unreachable)}`);
     }
   }
 }
