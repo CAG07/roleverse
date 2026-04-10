@@ -2,6 +2,7 @@
 
 import ADD2ESheet from './sheets/ADD2ESheet';
 import DND5ESheet from './sheets/DND5ESheet';
+import PF2ESheet from './sheets/PF2ESheet';
 import GenericSheet from './sheets/GenericSheet';
 
 interface CharacterSheetProps {
@@ -15,6 +16,8 @@ export default function CharacterSheet({ gameSystem, characterData }: CharacterS
       return <ADD2ESheet data={characterData} />;
     case '5E_2014':
       return <DND5ESheet data={characterData} />;
+    case 'PATHFINDER_2E':
+      return <PF2ESheet data={characterData} />;
     default:
       return <GenericSheet data={characterData} systemName={gameSystem} />;
   }
