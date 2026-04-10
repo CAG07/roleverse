@@ -107,6 +107,12 @@ export async function POST(request: NextRequest) {
 
   const system = gameSystem as IngestableSystem;
 
+  // requireAdmin() already ensures user is non-null when there is no error,
+  // but use a runtime guard to satisfy strict null checks.
+  if (!auth.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   // Create the ingestion_jobs row using the anon client (RLS: started_by = user.id)
   const supabase = await createClient();
   const { data: job, error: jobError } = await supabase
@@ -115,7 +121,7 @@ export async function POST(request: NextRequest) {
       game_system: system,
       source_label: SOURCE_LABELS[system],
       status: 'pending',
-      started_by: auth.user!.id,
+      started_by: auth.user.id,
     })
     .select()
     .single();

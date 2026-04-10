@@ -113,6 +113,8 @@ RETURNS TABLE (
   similarity FLOAT
 )
 LANGUAGE plpgsql STABLE
+-- 'extensions' is required because pgvector's <=> operator lives in that schema.
+-- This is the standard pattern for Supabase projects that install pgvector under extensions.
 SET search_path = 'public, extensions'
 AS $$
 BEGIN

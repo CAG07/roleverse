@@ -87,6 +87,38 @@ export default function AdminIngestPage() {
   const [starting, setStarting] = useState<Set<IngestableSystem>>(new Set());
   const pollTimers = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map());
 
+  // Keep a stable ref to startPolling so loadJobs (and handleIngest) can call it
+  // without needing it as a useCallback dependency.
+  const startPollingRef = useRef<(jobId: string) => void>(() => undefined);
+
+  startPollingRef.current = (jobId: string) => {
+    if (pollTimers.current.has(jobId)) return;
+
+    setRunningJobs((prev) => new Set(prev).add(jobId));
+
+    const timer = setInterval(async () => {
+      const res = await fetch(`/api/admin/ingest/${jobId}`);
+      if (!res.ok) return;
+
+      const data = (await res.json()) as { job: IngestionJob };
+      const job = data.job;
+
+      setJobs((prev: IngestionJob[]) => prev.map((j) => (j.id === jobId ? job : j)));
+
+      if (job.status === 'completed' || job.status === 'failed') {
+        clearInterval(pollTimers.current.get(jobId));
+        pollTimers.current.delete(jobId);
+        setRunningJobs((prev: Set<string>) => {
+          const next = new Set(prev);
+          next.delete(jobId);
+          return next;
+        });
+      }
+    }, 2000);
+
+    pollTimers.current.set(jobId, timer);
+  };
+
   // Fetch job list on mount
   const loadJobs = useCallback(async () => {
     const res = await fetch('/api/admin/ingest');
@@ -101,13 +133,13 @@ export default function AdminIngestPage() {
     const data = (await res.json()) as { jobs: IngestionJob[] };
     setJobs(data.jobs ?? []);
 
-    // Resume polling for any active jobs
+    // Resume polling for any active jobs via the stable ref.
     for (const job of data.jobs ?? []) {
       if (job.status === 'running' || job.status === 'pending') {
-        startPolling(job.id);
+        startPollingRef.current(job.id);
       }
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     void loadJobs();
@@ -119,37 +151,9 @@ export default function AdminIngestPage() {
     };
   }, [loadJobs]);
 
-  function startPolling(jobId: string) {
-    if (pollTimers.current.has(jobId)) return;
-
-    setRunningJobs((prev) => new Set(prev).add(jobId));
-
-    const timer = setInterval(async () => {
-      const res = await fetch(`/api/admin/ingest/${jobId}`);
-      if (!res.ok) return;
-
-      const data = (await res.json()) as { job: IngestionJob };
-      const job = data.job;
-
-      setJobs((prev) => prev.map((j) => (j.id === jobId ? job : j)));
-
-      if (job.status === 'completed' || job.status === 'failed') {
-        clearInterval(pollTimers.current.get(jobId));
-        pollTimers.current.delete(jobId);
-        setRunningJobs((prev) => {
-          const next = new Set(prev);
-          next.delete(jobId);
-          return next;
-        });
-      }
-    }, 2000);
-
-    pollTimers.current.set(jobId, timer);
-  }
-
   async function handleIngest(system: IngestableSystem) {
     setError(null);
-    setStarting((prev) => new Set(prev).add(system));
+    setStarting((prev: Set<IngestableSystem>) => new Set(prev).add(system));
 
     const res = await fetch('/api/admin/ingest', {
       method: 'POST',
@@ -157,7 +161,7 @@ export default function AdminIngestPage() {
       body: JSON.stringify({ gameSystem: system }),
     });
 
-    setStarting((prev) => {
+    setStarting((prev: Set<IngestableSystem>) => {
       const next = new Set(prev);
       next.delete(system);
       return next;
@@ -184,8 +188,8 @@ export default function AdminIngestPage() {
       completed_at: null,
     };
 
-    setJobs((prev) => [placeholder, ...prev]);
-    startPolling(data.jobId);
+    setJobs((prev: IngestionJob[]) => [placeholder, ...prev]);
+    startPollingRef.current(data.jobId);
   }
 
   return (

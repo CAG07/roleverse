@@ -3,7 +3,7 @@
 // Runs server-side (Node.js) with a Supabase service-role client so it can write
 // baseline rows (campaign_id IS NULL, user_id IS NULL) that bypass RLS.
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import { chunkText } from './chunk';
 import { embedBatch } from './embed';
@@ -117,8 +117,7 @@ export async function ingestSystem(options: IngestOptions): Promise<IngestResult
 /** Embed a buffer of chunks and upsert them; returns count upserted */
 async function flushBuffer(
   chunks: RagChunk[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: ReturnType<typeof createClient<any>>,
+  supabase: SupabaseClient,
   gameSystem: string
 ): Promise<number> {
   const texts = chunks.map((c) => c.content);
@@ -169,7 +168,7 @@ async function* streamChunksForSystem(gameSystem: IngestableSystem): AsyncGenera
 }
 
 /** Create a Supabase client using the service role key (bypasses RLS) */
-function getServiceClient() {
+function getServiceClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
