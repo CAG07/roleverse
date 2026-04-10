@@ -19,6 +19,8 @@ export interface GameSystem {
   rulesPrompt: string;
   /** Fantasy Grounds ruleset identifier for bridge mapping */
   fgRulesetId: string;
+  /** Whether this system is available for new campaign creation */
+  supported: boolean;
 }
 
 /** Generic character data with system-specific extensions */
