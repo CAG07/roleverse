@@ -60,7 +60,11 @@ export function CharactersPage({ campaignId, campaignName, characters }: Charact
       {characters.length > 0 ? (
         <div className={styles.characterGrid}>
           {characters.map((char) => (
-            <div key={char.id} className={styles.characterCard}>
+            <Link
+              key={char.id}
+              href={`/campaigns/${campaignId}/characters/${char.id}`}
+              className={styles.characterCard}
+            >
               <div className={styles.cardTop}>
                 <span className={styles.characterName}>{char.name}</span>
                 <span className={styles.systemBadge}>{char.game_system}</span>
@@ -79,7 +83,7 @@ export function CharactersPage({ campaignId, campaignName, characters }: Charact
               <div className={styles.characterUpdated}>
                 Updated {formatRelativeTime(char.updated_at)}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       ) : (
