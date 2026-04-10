@@ -1,6 +1,16 @@
 // lib/game-systems/types.ts
 // TypeScript interfaces for the game system abstraction layer
 
+/** Source descriptor for RAG ingestion — how baseline rules are fetched */
+export interface RagSource {
+  /** Ingestion strategy for this system */
+  type: 'api' | 'srd_clone' | 'scraped' | 'dataset' | 'none';
+  /** Primary URL for the data source */
+  url?: string;
+  /** Any caveats, licensing notes, or fallback explanations */
+  notes?: string;
+}
+
 /** Configuration for a supported tabletop RPG system */
 export interface GameSystem {
   /** Unique slug identifier (e.g. 'add-2e', 'dnd-5e-2014') */
@@ -21,6 +31,8 @@ export interface GameSystem {
   fgRulesetId: string;
   /** Whether this system is available for new campaign creation */
   supported: boolean;
+  /** RAG ingestion source configuration */
+  ragSource: RagSource;
 }
 
 /** Generic character data with system-specific extensions */

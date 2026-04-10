@@ -19,6 +19,10 @@ const add1e: GameSystem = {
     'You are a rules arbiter for AD&D 1st Edition. Use THAC0 for attack rolls and descending armor class. Enforce strict class and race restrictions per the 1E PHB and DMG.',
   fgRulesetId: '1E',
   supported: false,
+  ragSource: {
+    type: 'none',
+    notes: 'No machine-readable SRD available for AD&D 1E — agent relies on training knowledge.',
+  },
 };
 
 const add2e: GameSystem = {
@@ -40,6 +44,15 @@ const add2e: GameSystem = {
     'You are a rules arbiter for AD&D 2nd Edition. Use THAC0 for attack rolls, descending armor class, and 2E saving throw categories (Paralyzation/Poison/Death Magic, Rod/Staff/Wand, Petrification/Polymorph, Breath Weapon, Spell). Enforce proficiency slots and kit restrictions.',
   fgRulesetId: '2E',
   supported: true,
+  ragSource: {
+    type: 'srd_clone',
+    url: 'https://osricwiki.presgas.name/doku.php',
+    notes:
+      'OSRIC (Old School Reference and Index Compilation) is a retro-clone of AD&D 1E/2E rules ' +
+      'released under the OGL. No clean machine-readable JSON/markdown source was found after ' +
+      'research (see docs/phase-6a-sources.md). Falling back to data/osric-stub.md placeholder. ' +
+      'The Rules Arbiter for ADD2E relies primarily on Claude training knowledge.',
+  },
 };
 
 const dnd3_5e: GameSystem = {
@@ -60,6 +73,10 @@ const dnd3_5e: GameSystem = {
     'You are a rules arbiter for D&D 3.5th Edition. Use ascending AC, base attack bonus, and the skills/feats system from the 3.5E SRD.',
   fgRulesetId: '3.5E',
   supported: false,
+  ragSource: {
+    type: 'none',
+    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+  },
 };
 
 const dnd4e: GameSystem = {
@@ -78,6 +95,10 @@ const dnd4e: GameSystem = {
     'You are a rules arbiter for D&D 4th Edition. Use at-will, encounter, and daily powers. Apply 4E roles (striker, defender, controller, leader) and the minion/elite/solo monster framework.',
   fgRulesetId: '4E',
   supported: false,
+  ragSource: {
+    type: 'none',
+    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+  },
 };
 
 const dnd5e2014: GameSystem = {
@@ -99,6 +120,14 @@ const dnd5e2014: GameSystem = {
     'You are a rules arbiter for D&D 5th Edition (2014 rules). Use the advantage/disadvantage system, bounded accuracy, and proficiency bonus. Apply 2014 PHB rules for class features, spellcasting, and combat.',
   fgRulesetId: '5E',
   supported: true,
+  ragSource: {
+    type: 'api',
+    url: 'https://api.open5e.com',
+    notes:
+      'Open5e provides a public REST API of the 5E 2014 SRD. ' +
+      'Endpoints used: /spells/, /monsters/, /classes/, /races/, /sections/ (rules text). ' +
+      'See https://open5e.com and https://github.com/open5e/open5e-api.',
+  },
 };
 
 const dnd5e2024: GameSystem = {
@@ -119,6 +148,10 @@ const dnd5e2024: GameSystem = {
     'You are a rules arbiter for D&D 5th Edition (2024 revised rules). Apply the updated 2024 PHB class features, weapon masteries, and spellcasting rules.',
   fgRulesetId: '5E2024',
   supported: false,
+  ragSource: {
+    type: 'none',
+    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+  },
 };
 
 const pathfinder1e: GameSystem = {
@@ -139,6 +172,10 @@ const pathfinder1e: GameSystem = {
     'You are a rules arbiter for Pathfinder 1st Edition. Use ascending AC, CMB/CMD, and the Pathfinder SRD rules for classes, skills, and spellcasting.',
   fgRulesetId: 'PFRPG',
   supported: false,
+  ragSource: {
+    type: 'none',
+    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+  },
 };
 
 const pathfinder2e: GameSystem = {
@@ -157,6 +194,15 @@ const pathfinder2e: GameSystem = {
     'You are a rules arbiter for Pathfinder 2nd Edition. Use the three-action economy (Action, Reaction, Free Action), proficiency ranks (Untrained/Trained/Expert/Master/Legendary), and PF2E condition rules.',
   fgRulesetId: 'PF2',
   supported: true,
+  ragSource: {
+    type: 'dataset',
+    url: 'https://github.com/foundryvtt/pf2e',
+    notes:
+      'Foundry VTT PF2E system (MIT-licensed) contains machine-readable compendium data. ' +
+      'Compendium packs are stored in LevelDB format (.db files) under packs/. ' +
+      'The ingestion fetcher uses the GitHub API to download pack data as JSON via releases. ' +
+      'See docs/phase-6a-sources.md for full sourcing details.',
+  },
 };
 
 const dcc: GameSystem = {
@@ -175,6 +221,10 @@ const dcc: GameSystem = {
     'You are a rules arbiter for Dungeon Crawl Classics. Use the DCC dice chain, mighty deeds for warriors, patron bond and spellburn for wizards, and disapproval tables for clerics.',
   fgRulesetId: 'DCC',
   supported: false,
+  ragSource: {
+    type: 'none',
+    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+  },
 };
 
 const tor1e: GameSystem = {
@@ -192,6 +242,10 @@ const tor1e: GameSystem = {
     'You are a rules arbiter for The One Ring 1st Edition. Use the Feat die (d12) and Success dice (d6s), apply the Eye of Sauron result, and track Hope and Shadow for each character.',
   fgRulesetId: 'TOR',
   supported: false,
+  ragSource: {
+    type: 'none',
+    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+  },
 };
 
 const tor2e: GameSystem = {
@@ -209,6 +263,10 @@ const tor2e: GameSystem = {
     'You are a rules arbiter for The One Ring 2nd Edition. Apply the revised 2E Fellowship Phase, Feat die (d12) and Success dice, and the Shadow/Hope tracking rules.',
   fgRulesetId: 'TOR2',
   supported: false,
+  ragSource: {
+    type: 'none',
+    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+  },
 };
 
 const cyberpunk2020: GameSystem = {
@@ -227,6 +285,10 @@ const cyberpunk2020: GameSystem = {
     'You are a rules arbiter for Cyberpunk 2020. Use the FNFF (Friday Night Firefight) combat rules, Streetdeal for social encounters, and track Humanity loss for cyberware installation.',
   fgRulesetId: 'CP2020',
   supported: false,
+  ragSource: {
+    type: 'none',
+    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+  },
 };
 
 /** Internal registry of all game systems keyed by ID */
