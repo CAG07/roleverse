@@ -18,6 +18,7 @@ const add1e: GameSystem = {
   rulesPrompt:
     'You are a rules arbiter for AD&D 1st Edition. Use THAC0 for attack rolls and descending armor class. Enforce strict class and race restrictions per the 1E PHB and DMG.',
   fgRulesetId: '1E',
+  supported: false,
 };
 
 const add2e: GameSystem = {
@@ -38,6 +39,7 @@ const add2e: GameSystem = {
   rulesPrompt:
     'You are a rules arbiter for AD&D 2nd Edition. Use THAC0 for attack rolls, descending armor class, and 2E saving throw categories (Paralyzation/Poison/Death Magic, Rod/Staff/Wand, Petrification/Polymorph, Breath Weapon, Spell). Enforce proficiency slots and kit restrictions.',
   fgRulesetId: '2E',
+  supported: true,
 };
 
 const dnd3_5e: GameSystem = {
@@ -57,6 +59,7 @@ const dnd3_5e: GameSystem = {
   rulesPrompt:
     'You are a rules arbiter for D&D 3.5th Edition. Use ascending AC, base attack bonus, and the skills/feats system from the 3.5E SRD.',
   fgRulesetId: '3.5E',
+  supported: false,
 };
 
 const dnd4e: GameSystem = {
@@ -74,6 +77,7 @@ const dnd4e: GameSystem = {
   rulesPrompt:
     'You are a rules arbiter for D&D 4th Edition. Use at-will, encounter, and daily powers. Apply 4E roles (striker, defender, controller, leader) and the minion/elite/solo monster framework.',
   fgRulesetId: '4E',
+  supported: false,
 };
 
 const dnd5e2014: GameSystem = {
@@ -94,6 +98,7 @@ const dnd5e2014: GameSystem = {
   rulesPrompt:
     'You are a rules arbiter for D&D 5th Edition (2014 rules). Use the advantage/disadvantage system, bounded accuracy, and proficiency bonus. Apply 2014 PHB rules for class features, spellcasting, and combat.',
   fgRulesetId: '5E',
+  supported: true,
 };
 
 const dnd5e2024: GameSystem = {
@@ -113,6 +118,7 @@ const dnd5e2024: GameSystem = {
   rulesPrompt:
     'You are a rules arbiter for D&D 5th Edition (2024 revised rules). Apply the updated 2024 PHB class features, weapon masteries, and spellcasting rules.',
   fgRulesetId: '5E2024',
+  supported: false,
 };
 
 const pathfinder1e: GameSystem = {
@@ -132,6 +138,7 @@ const pathfinder1e: GameSystem = {
   rulesPrompt:
     'You are a rules arbiter for Pathfinder 1st Edition. Use ascending AC, CMB/CMD, and the Pathfinder SRD rules for classes, skills, and spellcasting.',
   fgRulesetId: 'PFRPG',
+  supported: false,
 };
 
 const pathfinder2e: GameSystem = {
@@ -149,6 +156,7 @@ const pathfinder2e: GameSystem = {
   rulesPrompt:
     'You are a rules arbiter for Pathfinder 2nd Edition. Use the three-action economy (Action, Reaction, Free Action), proficiency ranks (Untrained/Trained/Expert/Master/Legendary), and PF2E condition rules.',
   fgRulesetId: 'PF2',
+  supported: true,
 };
 
 const dcc: GameSystem = {
@@ -166,6 +174,7 @@ const dcc: GameSystem = {
   rulesPrompt:
     'You are a rules arbiter for Dungeon Crawl Classics. Use the DCC dice chain, mighty deeds for warriors, patron bond and spellburn for wizards, and disapproval tables for clerics.',
   fgRulesetId: 'DCC',
+  supported: false,
 };
 
 const tor1e: GameSystem = {
@@ -182,6 +191,7 @@ const tor1e: GameSystem = {
   rulesPrompt:
     'You are a rules arbiter for The One Ring 1st Edition. Use the Feat die (d12) and Success dice (d6s), apply the Eye of Sauron result, and track Hope and Shadow for each character.',
   fgRulesetId: 'TOR',
+  supported: false,
 };
 
 const tor2e: GameSystem = {
@@ -198,6 +208,7 @@ const tor2e: GameSystem = {
   rulesPrompt:
     'You are a rules arbiter for The One Ring 2nd Edition. Apply the revised 2E Fellowship Phase, Feat die (d12) and Success dice, and the Shadow/Hope tracking rules.',
   fgRulesetId: 'TOR2',
+  supported: false,
 };
 
 const cyberpunk2020: GameSystem = {
@@ -215,6 +226,7 @@ const cyberpunk2020: GameSystem = {
   rulesPrompt:
     'You are a rules arbiter for Cyberpunk 2020. Use the FNFF (Friday Night Firefight) combat rules, Streetdeal for social encounters, and track Humanity loss for cyberware installation.',
   fgRulesetId: 'CP2020',
+  supported: false,
 };
 
 /** Internal registry of all game systems keyed by ID */
@@ -254,8 +266,13 @@ export function getGameSystem(id: string): GameSystem | null {
   return systems.get(id) ?? null;
 }
 
-/** Get all registered game systems */
+/** Get all game systems available for new campaign creation (supported systems only) */
 export function getAllGameSystems(): GameSystem[] {
+  return Array.from(systems.values()).filter((s) => s.supported);
+}
+
+/** Get all registered game systems, including those not available for new campaigns */
+export function getAllGameSystemsIncludingUnsupported(): GameSystem[] {
   return Array.from(systems.values());
 }
 
