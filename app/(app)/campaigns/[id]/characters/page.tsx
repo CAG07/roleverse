@@ -1,21 +1,28 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { CharactersListPage } from '@/components/character/CharactersListPage';
+import { CharactersPage } from '@/components/character/CharactersPage';
 
-interface Props { params: Promise<{ id: string }>; }
+interface CharactersRouteProps {
+  params: Promise<{ id: string }>;
+}
 
-export default async function CharactersRoute({ params }: Props) {
+export default async function CharactersRoute({ params }: CharactersRouteProps) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: campaign } = await supabase
     .from('campaigns')
-    .select('id, name, game_system, owner_id')
+    .select('id, name, owner_id')
     .eq('id', id)
     .single();
 
-  if (!campaign || campaign.owner_id !== user?.id) notFound();
+  if (!campaign || campaign.owner_id !== user?.id) {
+    notFound();
+  }
 
   const { data: characters } = await supabase
     .from('characters')
@@ -24,10 +31,9 @@ export default async function CharactersRoute({ params }: Props) {
     .order('updated_at', { ascending: false });
 
   return (
-    <CharactersListPage
+    <CharactersPage
       campaignId={id}
-      campaignName={campaign.name}
-      gameSystem={campaign.game_system}
+      campaignName={campaign.name as string}
       characters={characters ?? []}
     />
   );
