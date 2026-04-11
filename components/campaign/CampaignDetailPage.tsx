@@ -164,7 +164,7 @@ export function CampaignDetailPage({
           {characters.length > 0 ? (
             <div className={styles.characterList}>
               {characters.map((char) => (
-                <div key={char.id} className={styles.characterCard}>
+                <Link key={char.id} href={`/campaigns/${id}/characters/${char.id}`} className={styles.characterCard}>
                   <div className={styles.characterName}>{char.name}</div>
                   <div className={styles.characterMeta}>
                     {[char.race, char.class].filter(Boolean).join(' ')}
@@ -175,7 +175,7 @@ export function CampaignDetailPage({
                       {char.hp} / {char.max_hp} HP
                     </div>
                   )}
-                </div>
+                </Link>
               ))}
             </div>
           ) : (
