@@ -8,7 +8,7 @@
 // section its own route group so future pages (/admin/sources, /admin/jobs, etc.)
 // and a shared admin layout can be added without touching the main (app) layout.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
@@ -130,32 +130,45 @@ export default function AdminIngestPage() {
     };
   }, [pollingJobIds]);
 
-  // Fetch job list on mount; seed pollingJobIds for any jobs still in-progress
-  const loadJobs = useCallback(async () => {
-    const res = await fetch('/api/admin/ingest');
-    if (res.status === 403) {
-      setError('Access denied — admin privileges required.');
-      return;
-    }
-    if (!res.ok) {
-      setError('Failed to load ingestion jobs.');
-      return;
-    }
-    const data = (await res.json()) as { jobs: IngestionJob[] };
-    setJobs(data.jobs ?? []);
-
-    const activeIds = (data.jobs ?? [])
-      .filter((j) => j.status === 'running' || j.status === 'pending')
-      .map((j) => j.id);
-
-    if (activeIds.length > 0) {
-      setPollingJobIds(new Set(activeIds));
-    }
-  }, []);
-
+  // Fetch job list once on mount; seed pollingJobIds for any jobs still in-progress.
+  // The async logic lives entirely inside the effect so setState calls happen in
+  // async callbacks rather than synchronously in the effect body.
   useEffect(() => {
-    void loadJobs();
-  }, [loadJobs]);
+    let cancelled = false;
+
+    async function fetchJobs() {
+      const res = await fetch('/api/admin/ingest');
+      if (cancelled) return;
+
+      if (res.status === 403) {
+        setError('Access denied — admin privileges required.');
+        return;
+      }
+      if (!res.ok) {
+        setError('Failed to load ingestion jobs.');
+        return;
+      }
+
+      const data = (await res.json()) as { jobs: IngestionJob[] };
+      if (cancelled) return;
+
+      setJobs(data.jobs ?? []);
+
+      const activeIds = (data.jobs ?? [])
+        .filter((j) => j.status === 'running' || j.status === 'pending')
+        .map((j) => j.id);
+
+      if (activeIds.length > 0) {
+        setPollingJobIds(new Set(activeIds));
+      }
+    }
+
+    void fetchJobs();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleIngest(system: IngestableSystem) {
     setError(null);
