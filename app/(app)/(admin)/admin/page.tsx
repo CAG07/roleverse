@@ -1,10 +1,14 @@
 'use client';
 
-// app/(app)/admin/page.tsx
+// app/(app)/(admin)/admin/page.tsx
 // Admin panel — RAG ingestion controls.
 // Only accessible to users whose email is in ADMIN_EMAILS (enforced server-side).
+//
+// Route group: (app)/(admin)/admin — keeps the /admin URL while giving the admin
+// section its own route group so future pages (/admin/sources, /admin/jobs, etc.)
+// and a shared admin layout can be added without touching the main (app) layout.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
@@ -82,44 +86,51 @@ function formatDate(iso: string | null): string {
 
 export default function AdminIngestPage() {
   const [jobs, setJobs] = useState<IngestionJob[]>([]);
-  const [runningJobs, setRunningJobs] = useState<Set<string>>(new Set());
+  // pollingJobIds drives the polling effect — add a job ID to start polling it,
+  // remove it when the job reaches a terminal state.
+  const [pollingJobIds, setPollingJobIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState<Set<IngestableSystem>>(new Set());
-  const pollTimers = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map());
 
-  // Keep a stable ref to startPolling so loadJobs (and handleIngest) can call it
-  // without needing it as a useCallback dependency.
-  const startPollingRef = useRef<(jobId: string) => void>(() => undefined);
+  // Single polling effect — one interval per active job ID.
+  // Whenever pollingJobIds changes the effect re-runs: cleanup tears down all
+  // existing intervals and setup creates fresh ones for the remaining IDs.
+  useEffect(() => {
+    if (pollingJobIds.size === 0) return;
 
-  startPollingRef.current = (jobId: string) => {
-    if (pollTimers.current.has(jobId)) return;
+    const intervals: ReturnType<typeof setInterval>[] = [];
 
-    setRunningJobs((prev) => new Set(prev).add(jobId));
+    for (const jobId of pollingJobIds) {
+      const interval = setInterval(async () => {
+        const res = await fetch(`/api/admin/ingest/${jobId}`);
+        if (!res.ok) return;
 
-    const timer = setInterval(async () => {
-      const res = await fetch(`/api/admin/ingest/${jobId}`);
-      if (!res.ok) return;
+        const data = (await res.json()) as { job: IngestionJob };
+        const job = data.job;
 
-      const data = (await res.json()) as { job: IngestionJob };
-      const job = data.job;
+        setJobs((prev: IngestionJob[]) => prev.map((j) => (j.id === jobId ? job : j)));
 
-      setJobs((prev: IngestionJob[]) => prev.map((j) => (j.id === jobId ? job : j)));
+        // Terminal state — remove from polling set; effect will re-run and clear interval
+        if (job.status === 'completed' || job.status === 'failed') {
+          setPollingJobIds((prev: Set<string>) => {
+            const next = new Set(prev);
+            next.delete(jobId);
+            return next;
+          });
+        }
+      }, 2000);
 
-      if (job.status === 'completed' || job.status === 'failed') {
-        clearInterval(pollTimers.current.get(jobId));
-        pollTimers.current.delete(jobId);
-        setRunningJobs((prev: Set<string>) => {
-          const next = new Set(prev);
-          next.delete(jobId);
-          return next;
-        });
+      intervals.push(interval);
+    }
+
+    return () => {
+      for (const interval of intervals) {
+        clearInterval(interval);
       }
-    }, 2000);
+    };
+  }, [pollingJobIds]);
 
-    pollTimers.current.set(jobId, timer);
-  };
-
-  // Fetch job list on mount
+  // Fetch job list on mount; seed pollingJobIds for any jobs still in-progress
   const loadJobs = useCallback(async () => {
     const res = await fetch('/api/admin/ingest');
     if (res.status === 403) {
@@ -133,22 +144,17 @@ export default function AdminIngestPage() {
     const data = (await res.json()) as { jobs: IngestionJob[] };
     setJobs(data.jobs ?? []);
 
-    // Resume polling for any active jobs via the stable ref.
-    for (const job of data.jobs ?? []) {
-      if (job.status === 'running' || job.status === 'pending') {
-        startPollingRef.current(job.id);
-      }
+    const activeIds = (data.jobs ?? [])
+      .filter((j) => j.status === 'running' || j.status === 'pending')
+      .map((j) => j.id);
+
+    if (activeIds.length > 0) {
+      setPollingJobIds(new Set(activeIds));
     }
   }, []);
 
   useEffect(() => {
     void loadJobs();
-    return () => {
-      // Clean up all poll timers on unmount
-      for (const timer of pollTimers.current.values()) {
-        clearInterval(timer);
-      }
-    };
   }, [loadJobs]);
 
   async function handleIngest(system: IngestableSystem) {
@@ -175,7 +181,7 @@ export default function AdminIngestPage() {
 
     const data = (await res.json()) as { jobId: string };
 
-    // Add a placeholder job row while polling kicks in
+    // Optimistically add a placeholder row before the first poll arrives
     const placeholder: IngestionJob = {
       id: data.jobId,
       game_system: system,
@@ -189,7 +195,7 @@ export default function AdminIngestPage() {
     };
 
     setJobs((prev: IngestionJob[]) => [placeholder, ...prev]);
-    startPollingRef.current(data.jobId);
+    setPollingJobIds((prev: Set<string>) => new Set(prev).add(data.jobId));
   }
 
   return (
@@ -273,7 +279,7 @@ export default function AdminIngestPage() {
                       <td className="px-4 py-2 text-xs text-zinc-400">{job.source_label}</td>
                       <td className={`px-4 py-2 text-xs font-medium ${statusColor(job.status)}`}>
                         {job.status}
-                        {runningJobs.has(job.id) && (
+                        {pollingJobIds.has(job.id) && (
                           <span className="ml-1 animate-pulse">…</span>
                         )}
                       </td>
