@@ -80,7 +80,7 @@ Voice chat via Discord is transcribed and displayed in the web app chat. The Rol
 | **AI**         | Anthropic Claude                 |
 | **Embeddings** | OpenAI ada-002                   |
 | **Voice**      | OpenAI Whisper + ElevenLabs      |
-| **Desktop**    | Electron                         |
+| **Desktop**    | Sync Agent                        |
 | **Hosting**    | Vercel                           |
 
 ## 🚀 Quick Start
@@ -93,6 +93,7 @@ Placeholder for user setup instructions. See [SETUP.md](docs/SETUP.md) for full 
 - **[ARCHITECTURE.md](./docs/ARCHITECTURE.png)** - System architecture
 - **[AGENTS.md](./docs/AGENTS.md)** - AI agent implementation details
 - **[FG_INTEGRATION.md](./docs/FG_INTEGRATION.md)** - Fantasy Grounds sync protocol
+- **[WORKSHOP.pdf](./docs/WORKSHOP.pdf)** - Guidelines for RPG resources and contributions
 
 ## 📝 License
 
