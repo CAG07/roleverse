@@ -96,10 +96,10 @@ CREATE INDEX IF NOT EXISTS ingestion_jobs_status_idx
 -- Threshold lowered from 0.7 → 0.5: short queries against rule text need a wider net.
 -- ============================================================================
 
-DROP FUNCTION IF EXISTS public.match_campaign_embeddings(vector(1536), uuid, float, int);
+DROP FUNCTION IF EXISTS public.match_campaign_embeddings(extensions.vector(1536), uuid, float, int);
 
 CREATE OR REPLACE FUNCTION public.match_rules_embeddings(
-  query_embedding vector(1536),
+  query_embedding extensions.vector(1536),
   query_game_system TEXT,
   query_campaign_id UUID DEFAULT NULL,
   match_threshold FLOAT DEFAULT 0.5,
