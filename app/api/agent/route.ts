@@ -4,6 +4,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { runNarratorAgent } from '@/lib/mcp/agents/narrator';
+import { runRulesArbiterAgent } from '@/lib/mcp/agents/rules-arbiter';
+import { routeMessage } from '@/lib/mcp/coordinator';
 import { registerRollDiceTool } from '@/lib/mcp/tools/roll-dice';
 import type { AgentRequest, AgentResponse, MCPContext } from '@/lib/mcp/types';
 import { createClient } from '@/lib/supabase/server';
@@ -68,26 +70,35 @@ export async function POST(request: NextRequest) {
   };
 
   // --- Dispatch to the correct agent ---
+  // If agentRole is 'auto', use the coordinator to route based on message content.
+  const resolvedRole =
+    agentRole === ('auto' as AgentRequest['agentRole'])
+      ? routeMessage(message)
+      : agentRole;
+
   try {
     let result: AgentResponse;
 
-    switch (agentRole) {
+    switch (resolvedRole) {
       case 'narrator':
         result = await runNarratorAgent(message, mcpContext, conversationHistory);
         break;
 
-      // Future agent roles will be added here
       case 'rules_arbiter':
+        result = await runRulesArbiterAgent(message, mcpContext, conversationHistory);
+        break;
+
+      // Future agent roles will be added here in Phase 6b
       case 'npc_dialogue':
       case 'lore_keeper':
       case 'encounter_builder':
         return NextResponse.json(
-          { error: `Agent role "${agentRole}" is not yet implemented` },
+          { error: `Agent role "${resolvedRole}" is not yet implemented` },
           { status: 501 }
         );
 
       default:
-        return NextResponse.json({ error: `Unknown agent role: "${agentRole}"` }, { status: 400 });
+        return NextResponse.json({ error: `Unknown agent role: "${resolvedRole}"` }, { status: 400 });
     }
 
     return NextResponse.json(result);
