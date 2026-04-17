@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { ingestSystem, type IngestableSystem } from '@/lib/rag/ingest';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
 const VALID_SYSTEMS: IngestableSystem[] = ['5E_2014', 'PATHFINDER_2E', 'ADD2E'];
@@ -113,9 +114,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Create the ingestion_jobs row using the anon client (RLS: started_by = user.id)
-  const supabase = await createClient();
-  const { data: job, error: jobError } = await supabase
+  // Create the ingestion_jobs row via service role.
+  // Auth is already enforced by requireAdmin() above; the service role
+  // bypasses RLS so the insert is not blocked by a missing INSERT policy.
+  const adminDb = createAdminClient();
+  const { data: job, error: jobError } = await adminDb
     .from('ingestion_jobs')
     .insert({
       game_system: system,
@@ -133,16 +136,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Run ingestion asynchronously — fire and forget.
+  // Run ingestion asynchronously -- fire and forget.
   // ingestSystem handles its own error state via the try-catch in its body,
   // which marks the job as 'failed' in the DB. The outer .catch catches any
   // synchronous throw (e.g., missing env vars) before that try-catch is reached.
   void ingestSystem({ gameSystem: system, jobId: job.id }).catch(async (err: unknown) => {
     console.error(`Ingestion failed for ${system} (job ${job.id}):`, err);
     // Belt-and-suspenders: ensure job is marked failed even if ingestSystem threw
-    // before its own error handler ran.
-    const supabase = await createClient();
-    await supabase
+    // before its own error handler ran. Use the admin client because this runs
+    // outside of the request context and has no auth session.
+    const adminDb = createAdminClient();
+    await adminDb
       .from('ingestion_jobs')
       .update({
         status: 'failed',
@@ -150,7 +154,7 @@ export async function POST(request: NextRequest) {
         completed_at: new Date().toISOString(),
       })
       .eq('id', job.id)
-      .eq('status', 'pending'); // only overwrite if still pending (not already handled)
+      .eq('status', 'pending');
   });
 
   return NextResponse.json({ jobId: job.id, status: 'pending' }, { status: 202 });
