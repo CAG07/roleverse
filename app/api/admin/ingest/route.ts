@@ -28,7 +28,7 @@ function getAdminEmails(): string[] {
 }
 
 /** Check whether the authenticated user is an admin */
-async function requireAdmin(): Promise
+async function requireAdmin(): Promise<
   | { user: { id: string; email: string }; error: null }
   | { user: null; error: NextResponse }
 > {
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
 
   // Create the ingestion_jobs row via service role.
   // Auth is already enforced by requireAdmin() above; the service role
-  // bypasses RLS so the insert isn't blocked by a missing INSERT policy.
+  // bypasses RLS so the insert is not blocked by a missing INSERT policy.
   const adminDb = createAdminClient();
   const { data: job, error: jobError } = await adminDb
     .from('ingestion_jobs')
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Run ingestion asynchronously — fire and forget.
+  // Run ingestion asynchronously -- fire and forget.
   // ingestSystem handles its own error state via the try-catch in its body,
   // which marks the job as 'failed' in the DB. The outer .catch catches any
   // synchronous throw (e.g., missing env vars) before that try-catch is reached.
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         completed_at: new Date().toISOString(),
       })
       .eq('id', job.id)
-      .eq('status', 'pending'); // only overwrite if still pending (not already handled)
+      .eq('status', 'pending');
   });
 
   return NextResponse.json({ jobId: job.id, status: 'pending' }, { status: 202 });
