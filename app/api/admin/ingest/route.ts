@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { ingestSystem, type IngestableSystem } from '@/lib/rag/ingest';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
 const VALID_SYSTEMS: IngestableSystem[] = ['5E_2014', 'PATHFINDER_2E', 'ADD2E'];
@@ -27,7 +28,7 @@ function getAdminEmails(): string[] {
 }
 
 /** Check whether the authenticated user is an admin */
-async function requireAdmin(): Promise<
+async function requireAdmin(): Promise
   | { user: { id: string; email: string }; error: null }
   | { user: null; error: NextResponse }
 > {
@@ -113,9 +114,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Create the ingestion_jobs row using the anon client (RLS: started_by = user.id)
-  const supabase = await createClient();
-  const { data: job, error: jobError } = await supabase
+  // Create the ingestion_jobs row via service role.
+  // Auth is already enforced by requireAdmin() above; the service role
+  // bypasses RLS so the insert isn't blocked by a missing INSERT policy.
+  const adminDb = createAdminClient();
+  const { data: job, error: jobError } = await adminDb
     .from('ingestion_jobs')
     .insert({
       game_system: system,
@@ -140,9 +143,10 @@ export async function POST(request: NextRequest) {
   void ingestSystem({ gameSystem: system, jobId: job.id }).catch(async (err: unknown) => {
     console.error(`Ingestion failed for ${system} (job ${job.id}):`, err);
     // Belt-and-suspenders: ensure job is marked failed even if ingestSystem threw
-    // before its own error handler ran.
-    const supabase = await createClient();
-    await supabase
+    // before its own error handler ran. Use the admin client because this runs
+    // outside of the request context and has no auth session.
+    const adminDb = createAdminClient();
+    await adminDb
       .from('ingestion_jobs')
       .update({
         status: 'failed',
