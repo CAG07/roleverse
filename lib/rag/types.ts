@@ -27,7 +27,7 @@ export interface ChunkMetadata {
 
 /** A chunk with its computed embedding vector */
 export interface EmbeddedChunk extends RagChunk {
-  /** 1536-dimension embedding from text-embedding-3-small */
+  /** 1024-dimension embedding from Voyage AI voyage-3-lite */
   embedding: number[];
 }
 

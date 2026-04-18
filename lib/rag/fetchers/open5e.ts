@@ -1,10 +1,12 @@
 // lib/rag/fetchers/open5e.ts
 // Fetches 5E 2014 SRD content from the Open5e public REST API.
-// See: https://api.open5e.com and https://github.com/open5e/open5e-api
+// Open5e migrated its endpoints to /v1/ — all content paths now require the version prefix.
+// See: https://api.open5e.com/v1/ and https://github.com/open5e/open5e-api
 
 import type { RagChunk } from '../types';
 
-const BASE_URL = 'https://api.open5e.com';
+/** All SRD content is served under the /v1/ prefix as of the Open5e v2 migration */
+const BASE_URL = 'https://api.open5e.com/v1';
 /** Page size for paginated endpoints */
 const PAGE_SIZE = 200;
 
