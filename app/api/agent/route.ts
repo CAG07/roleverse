@@ -3,7 +3,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+import { runEncounterBuilderAgent } from '@/lib/mcp/agents/encounter-builder';
+import { runLoreKeeperAgent } from '@/lib/mcp/agents/lore-keeper';
 import { runNarratorAgent } from '@/lib/mcp/agents/narrator';
+import { runNpcDialogueAgent } from '@/lib/mcp/agents/npc-dialogue';
 import { runRulesArbiterAgent } from '@/lib/mcp/agents/rules-arbiter';
 import { routeMessage } from '@/lib/mcp/coordinator';
 import { registerRollDiceTool } from '@/lib/mcp/tools/roll-dice';
@@ -73,7 +76,7 @@ export async function POST(request: NextRequest) {
   // If agentRole is 'auto', use the coordinator to route based on message content.
   const resolvedRole =
     agentRole === ('auto' as AgentRequest['agentRole'])
-      ? routeMessage(message)
+      ? await routeMessage(message)
       : agentRole;
 
   try {
@@ -88,14 +91,17 @@ export async function POST(request: NextRequest) {
         result = await runRulesArbiterAgent(message, mcpContext, conversationHistory);
         break;
 
-      // Future agent roles will be added here in Phase 6b
       case 'npc_dialogue':
+        result = await runNpcDialogueAgent(message, mcpContext, conversationHistory);
+        break;
+
       case 'lore_keeper':
+        result = await runLoreKeeperAgent(message, mcpContext, conversationHistory);
+        break;
+
       case 'encounter_builder':
-        return NextResponse.json(
-          { error: `Agent role "${resolvedRole}" is not yet implemented` },
-          { status: 501 }
-        );
+        result = await runEncounterBuilderAgent(message, mcpContext, conversationHistory);
+        break;
 
       default:
         return NextResponse.json({ error: `Unknown agent role: "${resolvedRole}"` }, { status: 400 });
