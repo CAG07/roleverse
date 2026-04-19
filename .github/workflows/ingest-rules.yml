@@ -1,0 +1,41 @@
+name: Ingest Rules Embeddings
+
+on:
+  workflow_dispatch:
+    inputs:
+      system:
+        description: 'Game system to re-index'
+        required: true
+        type: choice
+        options:
+          - 5E_2014
+          - ADD2E
+          - PATHFINDER_2E
+
+jobs:
+  ingest:
+    name: Ingest ${{ github.event.inputs.system }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run ingestion
+        run: npx tsx scripts/run-ingestion.ts ${{ github.event.inputs.system }}
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        timeout-minutes: 180
