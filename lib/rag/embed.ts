@@ -5,7 +5,7 @@
 
 const VOYAGE_API_URL = 'https://api.voyageai.com/v1/embeddings';
 const EMBEDDING_MODEL = 'voyage-3-lite';
-/** Native dimension of voyage-3-lite — matches VECTOR(1024) in schema */
+/** Native dimension of voyage-3-lite — matches VECTOR(512) in schema */
 export const EMBEDDING_DIMENSIONS = 512;
 /** Voyage supports up to 128 texts per request */
 const BATCH_SIZE = 128;
