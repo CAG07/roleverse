@@ -77,10 +77,10 @@ Voice chat via Discord is transcribed and displayed in the web app chat. The Rol
 | **Frontend**   | Next.js 16 + React 19            |
 | **Backend**    | Next.js API Routes (serverless)  |
 | **Database**   | PostgreSQL + pgvector            |
-| **AI**         | Anthropic Claude                 |
-| **Embeddings** | OpenAI ada-002                   |
-| **Voice**      | OpenAI Whisper + ElevenLabs      |
-| **Desktop**    | Sync Agent                        |
+| **AI Agents**  | Anthropic Claude                 |
+| **Embeddings** | Voyage AI voyage-3-lite          |
+| **Voice**      | OpenAI Whisper                   |
+| **Desktop**    | Sync Agent                       |
 | **Hosting**    | Vercel                           |
 
 ## 🚀 Quick Start
