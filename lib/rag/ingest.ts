@@ -2,6 +2,10 @@
 // Ingestion orchestrator — coordinates fetching, chunking, embedding, and upserting.
 // Runs server-side (Node.js) with a Supabase service-role client so it can write
 // baseline rows (campaign_id IS NULL, user_id IS NULL) that bypass RLS.
+//
+// Zero-downtime re-ingestion via generation swap:
+// New chunks are written under generation N+1 while generation N stays live.
+// The old generation is deleted only after the new one is fully written.
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
@@ -27,17 +31,22 @@ export interface IngestOptions {
 export interface IngestResult {
   chunksProcessed: number;
   chunksUpserted: number;
+  generation: number;
 }
 
 /**
  * Run the full ingestion pipeline for a given game system.
  *
  * Steps:
- * 1. Fetch raw content from the appropriate fetcher.
- * 2. Split long entries into overlapping text chunks.
- * 3. Embed each chunk with text-embedding-3-small.
- * 4. Upsert the embedded vectors into campaign_embeddings.
- * 5. Update ingestion_jobs progress throughout.
+ * 1. Determine the next generation number for this system.
+ * 2. Fetch raw content from the appropriate fetcher.
+ * 3. Split long entries into overlapping text chunks.
+ * 4. Embed each chunk via Voyage AI and upsert under the new generation.
+ * 5. After all chunks are written, delete the previous generation atomically.
+ * 6. Update ingestion_jobs progress throughout.
+ *
+ * The previous generation remains fully queryable until step 5 completes,
+ * so active game sessions are never interrupted during re-ingestion.
  */
 export async function ingestSystem(options: IngestOptions): Promise<IngestResult> {
   const { gameSystem, jobId, signal } = options;
@@ -51,6 +60,21 @@ export async function ingestSystem(options: IngestOptions): Promise<IngestResult
     .eq('id', jobId);
 
   try {
+    // Determine the next generation number.
+    // Existing live data stays queryable under the current generation
+    // throughout the entire ingestion run.
+    const { data: genRow } = await supabase
+      .from('campaign_embeddings')
+      .select('generation')
+      .eq('game_system', gameSystem)
+      .eq('source_type', 'baseline')
+      .is('campaign_id', null)
+      .order('generation', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const newGeneration = ((genRow?.generation as number | null) ?? 0) + 1;
+
     const chunkStream = streamChunksForSystem(gameSystem);
     const buffer: RagChunk[] = [];
     let chunksProcessed = 0;
@@ -70,7 +94,7 @@ export async function ingestSystem(options: IngestOptions): Promise<IngestResult
 
       // Flush when we have enough to batch
       if (buffer.length >= UPSERT_BATCH_SIZE) {
-        const upserted = await flushBuffer(buffer, supabase, gameSystem);
+        const upserted = await flushBuffer(buffer, supabase, gameSystem, newGeneration);
         chunksUpserted += upserted;
         buffer.length = 0;
 
@@ -84,8 +108,27 @@ export async function ingestSystem(options: IngestOptions): Promise<IngestResult
 
     // Flush remainder
     if (buffer.length > 0) {
-      const upserted = await flushBuffer(buffer, supabase, gameSystem);
+      const upserted = await flushBuffer(buffer, supabase, gameSystem, newGeneration);
       chunksUpserted += upserted;
+    }
+
+    // All new chunks are written — now atomically retire the previous generation.
+    // This is the only moment old data is removed. New data is already complete
+    // and queryable, so active sessions see no gap.
+    const { error: deleteError } = await supabase
+      .from('campaign_embeddings')
+      .delete()
+      .eq('game_system', gameSystem)
+      .eq('source_type', 'baseline')
+      .is('campaign_id', null)
+      .lt('generation', newGeneration);
+
+    if (deleteError) {
+      // Non-fatal: old generation rows are orphaned but don't break anything.
+      // Log and continue — the new generation is live and correct.
+      console.warn(
+        `[${gameSystem}] Warning: failed to delete old generation rows: ${deleteError.message}`
+      );
     }
 
     // Mark completed
@@ -96,10 +139,11 @@ export async function ingestSystem(options: IngestOptions): Promise<IngestResult
         total_chunks: chunksProcessed,
         processed_chunks: chunksUpserted,
         completed_at: new Date().toISOString(),
+        metadata: { generation: newGeneration },
       })
       .eq('id', jobId);
 
-    return { chunksProcessed, chunksUpserted };
+    return { chunksProcessed, chunksUpserted, generation: newGeneration };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await supabase
@@ -114,11 +158,12 @@ export async function ingestSystem(options: IngestOptions): Promise<IngestResult
   }
 }
 
-/** Embed a buffer of chunks and upsert them; returns count upserted */
+/** Embed a buffer of chunks and insert them tagged with the current generation */
 async function flushBuffer(
   chunks: RagChunk[],
   supabase: SupabaseClient,
-  gameSystem: string
+  gameSystem: string,
+  generation: number
 ): Promise<number> {
   const texts = chunks.map((c) => c.content);
   const embeddings = await embedBatch(texts);
@@ -131,6 +176,7 @@ async function flushBuffer(
     embedding: embeddings[i],
     metadata: chunk.metadata,
     source_type: 'baseline' as const,
+    generation,
   }));
 
   const { error } = await supabase.from('campaign_embeddings').insert(rows);
