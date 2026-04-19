@@ -3,14 +3,13 @@ name: Ingest Rules Embeddings
 on:
   workflow_dispatch:
     inputs:
-      system:
-        description: 'Game system to re-index'
-        required: true
-        type: choice
-        options:
-          - 5E_2014
-          - ADD2E
-          - PATHFINDER_2E
+      systems:
+        description: >
+          Comma-separated systems to re-index. Run when: a source updates,
+          a new system is added, or the embedding model changes.
+          Each run clears and replaces existing baseline data for that system.
+        required: false
+        default: '5E_2014,ADD2E,PATHFINDER_2E'
 
 jobs:
   ingest:
