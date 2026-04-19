@@ -6,19 +6,12 @@
 import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
-import { embedText } from '@/lib/rag/embed';
-import type { RulesMatchResult } from '@/lib/rag/types';
-import { createClient } from '@/lib/supabase/server';
+import { searchRules } from '@/lib/rag/search';
 
 import type { AgentMessage, AgentResponse, MCPContext } from '../types';
 
 const MODEL = 'claude-sonnet-4-20250514';
 const MAX_TOKENS = 1024;
-
-/** Minimum similarity score to include a retrieved chunk as context */
-const MIN_SIMILARITY = 0.5;
-/** Maximum number of chunks to retrieve */
-const MATCH_COUNT = 8;
 
 /** Build the system prompt for the Rules Arbiter */
 function buildSystemPrompt(context: MCPContext, ragContext: string): string {
@@ -67,36 +60,15 @@ function buildSystemPrompt(context: MCPContext, ragContext: string): string {
   return parts.join('\n');
 }
 
-/** Query Supabase for semantically similar rules chunks */
+/** Retrieve semantically similar rules chunks using the shared search helper and format as context */
 async function retrieveRulesContext(
   question: string,
   context: MCPContext
 ): Promise<{ ragContext: string; matchCount: number }> {
-  let queryEmbedding: number[];
-  try {
-    queryEmbedding = await embedText(question);
-  } catch {
-    // If embedding fails (e.g., no API key), fall back gracefully
-    return { ragContext: '', matchCount: 0 };
-  }
-
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.rpc('match_rules_embeddings', {
-    query_embedding: queryEmbedding,
-    query_game_system: context.gameSystem,
-    query_campaign_id: context.campaignId ?? null,
-    match_threshold: MIN_SIMILARITY,
-    match_count: MATCH_COUNT,
+  const results = await searchRules(question, {
+    gameSystem: context.gameSystem,
+    campaignId: context.campaignId,
   });
-
-  if (error || !data) {
-    // Non-fatal: proceed without RAG context
-    console.warn('Rules Arbiter: match_rules_embeddings failed:', error?.message);
-    return { ragContext: '', matchCount: 0 };
-  }
-
-  const results = (data as RulesMatchResult[]).sort((a, b) => b.similarity - a.similarity);
 
   if (results.length === 0) {
     return { ragContext: '', matchCount: 0 };
