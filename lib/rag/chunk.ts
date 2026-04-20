@@ -106,8 +106,8 @@ function hardSlice(text: string, maxChars: number, overlapChars: number): string
   while (start < text.length) {
     const end = Math.min(start + maxChars, text.length);
     slices.push(text.slice(start, end));
+    if (end >= text.length) break;
     start = end - overlapChars;
-    if (start >= text.length) break;
   }
   return slices;
 }
