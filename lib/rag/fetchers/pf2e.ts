@@ -10,6 +10,7 @@
 // Set GITHUB_TOKEN env var to avoid GitHub API rate limits.
 
 import type { RagChunk } from '../types';
+import { fetchWithRetry } from './utils';
 
 const GITHUB_API = 'https://api.github.com';
 const PF2E_REPO = 'foundryvtt/pf2e';
@@ -69,9 +70,9 @@ export async function* fetchPf2eChunks(
   // Get the latest release to find the commit SHA / tag for stable content
   let commitSha = 'master';
   try {
-    const releaseResponse = await fetch(
+    const releaseResponse = await fetchWithRetry(
       `${GITHUB_API}/repos/${PF2E_REPO}/releases/latest`,
-      { headers, signal: AbortSignal.timeout(15_000) }
+      { headers }
     );
 
     if (releaseResponse.ok) {
@@ -96,16 +97,15 @@ export async function* fetchPf2eChunks(
     // Try .json first, then .db (which may be JSONL in older versions)
     for (const url of [jsonUrl, jsonlUrl]) {
       try {
-        const res = await fetch(url, {
+        const res = await fetchWithRetry(url, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
-          signal: AbortSignal.timeout(60_000),
         });
         if (res.ok) {
           packText = await res.text();
           break;
         }
       } catch {
-        // Timeout or network error — try next URL or skip pack
+        // Retries exhausted for this URL — try next URL or skip pack
         continue;
       }
     }
