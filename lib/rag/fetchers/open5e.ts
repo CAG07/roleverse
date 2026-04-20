@@ -1,11 +1,15 @@
 // lib/rag/fetchers/open5e.ts
 // Fetches 5E 2014 SRD content from the Open5e public REST API.
-// Open5e migrated its endpoints to /v1/ — all content paths now require the version prefix.
+// Uses the v1 API (https://api.open5e.com/v1/) with the wotc-srd document filter
+// to ingest only the WotC System Reference Document 5.1 content (CC-BY-4.0),
+// excluding third-party publisher content (Kobold Press, Level Up, etc.)
+// that Open5e also hosts.
+//
 // See: https://api.open5e.com/v1/ and https://github.com/open5e/open5e-api
 
 import type { RagChunk } from '../types';
 
-/** All SRD content is served under the /v1/ prefix as of the Open5e v2 migration */
+/** All SRD content is served under the /v1/ prefix */
 const BASE_URL = 'https://api.open5e.com/v1';
 /** Page size for paginated endpoints */
 const PAGE_SIZE = 200;
@@ -89,7 +93,7 @@ async function* fetchEndpointChunks(
   endpoint: Open5eEndpoint,
   onProgress?: ProgressCallback
 ): AsyncGenerator<RagChunk> {
-  let url: string | null = `${BASE_URL}${endpoint.path}?limit=${PAGE_SIZE}`;
+  let url: string | null = `${BASE_URL}${endpoint.path}?document__slug=wotc-srd&limit=${PAGE_SIZE}`;
   let total: number | null = null;
   let fetched = 0;
 
