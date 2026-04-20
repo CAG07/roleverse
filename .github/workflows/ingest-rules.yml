@@ -3,17 +3,18 @@ name: Ingest Rules Embeddings
 on:
   workflow_dispatch:
     inputs:
-      systems:
-        description: >
-          Comma-separated systems to re-index. Run when: a source updates,
-          a new system is added, or the embedding model changes.
-          Each run clears and replaces existing baseline data for that system.
-        required: false
-        default: '5E_2014,ADD2E,PATHFINDER_2E'
+      system:
+        description: 'Game system to re-index'
+        required: true
+        type: choice
+        options:
+          - 5E_2014
+          - ADD2E
+          - PATHFINDER_2E
 
 jobs:
   ingest:
-    name: Ingest ${{ github.event.inputs.system }}
+    name: Ingest ${{ inputs.system }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
@@ -31,10 +32,10 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Run ingestion
-        run: npx tsx scripts/run-ingestion.ts ${{ github.event.inputs.system }}
+        run: npx tsx scripts/run-ingestion.ts ${{ inputs.system }}
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        timeout-minutes: 180
+        timeout-minutes: 120
