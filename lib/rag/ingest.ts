@@ -4,8 +4,14 @@
 // baseline rows (campaign_id IS NULL, user_id IS NULL) that bypass RLS.
 //
 // Zero-downtime re-ingestion via generation swap:
-// New chunks are written under generation N+1 while generation N stays live.
-// The old generation is deleted only after the new one is fully written.
+// 1. reserve_next_generation atomically increments latest_generation
+// 2. All new chunks are written tagged with the new generation number
+// 3. promote_generation atomically flips active_generation to the new value
+// 4. Cleanup deletes pre-rollback generations
+//
+// Queries via match_rules_embeddings only ever see active_generation, so active
+// game sessions are never interrupted during re-ingestion. Failed ingests leave
+// orphan rows that are invisible to queries and get swept on the next successful run.
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
@@ -60,20 +66,24 @@ export async function ingestSystem(options: IngestOptions): Promise<IngestResult
     .eq('id', jobId);
 
   try {
-    // Determine the next generation number.
-    // Existing live data stays queryable under the current generation
-    // throughout the entire ingestion run.
-    const { data: genRow } = await supabase
-      .from('campaign_embeddings')
-      .select('generation')
-      .eq('game_system', gameSystem)
-      .eq('source_type', 'baseline')
-      .is('campaign_id', null)
-      .order('generation', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // Atomically reserve the next generation number. This increments
+    // latest_generation in embedding_generations; active_generation stays put,
+    // so live queries continue to see the previous generation until we promote.
+    const { data: reservedGen, error: reserveError } = await supabase.rpc(
+      'reserve_next_generation',
+      {
+        p_game_system: gameSystem,
+        p_source_type: 'baseline',
+      }
+    );
 
-    const newGeneration = ((genRow?.generation as number | null) ?? 0) + 1;
+    if (reserveError || typeof reservedGen !== 'number') {
+      throw new Error(
+        `Failed to reserve next generation for ${gameSystem}: ${reserveError?.message ?? 'unknown'}`
+      );
+    }
+
+    const newGeneration = reservedGen;
 
     const chunkStream = streamChunksForSystem(gameSystem);
     const buffer: RagChunk[] = [];
@@ -112,22 +122,35 @@ export async function ingestSystem(options: IngestOptions): Promise<IngestResult
       chunksUpserted += upserted;
     }
 
-    // All new chunks are written — now atomically retire the previous generation.
-    // This is the only moment old data is removed. New data is already complete
-    // and queryable, so active sessions see no gap.
+    // All new chunks are written under the new generation. Promote it atomically —
+    // this is the moment live queries start seeing the new data.
+    const { error: promoteError } = await supabase.rpc('promote_generation', {
+      p_game_system: gameSystem,
+      p_source_type: 'baseline',
+      p_generation: newGeneration,
+    });
+
+    if (promoteError) {
+      throw new Error(
+        `Failed to promote generation ${newGeneration} for ${gameSystem}: ${promoteError.message}`
+      );
+    }
+
+    // Cleanup: keep the newly-promoted generation (newGeneration) and one previous
+    // as rollback. Delete everything older.
     const { error: deleteError } = await supabase
       .from('campaign_embeddings')
       .delete()
       .eq('game_system', gameSystem)
       .eq('source_type', 'baseline')
       .is('campaign_id', null)
-      .lt('generation', newGeneration);
+      .lt('generation', newGeneration - 1);
 
     if (deleteError) {
-      // Non-fatal: old generation rows are orphaned but don't break anything.
-      // Log and continue — the new generation is live and correct.
+      // Non-fatal: the new generation is already live. Orphan old rows are
+      // invisible to queries (wrong generation) and will be swept on next run.
       console.warn(
-        `[${gameSystem}] Warning: failed to delete old generation rows: ${deleteError.message}`
+        `[${gameSystem}] Warning: cleanup of pre-rollback generations failed: ${deleteError.message}`
       );
     }
 
