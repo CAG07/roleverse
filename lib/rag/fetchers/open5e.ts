@@ -8,6 +8,7 @@
 // See: https://api.open5e.com/v1/ and https://github.com/open5e/open5e-api
 
 import type { RagChunk } from '../types';
+import { fetchWithRetry } from './utils';
 
 /** All SRD content is served under the /v1/ prefix */
 const BASE_URL = 'https://api.open5e.com/v1';
@@ -98,9 +99,8 @@ async function* fetchEndpointChunks(
   let fetched = 0;
 
   while (url) {
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(30_000),
     });
 
     if (!response.ok) {
