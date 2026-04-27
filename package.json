@@ -46,7 +46,7 @@
     "openai": "^6.25.0",
     "pdf-parse-fork": "^1.2.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react-dom": "^19.2.5",
     "tailwind-merge": "^3.4.1",
     "tar": "7.5.11",
     "zod": "^4.3.6"
