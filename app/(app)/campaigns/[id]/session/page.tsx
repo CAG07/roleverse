@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import SessionPageClient from '@/components/session/SessionPageClient';
 import type { PartyMember, Character } from '@/lib/types/session';
@@ -57,8 +57,20 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
   const characters: Character[] = (charactersRaw ?? []) as Character[];
 
+  // Create a new session record for this visit (establishes session boundary)
+  const { data: newSession } = await supabase
+    .from('sessions')
+    .insert({ campaign_id: id, user_id: user!.id })
+    .select('id')
+    .single();
+
+  if (!newSession) {
+    redirect(`/campaigns/${id}`);
+  }
+
   return (
     <SessionPageClient
+      sessionId={newSession.id as string}
       campaignId={id}
       campaignName={campaign.name}
       gameSystem={campaign.game_system}

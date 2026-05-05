@@ -19,6 +19,7 @@ interface SessionSidebarProps {
   isDM?: boolean;
   campaignId: string;
   onToggleNotes?: () => void;
+  onStopSession?: () => void;
 }
 
 function CollapsibleSection({
@@ -49,6 +50,7 @@ export default function SessionSidebar({
   isDM = false,
   campaignId,
   onToggleNotes,
+  onStopSession,
 }: SessionSidebarProps) {
   return (
     <aside className={styles.sessionSidebar}>
@@ -94,6 +96,11 @@ export default function SessionSidebar({
 
       {/* Status indicators */}
       <div className={styles.sidebarFooter}>
+        {onStopSession && (
+          <button className={styles.btnStopSession} onClick={onStopSession} type="button">
+            ■ Stop Session
+          </button>
+        )}
         <FGConnectionStatus />
         <VoiceStatus />
       </div>

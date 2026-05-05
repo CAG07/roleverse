@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import SessionSidebar from '@/components/session/SessionSidebar';
 import SceneDisplay from '@/components/session/SceneDisplay';
 import ChatWindow from '@/components/session/ChatWindow';
@@ -15,23 +16,38 @@ import styles from './SessionPageClient.module.css';
 type MobileTab = 'chat' | 'character' | 'sidebar';
 
 export default function SessionPageClient({
+  sessionId,
   campaignId,
   campaignName,
   gameSystem,
   partyMembers,
   characters,
 }: {
+  sessionId: string;
   campaignId: string;
   campaignName: string;
   gameSystem: string;
   partyMembers: PartyMember[];
   characters: Character[];
 }) {
+  const router = useRouter();
   const [sceneMedia, setSceneMedia] = useState<SceneMedia | null>(null);
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
+  const [confirmStop, setConfirmStop] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
 
   const selectedCharacter = characters.find((c) => c.id === selectedCharacterId) ?? null;
+
+  const handleStopSession = useCallback(async () => {
+    setIsStopping(true);
+    try {
+      await fetch(`/api/sessions/${sessionId}/end`, { method: 'POST' });
+    } finally {
+      setIsStopping(false);
+      router.push(`/campaigns/${campaignId}`);
+    }
+  }, [sessionId, campaignId, router]);
 
   // Build party nav entries for SessionSidebar
   const partyNav = partyMembers.map((m) => ({
@@ -66,6 +82,33 @@ export default function SessionPageClient({
 
   return (
     <div className={styles.sessionRoot}>
+      {/* Confirm Stop Session dialog */}
+      {confirmStop && (
+        <div className={styles.confirmOverlay}>
+          <div className={styles.confirmDialog}>
+            <p className={styles.confirmText}>End this session?</p>
+            <div className={styles.confirmActions}>
+              <button
+                className={styles.btnConfirmStop}
+                onClick={handleStopSession}
+                disabled={isStopping}
+                type="button"
+              >
+                {isStopping ? 'Ending…' : 'End Session'}
+              </button>
+              <button
+                className={styles.btnCancel}
+                onClick={() => setConfirmStop(false)}
+                disabled={isStopping}
+                type="button"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile tab bar */}
       <div className={styles.mobileTabs}>
         <button
@@ -98,6 +141,7 @@ export default function SessionPageClient({
             partyMembers={partyNav}
             isDM
             campaignId={campaignId}
+            onStopSession={() => setConfirmStop(true)}
           />
         </div>
 
@@ -109,8 +153,7 @@ export default function SessionPageClient({
           <div className={styles.chatPanel}>
             <ChatWindow
               onSceneMediaUpdate={setSceneMedia}
-              campaignId={campaignId}
-              gameSystem={gameSystem}
+              sessionId={sessionId}
             />
           </div>
         </div>
