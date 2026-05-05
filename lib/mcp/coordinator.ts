@@ -13,18 +13,144 @@ import type { AgentRole } from './types';
 // Haiku classifier
 // ---------------------------------------------------------------------------
 
-const HAIKU_MODEL = 'claude-haiku-4-20250514';
+const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 
-const ROUTER_SYSTEM_PROMPT = `You are a message router for a tabletop RPG assistant. 
-Classify the player's message into exactly one of the following agent roles:
+const ROUTER_SYSTEM_PROMPT = `You are a message router for a tabletop RPG assistant.
+Classify the player's message into exactly one of these agent roles and reply with ONLY the role name — no punctuation, no explanation.
 
-- narrator: Story narration, scene descriptions, NPC actions, general gameplay, anything not covered below.
-- rules_arbiter: Rules questions, mechanic clarifications, how abilities/spells/conditions work.
-- npc_dialogue: Requests to speak as a specific NPC, generate NPC dialogue, or roleplay as a character.
-- lore_keeper: Campaign lore questions, story history, "what happened in session X", world knowledge.
-- encounter_builder: Building or requesting a combat encounter, generating enemies, encounter difficulty.
+───────────────────────────────────────────
+AGENT ROLES
+───────────────────────────────────────────
 
-Reply with ONLY the role name and nothing else. No punctuation, no explanation.`;
+narrator
+  Default agent. Handles present-tense player actions, exploration, scene
+  interaction, and anything not clearly belonging to another agent.
+  Examples:
+    "I head north toward the mountains"
+    "I enter the tavern"
+    "I search the room for traps"
+    "I draw my sword and ready my shield"
+    "I attack the goblin"
+    "I dodge behind the pillar"
+    "I try to pick the lock"
+    "I make camp for the night"
+    "I listen at the door"
+    "What does the room look like?"
+    "I examine the strange symbol on the wall"
+    "I run from the bandits"
+    "What do the guards do?"
+    "I try to intimidate the guard"
+    "Who are those people?"
+
+npc_dialogue
+  Handles messages where the player is speaking TO a named or present NPC,
+  or explicitly requesting an NPC voice or reaction.
+  Examples:
+    "I ask the innkeeper about available rooms"
+    "I tell the merchant we are looking for information"
+    "I warn the guard captain that danger is coming"
+    "I try to convince the elder to help us"
+    "I offer the thief a deal"
+    "What does the merchant say to our offer?"
+    "Have the captain respond to our proposal"
+    "Play the old wizard reaction"
+    "I negotiate with the guild master"
+    "I try to charm the noble"
+    "I plead with the guard"
+    "I greet the merchant and ask about the road north"
+    "I ask the barkeep what he knows about the missing miners"
+    "I persuade her to lower her price"
+    "What would an innkeeper say about that?"
+
+rules_arbiter
+  Handles questions about game mechanics, rules, stats, and how the system works.
+  Examples:
+    "How does grappling work?"
+    "What is the range on fireball?"
+    "Can I use a bonus action to disengage?"
+    "How many spell slots do I have at level 5?"
+    "What does the prone condition do?"
+    "Does my rage bonus apply to this damage?"
+    "Can I cast two spells in one turn?"
+    "Can my character multiclass?"
+    "Is sneak attack allowed on this attack?"
+    "What is my THAC0 against plate armor?"
+    "How does the three-action economy work?"
+    "How much XP do I need for level 6?"
+    "What is the damage for a greataxe?"
+    "How long does paralysis last?"
+    "What happens when I fail a death saving throw?"
+    "Can I act while concentrating on a spell?"
+    "How does spell burn work?"
+    "What is the CR of a beholder?"
+    "How do saving throws work in AD&D?"
+
+lore_keeper
+  Handles recall questions about established campaign facts, past sessions,
+  NPCs already encountered, locations visited, and ongoing quest details.
+  These are memory questions about what HAS happened, not what is happening now.
+  Examples:
+    "What was the sheriff name?"
+    "Who hired us for this job?"
+    "What was that merchant we met called?"
+    "Which guard let us through last time?"
+    "What happened in the last session?"
+    "Where did we find the amulet?"
+    "How did we escape from the prison?"
+    "What did the wizard tell us about the artifact?"
+    "What is the name of this town?"
+    "Where is the thieves guild located?"
+    "Which inn did we stay at before?"
+    "What is our current quest?"
+    "What were we supposed to deliver?"
+    "Who are we working for?"
+    "What did we learn about the cult?"
+    "Are we on good terms with the merchants guild?"
+    "Does the baron know who we are?"
+    "What do the villagers think of us?"
+    "Who was that person we met at the crossroads?"
+    "Remind me what is going on with the storyline"
+    "What happened to the missing miners?"
+
+encounter_builder
+  Handles requests to generate, design, or build a combat encounter or enemy group.
+  Examples:
+    "Build me a bandit ambush for a party of four"
+    "Create a random encounter in the forest"
+    "Generate a dungeon boss fight"
+    "What monsters would guard an ancient tomb?"
+    "Give me a hard encounter for level 5 characters"
+    "Create a challenging but survivable fight"
+    "What would a goblin war band look like?"
+    "Generate a patrol of undead"
+    "Create a rival adventuring party as antagonists"
+    "Design an ambush with archers and melee fighters"
+    "What enemies would work well in a swamp?"
+    "How many goblins should we fight at this level?"
+
+───────────────────────────────────────────
+DISAMBIGUATION RULES (apply in order)
+───────────────────────────────────────────
+
+1. "Build / create / generate an encounter / enemies / a fight" → encounter_builder
+2. "How does X work / Can I do X / What is the rule for X / What is the stat for X" → rules_arbiter
+3. "What was / Who was / What happened / Where did / Who hired / Remind me" (past tense recall) → lore_keeper
+4. Player speaking TO a named or present NPC ("I ask [NPC]", "I tell [NPC]", "I warn [NPC]") → npc_dialogue
+5. Request for an NPC voice or reaction ("What does [NPC] say?", "Have [NPC] respond") → npc_dialogue
+6. Present-tense player action ("I [verb]") → narrator
+7. When ambiguous → narrator
+
+KEY DISTINCTIONS:
+- "I ask the sheriff about the road" (NPC present, speaking to them) → npc_dialogue
+- "What was the sheriff name?" (past recall, NPC not present) → lore_keeper
+- "I attack the goblin" (action) → narrator
+- "How do I attack?" (rule question) → rules_arbiter
+- "I try to intimidate the guard" (player action) → narrator
+- "What does the guard say?" (NPC voice request) → npc_dialogue
+- "Who are those people?" (scene, NPCs present) → narrator
+- "Who was that person we met before?" (past recall) → lore_keeper
+- "What does this symbol mean?" (current scene) → narrator
+- "What did that symbol mean that we found before?" (past recall) → lore_keeper`;
 
 /**
  * Route a player message to the most appropriate agent role using Claude Haiku.
