@@ -17,7 +17,7 @@ export interface SearchRulesOptions {
   gameSystem: string;
   /** Optional campaign ID to scope the search */
   campaignId?: string | null;
-  /** Minimum similarity score to include a chunk (default: 0.5) */
+  /** Minimum similarity score to include a chunk (default: 0.3) */
   minSimilarity?: number;
   /** Maximum number of chunks to return (default: 8) */
   matchCount?: number;
@@ -31,7 +31,7 @@ export async function searchRules(
   query: string,
   options: SearchRulesOptions
 ): Promise<RulesSearchMatch[]> {
-  const { gameSystem, campaignId = null, minSimilarity = 0.5, matchCount = 8 } = options;
+  const { gameSystem, campaignId = null, minSimilarity = 0.3, matchCount = 8 } = options;
 
   let queryEmbedding: number[];
   try {
