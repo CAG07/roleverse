@@ -57,8 +57,20 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
   const characters: Character[] = (charactersRaw ?? []) as Character[];
 
+  // Create a new session record for this visit (establishes session boundary)
+  const { data: newSession } = await supabase
+    .from('sessions')
+    .insert({ campaign_id: id, user_id: user!.id })
+    .select('id')
+    .single();
+
+  if (!newSession) {
+    notFound();
+  }
+
   return (
     <SessionPageClient
+      sessionId={newSession.id as string}
       campaignId={id}
       campaignName={campaign.name}
       gameSystem={campaign.game_system}

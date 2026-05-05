@@ -47,11 +47,10 @@ function relativeTime(date: Date): string {
 
 interface ChatWindowProps {
   onSceneMediaUpdate?: (media: SceneMedia) => void;
-  campaignId: string;
-  gameSystem: string;
+  sessionId: string;
 }
 
-export default function ChatWindow({ onSceneMediaUpdate, campaignId, gameSystem }: ChatWindowProps) {
+export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindowProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'msg-init',
@@ -102,13 +101,11 @@ export default function ChatWindow({ onSceneMediaUpdate, campaignId, gameSystem 
       }));
 
     try {
-      const res = await fetch('/api/agent', {
+      const res = await fetch(`/api/sessions/${sessionId}/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          agentRole: 'narrator',
           message: text,
-          context: { campaignId, gameSystem },
           conversationHistory: history,
         }),
       });
@@ -128,10 +125,10 @@ export default function ChatWindow({ onSceneMediaUpdate, campaignId, gameSystem 
       }
 
       const data = await res.json();
-      const narratorMsg: ChatMessage = {
+      const agentMsg: ChatMessage = {
         id: `msg-${Date.now()}`,
         role: 'agent',
-        agentType: 'narrator',
+        agentType: (data.agentRole as AgentType) ?? 'narrator',
         content: data.content,
         timestamp: new Date(),
       };
@@ -145,11 +142,11 @@ export default function ChatWindow({ onSceneMediaUpdate, campaignId, gameSystem 
           source: data.sceneMedia.source,
           timestamp: new Date(),
         };
-        narratorMsg.sceneMedia = media;
+        agentMsg.sceneMedia = media;
         onSceneMediaUpdate(media);
       }
 
-      setMessages((prev) => [...prev, narratorMsg]);
+      setMessages((prev) => [...prev, agentMsg]);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -163,7 +160,7 @@ export default function ChatWindow({ onSceneMediaUpdate, campaignId, gameSystem 
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, campaignId, gameSystem, onSceneMediaUpdate]);
+  }, [input, isLoading, sessionId, onSceneMediaUpdate]);
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

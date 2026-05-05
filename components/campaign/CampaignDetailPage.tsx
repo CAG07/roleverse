@@ -68,6 +68,22 @@ export function CampaignDetailPage({
 }: CampaignDetailPageProps) {
   const router = useRouter();
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [confirmStop, setConfirmStop] = useState(false);
+  const [stoppingSession, setStoppingSession] = useState(false);
+
+  const activeSession = sessions.find((s) => !s.ended_at) ?? null;
+
+  const handleStopSession = async () => {
+    if (!activeSession) return;
+    setStoppingSession(true);
+    try {
+      await fetch(`/api/sessions/${activeSession.id}/end`, { method: 'POST' });
+      router.refresh();
+    } finally {
+      setStoppingSession(false);
+      setConfirmStop(false);
+    }
+  };
 
   const lastSession = sessions[0] ?? null;
 
@@ -85,6 +101,32 @@ export function CampaignDetailPage({
 
   return (
     <div className={styles.campaignDetailRoot}>
+      {confirmStop && (
+        <div className={styles.confirmOverlay}>
+          <div className={styles.confirmDialog}>
+            <p className={styles.confirmText}>End the active session?</p>
+            <div className={styles.confirmActions}>
+              <button
+                type="button"
+                className={styles.btnConfirmStop}
+                onClick={handleStopSession}
+                disabled={stoppingSession}
+              >
+                {stoppingSession ? 'Ending…' : 'End Session'}
+              </button>
+              <button
+                type="button"
+                className={styles.btnCancel}
+                onClick={() => setConfirmStop(false)}
+                disabled={stoppingSession}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Link href="/dashboard" className={styles.backLink}>
         ← Back to Dashboard
       </Link>
@@ -100,6 +142,16 @@ export function CampaignDetailPage({
           <Link href={`/campaigns/${id}/session`} className={styles.btnStartSession}>
             ▶ Start Session
           </Link>
+          {activeSession && (
+            <button
+              type="button"
+              className={styles.btnStopSession}
+              onClick={() => setConfirmStop(true)}
+              disabled={stoppingSession}
+            >
+              ■ {stoppingSession ? 'Stopping…' : 'Stop Session'}
+            </button>
+          )}
           <Link href={`/campaigns/${id}/edit`} className={styles.btnEdit}>
             ✎ Edit Campaign
           </Link>
