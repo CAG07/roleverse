@@ -13,7 +13,7 @@ import type { AgentRole } from './types';
 // Haiku classifier
 // ---------------------------------------------------------------------------
 
-const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
+const HAIKU_MODEL = 'claude-haiku-4-20250514';
 
 const ROUTER_SYSTEM_PROMPT = `You are a message router for a tabletop RPG assistant.
 Classify the player's message into exactly one of these agent roles and reply with ONLY the role name — no punctuation, no explanation.
