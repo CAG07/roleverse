@@ -90,7 +90,7 @@ export default function SessionPageClient({
             <div className={styles.confirmActions}>
               <button
                 className={styles.btnConfirmStop}
-                onClick={() => { void handleStopSession(); }}
+                onClick={handleStopSession}
                 disabled={isStopping}
                 type="button"
               >
