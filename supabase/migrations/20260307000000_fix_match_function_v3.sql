@@ -26,7 +26,6 @@ RETURNS TABLE (
   similarity FLOAT
 )
 LANGUAGE plpgsql STABLE
-SET search_path = 'public, extensions'
 AS $$
 BEGIN
   RETURN QUERY
