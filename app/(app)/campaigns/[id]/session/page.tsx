@@ -57,20 +57,35 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
   const characters: Character[] = (charactersRaw ?? []) as Character[];
 
-  // Create a new session record for this visit (establishes session boundary)
-  const { data: newSession } = await supabase
-    .from('sessions')
-    .insert({ campaign_id: id, user_id: user!.id })
-    .select('id')
-    .single();
+  // Resume active session if one exists, only create a new one if none is found
+  let sessionId: string;
 
-  if (!newSession) {
-    redirect(`/campaigns/${id}`);
+  const { data: activeSession } = await supabase
+    .from('sessions')
+    .select('id')
+    .eq('campaign_id', id)
+    .eq('user_id', user!.id)
+    .is('ended_at', null)
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (activeSession) {
+    sessionId = activeSession.id as string;
+  } else {
+    const { data: newSession } = await supabase
+      .from('sessions')
+      .insert({ campaign_id: id, user_id: user!.id })
+      .select('id')
+      .single();
+
+    if (!newSession) redirect(`/campaigns/${id}`);
+    sessionId = newSession.id as string;
   }
 
   return (
     <SessionPageClient
-      sessionId={newSession.id as string}
+      sessionId={sessionId}
       campaignId={id}
       campaignName={campaign.name}
       gameSystem={campaign.game_system}

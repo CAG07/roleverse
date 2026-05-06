@@ -18,7 +18,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
   const [
     { data: campaign },
     { data: characters },
-    { data: sessions, count: sessionCount },
+    { count: sessionCount },
   ] = await Promise.all([
     supabase.from('campaigns').select('*').eq('id', id).single(),
     supabase
@@ -27,10 +27,8 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       .eq('campaign_id', id),
     supabase
       .from('sessions')
-      .select('id, started_at, ended_at', { count: 'exact' })
-      .eq('campaign_id', id)
-      .order('started_at', { ascending: false })
-      .limit(10),
+      .select('id', { count: 'exact', head: true })
+      .eq('campaign_id', id),
   ]);
 
   if (!campaign || campaign.owner_id !== user?.id) {
@@ -45,6 +43,26 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
     systemDescription = system.description;
   }
 
+  // Active session — determines Start vs Resume button label
+  const { data: activeSession } = await supabase
+    .from('sessions')
+    .select('id')
+    .eq('campaign_id', id)
+    .eq('user_id', user!.id)
+    .is('ended_at', null)
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // Last 5 sessions for history panel
+  const { data: recentSessions } = await supabase
+    .from('sessions')
+    .select('id, started_at, ended_at, transcript')
+    .eq('campaign_id', id)
+    .eq('user_id', user!.id)
+    .order('started_at', { ascending: false })
+    .limit(5);
+
   return (
     <CampaignDetailPage
       id={id}
@@ -53,7 +71,8 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       systemName={systemName}
       systemDescription={systemDescription}
       characters={characters ?? []}
-      sessions={sessions ?? []}
+      activeSession={activeSession ?? null}
+      recentSessions={recentSessions ?? []}
       sessionCount={sessionCount ?? 0}
     />
   );

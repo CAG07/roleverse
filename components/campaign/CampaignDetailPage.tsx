@@ -20,6 +20,7 @@ export interface CampaignSession {
   id: string;
   started_at: string;
   ended_at: string | null;
+  transcript: string | null;
 }
 
 interface CampaignDetailPageProps {
@@ -29,7 +30,8 @@ interface CampaignDetailPageProps {
   systemName: string;
   systemDescription: string;
   characters: CampaignCharacter[];
-  sessions: CampaignSession[];
+  activeSession: { id: string } | null;
+  recentSessions: CampaignSession[];
   sessionCount: number;
 }
 
@@ -63,15 +65,14 @@ export function CampaignDetailPage({
   systemName,
   systemDescription,
   characters,
-  sessions,
+  activeSession,
+  recentSessions,
   sessionCount,
 }: CampaignDetailPageProps) {
   const router = useRouter();
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [confirmStop, setConfirmStop] = useState(false);
   const [stoppingSession, setStoppingSession] = useState(false);
-
-  const activeSession = sessions.find((s) => !s.ended_at) ?? null;
 
   const handleStopSession = async () => {
     if (!activeSession) return;
@@ -85,7 +86,7 @@ export function CampaignDetailPage({
     }
   };
 
-  const lastSession = sessions[0] ?? null;
+  const lastSession = recentSessions[0] ?? null;
 
   const handleDelete = async () => {
     if (!window.confirm(`Delete campaign "${name}"? This cannot be undone.`)) return;
@@ -140,7 +141,7 @@ export function CampaignDetailPage({
         {systemDescription && <p className={styles.campaignSystemInfo}>{systemDescription}</p>}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           <Link href={`/campaigns/${id}/session`} className={styles.btnStartSession}>
-            ▶ Start Session
+            ▶ {activeSession ? 'Resume Session' : 'Start Session'}
           </Link>
           {activeSession && (
             <button
@@ -243,17 +244,18 @@ export function CampaignDetailPage({
         {/* Session History */}
         <div className={styles.infoPanel}>
           <h3 className={styles.infoPanelTitle}>Session History</h3>
-          {sessions.length > 0 ? (
+          {recentSessions.length > 0 ? (
             <div className={styles.sessionList}>
-              {sessions.map((session) => (
+              {recentSessions.map((session) => (
                 <div
                   key={session.id}
                   className={styles.sessionRow}
-                  onClick={() => router.push(`/campaigns/${id}/session`)}
+                  onClick={() => router.push(`/campaigns/${id}/sessions/${session.id}`)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) =>
-                    (e.key === 'Enter' || e.key === ' ') && router.push(`/campaigns/${id}/session`)
+                    (e.key === 'Enter' || e.key === ' ') &&
+                    router.push(`/campaigns/${id}/sessions/${session.id}`)
                   }
                 >
                   <span className={styles.sessionDate}>
