@@ -118,6 +118,40 @@ export async function POST(
         return NextResponse.json({ error: `Unknown agent role: "${agentRole}"` }, { status: 400 });
     }
 
+    // --- Persist transcript (non-blocking — failure logs but does not block the response) ---
+    try {
+      const { data: currentSession } = await supabase
+        .from('sessions')
+        .select('transcript')
+        .eq('id', sessionId)
+        .single();
+
+      const currentTranscript = (currentSession?.transcript as unknown[]) ?? [];
+      const now = new Date().toISOString();
+
+      await supabase
+        .from('sessions')
+        .update({
+          transcript: [
+            ...currentTranscript,
+            {
+              role: 'player',
+              content: message,
+              timestamp: now,
+            },
+            {
+              role: 'agent',
+              agentType: result.agentRole,
+              content: result.content,
+              timestamp: now,
+            },
+          ],
+        })
+        .eq('id', sessionId);
+    } catch (transcriptErr) {
+      console.warn('[transcript] Failed to save transcript entry:', transcriptErr);
+    }
+
     return NextResponse.json(result);
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : 'Internal server error';

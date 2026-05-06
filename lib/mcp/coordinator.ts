@@ -58,6 +58,8 @@ npc_dialogue
     "I try to charm the noble"
     "I plead with the guard"
     "I greet the merchant and ask about the road north"
+    "I approach the guard and ask if we can pass"
+    "I wave to the innkeeper and ask for a room"
     "I ask the barkeep what he knows about the missing miners"
     "I persuade her to lower her price"
     "What would an innkeeper say about that?"
@@ -141,6 +143,7 @@ DISAMBIGUATION RULES (apply in order)
 7. When ambiguous → narrator
 
 KEY DISTINCTIONS:
+- "I greet [NPC] and ask [topic]" → npc_dialogue (greeting + question directed at present NPC)
 - "I ask the sheriff about the road" (NPC present, speaking to them) → npc_dialogue
 - "What was the sheriff name?" (past recall, NPC not present) → lore_keeper
 - "I attack the goblin" (action) → narrator
