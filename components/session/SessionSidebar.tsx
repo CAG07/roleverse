@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import FGConnectionStatus from './FGConnectionStatus';
@@ -62,6 +63,9 @@ export default function SessionSidebar({
 
       {/* Scrollable sections */}
       <div className={styles.sidebarContent}>
+        <Link href={`/campaigns/${campaignId}`} className={styles.backLink}>
+          ← Back to Campaign
+        </Link>
         <CollapsibleSection title="Party Members">
           {partyMembers.length === 0 ? (
             <p className={styles.emptyText}>No members yet.</p>
