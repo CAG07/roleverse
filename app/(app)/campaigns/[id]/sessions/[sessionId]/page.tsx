@@ -23,6 +23,10 @@ export default async function SessionDetailPage({ params }: SessionDetailPagePro
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    notFound();
+  }
+
   const { data: session } = await supabase
     .from('sessions')
     .select('id, started_at, ended_at, transcript, campaign_id, user_id')
@@ -30,7 +34,7 @@ export default async function SessionDetailPage({ params }: SessionDetailPagePro
     .eq('campaign_id', id)
     .single();
 
-  if (!session || session.user_id !== user?.id) {
+  if (!session || session.user_id !== user.id) {
     notFound();
   }
 
