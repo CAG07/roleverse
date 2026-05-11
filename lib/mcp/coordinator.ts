@@ -117,6 +117,10 @@ lore_keeper
     "What was his name again?"
     "Do you remember the sheriff name?"
     "What was the name of that guard we met?"
+    "Let's return to where we were in our previous session"
+    "Pick up where we left off"
+    "Where did we leave off last time?"
+    "Continue from our last session"
 
 encounter_builder
   Handles requests to generate, design, or build a combat encounter or enemy group.
@@ -157,7 +161,8 @@ KEY DISTINCTIONS:
 - "Who are those people?" (scene, NPCs present) → narrator
 - "Who was that person we met before?" (past recall) → lore_keeper
 - "What does this symbol mean?" (current scene) → narrator
-- "What did that symbol mean that we found before?" (past recall) → lore_keeper`;
+- "What did that symbol mean that we found before?" (past recall) → lore_keeper
+- "Let's return to / pick up where / where did we leave off" → lore_keeper (session continuity recall)`;
 
 /**
  * Route a player message to the most appropriate agent role using Claude Haiku.
@@ -239,6 +244,9 @@ const NPC_KEYWORDS = [
 ];
 
 const LORE_KEYWORDS = [
+  // Session continuity recall
+  'previous session', 'last time', 'where we were', 'pick up where',
+  'continue from', 'return to where', 'where did we leave',
   // Past-tense name and fact recall — checked before NPC keywords
   'what was', 'who was', 'name again', 'his name', 'her name', 'their name',
   "what's his name", "what's her name", 'do you remember',
