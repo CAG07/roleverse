@@ -1,10 +1,22 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import styles from './page.module.css';
 
-interface SessionDetailPageProps {
-  params: Promise<{ id: string; sessionId: string }>;
+interface TranscriptEntry {
+  role?: string;
+  content?: string;
+  agentType?: string;
+  timestamp?: string;
 }
+
+const agentLabels: Record<string, { label: string; accent: string }> = {
+  narrator:          { label: 'Narrator',          accent: '#b8882a' },
+  rules_arbiter:     { label: 'Rules Arbiter',      accent: '#7a8a9a' },
+  npc_dialogue:      { label: 'NPC Dialogue',       accent: '#2a7a4a' },
+  lore_keeper:       { label: 'Lore Keeper',        accent: '#6a3a8a' },
+  encounter_builder: { label: 'Encounter Builder',  accent: '#8a6a3a' },
+};
 
 function formatDuration(startedAt: string, endedAt: string | null): string {
   if (!endedAt) return 'Active';
@@ -15,17 +27,16 @@ function formatDuration(startedAt: string, endedAt: string | null): string {
   return `${mins}m`;
 }
 
-export default async function SessionDetailPage({ params }: SessionDetailPageProps) {
+interface Props {
+  params: Promise<{ id: string; sessionId: string }>;
+}
+
+export default async function SessionLogPage({ params }: Props) {
   const { id, sessionId } = await params;
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    notFound();
-  }
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) notFound();
 
   const { data: session } = await supabase
     .from('sessions')
@@ -34,9 +45,7 @@ export default async function SessionDetailPage({ params }: SessionDetailPagePro
     .eq('campaign_id', id)
     .single();
 
-  if (!session || session.user_id !== user.id) {
-    notFound();
-  }
+  if (!session || session.user_id !== user.id) notFound();
 
   const { data: campaign } = await supabase
     .from('campaigns')
@@ -44,52 +53,87 @@ export default async function SessionDetailPage({ params }: SessionDetailPagePro
     .eq('id', id)
     .single();
 
+  const entries: TranscriptEntry[] = Array.isArray(session.transcript)
+    ? (session.transcript as TranscriptEntry[])
+    : [];
+
+  const isActive = !session.ended_at;
+
+  const startDate = new Date(session.started_at as string).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  const startTime = new Date(session.started_at as string).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '2rem 1rem' }}>
-      <Link
-        href={`/campaigns/${id}`}
-        style={{ color: 'var(--color-accent)', textDecoration: 'none', fontSize: '0.875rem' }}
-      >
-        ← Back to {campaign?.name ?? 'Campaign'}
+    <div className={styles.logRoot}>
+      <Link href={`/campaigns/${id}`} className={styles.logBack}>
+        ← {campaign?.name ?? 'Campaign'}
       </Link>
 
-      <h1 style={{ marginTop: '1.5rem', marginBottom: '0.25rem' }}>
-        Session —{' '}
-        {new Date(session.started_at).toLocaleDateString('en-US', {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-        })}
-      </h1>
+      <div className={styles.logHeader}>
+        <h1 className={styles.logTitle}>Session Log</h1>
+        <div className={styles.logMeta}>
+          <span>{startDate} · {startTime}</span>
+          <span>·</span>
+          <span>{formatDuration(session.started_at as string, session.ended_at as string | null)}</span>
+          {isActive && <span className={styles.activeBadge}>Active</span>}
+        </div>
+      </div>
 
-      <p style={{ color: 'var(--color-muted)', fontSize: '0.875rem', marginBottom: '2rem' }}>
-        Duration: {formatDuration(session.started_at, session.ended_at)}
-        {!session.ended_at && (
-          <span style={{ marginLeft: '0.5rem', color: 'var(--color-accent)' }}>● Active</span>
+      <div className={styles.logDivider} />
+
+      <div className={styles.logFeed}>
+        {entries.length === 0 ? (
+          <p className={styles.logEmpty}>
+            {isActive
+              ? 'No messages yet in this session.'
+              : 'No messages were recorded in this session.'}
+          </p>
+        ) : (
+          entries.map((entry, i) => {
+            const time = entry.timestamp
+              ? new Date(entry.timestamp).toLocaleTimeString('en-US', {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })
+              : null;
+
+            if (entry.role === 'player') {
+              return (
+                <div key={i} className={styles.entryPlayer}>
+                  <span className={styles.entryPlayerName}>You</span>
+                  <div className={styles.entryPlayerBubble}>{entry.content}</div>
+                  {time && <span className={styles.entryTime}>{time}</span>}
+                </div>
+              );
+            }
+
+            if (entry.role === 'agent' && entry.content) {
+              const agentKey = entry.agentType ?? 'narrator';
+              const agent = agentLabels[agentKey] ?? agentLabels.narrator;
+              return (
+                <div key={i} className={styles.entryAgent}>
+                  <span
+                    className={styles.entryAgentLabel}
+                    style={{ color: agent.accent, borderColor: agent.accent + '40' }}
+                  >
+                    {agent.label}
+                  </span>
+                  <div className={styles.entryAgentBubble}>{entry.content}</div>
+                  {time && <span className={styles.entryTime}>{time}</span>}
+                </div>
+              );
+            }
+
+            return null;
+          })
         )}
-      </p>
-
-      <h2 style={{ fontSize: '1rem', marginBottom: '0.75rem' }}>Transcript</h2>
-      {session.transcript ? (
-        <pre
-          style={{
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            fontSize: '0.875rem',
-            lineHeight: 1.6,
-          }}
-        >
-          {session.transcript}
-        </pre>
-      ) : (
-        <p style={{ color: 'var(--color-muted)', fontStyle: 'italic' }}>
-          No transcript available for this session.
-        </p>
-      )}
+      </div>
     </div>
   );
 }
