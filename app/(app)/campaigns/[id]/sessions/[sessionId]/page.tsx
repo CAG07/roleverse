@@ -2,9 +2,20 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 
-interface SessionDetailPageProps {
-  params: Promise<{ id: string; sessionId: string }>;
+interface TranscriptEntry {
+  role?: string;
+  content?: string;
+  agentType?: string;
+  timestamp?: string;
 }
+
+const agentLabels: Record<string, { label: string; accent: string }> = {
+  narrator:          { label: 'Narrator',          accent: '#b8882a' },
+  rules_arbiter:     { label: 'Rules Arbiter',      accent: '#7a8a9a' },
+  npc_dialogue:      { label: 'NPC Dialogue',       accent: '#2a7a4a' },
+  lore_keeper:       { label: 'Lore Keeper',        accent: '#6a3a8a' },
+  encounter_builder: { label: 'Encounter Builder',  accent: '#8a6a3a' },
+};
 
 function formatDuration(startedAt: string, endedAt: string | null): string {
   if (!endedAt) return 'Active';
@@ -15,17 +26,16 @@ function formatDuration(startedAt: string, endedAt: string | null): string {
   return `${mins}m`;
 }
 
-export default async function SessionDetailPage({ params }: SessionDetailPageProps) {
+interface Props {
+  params: Promise<{ id: string; sessionId: string }>;
+}
+
+export default async function SessionLogPage({ params }: Props) {
   const { id, sessionId } = await params;
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    notFound();
-  }
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) notFound();
 
   const { data: session } = await supabase
     .from('sessions')
@@ -34,9 +44,7 @@ export default async function SessionDetailPage({ params }: SessionDetailPagePro
     .eq('campaign_id', id)
     .single();
 
-  if (!session || session.user_id !== user.id) {
-    notFound();
-  }
+  if (!session || session.user_id !== user.id) notFound();
 
   const { data: campaign } = await supabase
     .from('campaigns')
@@ -44,52 +52,220 @@ export default async function SessionDetailPage({ params }: SessionDetailPagePro
     .eq('id', id)
     .single();
 
+  const entries: TranscriptEntry[] = Array.isArray(session.transcript)
+    ? (session.transcript as TranscriptEntry[])
+    : [];
+
+  const isActive = !session.ended_at;
+
+  const startDate = new Date(session.started_at as string).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  const startTime = new Date(session.started_at as string).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '2rem 1rem' }}>
-      <Link
-        href={`/campaigns/${id}`}
-        style={{ color: 'var(--color-accent)', textDecoration: 'none', fontSize: '0.875rem' }}
-      >
-        ← Back to {campaign?.name ?? 'Campaign'}
+    <div className="log-root">
+      <style jsx>{`
+        .log-root {
+          min-height: 100vh;
+          background: var(--void);
+          padding: 2rem 1.5rem;
+        }
+
+        .log-back {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          font-family: var(--font-body);
+          font-size: 0.875rem;
+          color: var(--ivory-muted);
+          text-decoration: none;
+          margin-bottom: 1.5rem;
+          transition: color 0.15s;
+        }
+        .log-back:hover { color: var(--gold); }
+
+        .log-header { margin-bottom: 1.5rem; }
+
+        .log-title {
+          font-family: var(--font-heading);
+          font-size: 1.5rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ivory);
+          margin: 0 0 0.25rem;
+        }
+
+        .log-meta {
+          font-family: var(--font-body);
+          font-size: 0.875rem;
+          color: var(--ivory-muted);
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .active-badge {
+          font-family: var(--font-heading);
+          font-size: 0.575rem;
+          font-weight: 600;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: #4a9a5a;
+          border: 1px solid #4a9a5a;
+          padding: 0.15rem 0.5rem;
+        }
+
+        .log-divider {
+          height: 2px;
+          background: linear-gradient(90deg, transparent, var(--crimson), var(--gold-dim), var(--crimson), transparent);
+          margin-bottom: 2rem;
+        }
+
+        .log-feed {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          max-width: 52rem;
+        }
+
+        .entry-player {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 0.25rem;
+        }
+        .entry-player-name {
+          font-family: var(--font-heading);
+          font-size: 0.575rem;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ivory-muted);
+        }
+        .entry-player-bubble {
+          background: var(--void-raised);
+          border: var(--rule-thin);
+          padding: 0.625rem 0.875rem;
+          font-family: var(--font-body);
+          font-size: 0.9rem;
+          color: var(--ivory);
+          max-width: 80%;
+          line-height: 1.55;
+        }
+
+        .entry-agent {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.25rem;
+        }
+        .entry-agent-label {
+          display: inline-block;
+          font-family: var(--font-heading);
+          font-size: 0.575rem;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          padding: 0.15rem 0.5rem;
+          background: rgba(0,0,0,0.3);
+          border: 1px solid;
+        }
+        .entry-agent-bubble {
+          background: var(--surface-card);
+          border-left: 2px solid var(--crimson-dim);
+          padding: 0.625rem 0.875rem;
+          font-family: var(--font-body);
+          font-size: 0.9rem;
+          color: var(--ivory);
+          line-height: 1.55;
+          max-width: 80%;
+          white-space: pre-wrap;
+        }
+
+        .entry-time {
+          font-family: var(--font-body);
+          font-size: 0.65rem;
+          color: var(--ivory-dim);
+        }
+
+        .log-empty {
+          font-family: var(--font-body);
+          font-size: 0.9rem;
+          color: var(--ivory-dim);
+          font-style: italic;
+        }
+      `}</style>
+
+      <Link href={`/campaigns/${id}`} className="log-back">
+        ← {campaign?.name ?? 'Campaign'}
       </Link>
 
-      <h1 style={{ marginTop: '1.5rem', marginBottom: '0.25rem' }}>
-        Session —{' '}
-        {new Date(session.started_at).toLocaleDateString('en-US', {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-        })}
-      </h1>
+      <div className="log-header">
+        <h1 className="log-title">Session Log</h1>
+        <div className="log-meta">
+          <span>{startDate} · {startTime}</span>
+          <span>·</span>
+          <span>{formatDuration(session.started_at as string, session.ended_at as string | null)}</span>
+          {isActive && <span className="active-badge">Active</span>}
+        </div>
+      </div>
 
-      <p style={{ color: 'var(--color-muted)', fontSize: '0.875rem', marginBottom: '2rem' }}>
-        Duration: {formatDuration(session.started_at, session.ended_at)}
-        {!session.ended_at && (
-          <span style={{ marginLeft: '0.5rem', color: 'var(--color-accent)' }}>● Active</span>
+      <div className="log-divider" />
+
+      <div className="log-feed">
+        {entries.length === 0 ? (
+          <p className="log-empty">
+            {isActive
+              ? 'No messages yet in this session.'
+              : 'No messages were recorded in this session.'}
+          </p>
+        ) : (
+          entries.map((entry, i) => {
+            const time = entry.timestamp
+              ? new Date(entry.timestamp).toLocaleTimeString('en-US', {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })
+              : null;
+
+            if (entry.role === 'player') {
+              return (
+                <div key={i} className="entry-player">
+                  <span className="entry-player-name">You</span>
+                  <div className="entry-player-bubble">{entry.content}</div>
+                  {time && <span className="entry-time">{time}</span>}
+                </div>
+              );
+            }
+
+            if (entry.role === 'agent' && entry.content) {
+              const agentKey = entry.agentType ?? 'narrator';
+              const agent = agentLabels[agentKey] ?? agentLabels.narrator;
+              return (
+                <div key={i} className="entry-agent">
+                  <span
+                    className="entry-agent-label"
+                    style={{ color: agent.accent, borderColor: agent.accent + '40' }}
+                  >
+                    {agent.label}
+                  </span>
+                  <div className="entry-agent-bubble">{entry.content}</div>
+                  {time && <span className="entry-time">{time}</span>}
+                </div>
+              );
+            }
+
+            return null;
+          })
         )}
-      </p>
-
-      <h2 style={{ fontSize: '1rem', marginBottom: '0.75rem' }}>Transcript</h2>
-      {session.transcript ? (
-        <pre
-          style={{
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            fontSize: '0.875rem',
-            lineHeight: 1.6,
-          }}
-        >
-          {session.transcript}
-        </pre>
-      ) : (
-        <p style={{ color: 'var(--color-muted)', fontStyle: 'italic' }}>
-          No transcript available for this session.
-        </p>
-      )}
+      </div>
     </div>
   );
 }

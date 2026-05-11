@@ -2,7 +2,6 @@
 // POST /api/sessions/[sessionId]/end — mark a session as ended
 
 import { NextRequest, NextResponse } from 'next/server';
-
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(
@@ -11,7 +10,6 @@ export async function POST(
 ) {
   const { sessionId } = await params;
 
-  // --- Auth ---
   const supabase = await createClient();
   const {
     data: { user },
@@ -22,17 +20,29 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // --- End the session (RLS enforces ownership) ---
+  // Look up campaign_id from the session being stopped
+  const { data: session } = await supabase
+    .from('sessions')
+    .select('campaign_id')
+    .eq('id', sessionId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (!session) {
+    return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+  }
+
+  // End ALL active sessions for this campaign — handles duplicates cleanly
   const { error } = await supabase
     .from('sessions')
     .update({ ended_at: new Date().toISOString() })
-    .eq('id', sessionId)
+    .eq('campaign_id', session.campaign_id)
     .eq('user_id', user.id)
-    .is('ended_at', null); // only end if not already ended
+    .is('ended_at', null);
 
   if (error) {
-    return NextResponse.json({ error: 'Failed to end session' }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ success: true });
 }
