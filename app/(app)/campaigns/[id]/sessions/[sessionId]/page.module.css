@@ -1,0 +1,146 @@
+.logRoot {
+  min-height: 100vh;
+  background: var(--void);
+  padding: 2rem 1.5rem;
+}
+
+.logBack {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory-muted);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: color 0.15s;
+}
+
+.logBack:hover {
+  color: var(--gold);
+}
+
+.logHeader {
+  margin-bottom: 1.5rem;
+}
+
+.logTitle {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  margin: 0 0 0.25rem;
+}
+
+.logMeta {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.activeBadge {
+  font-family: var(--font-heading);
+  font-size: 0.575rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4a9a5a;
+  border: 1px solid #4a9a5a;
+  padding: 0.15rem 0.5rem;
+}
+
+.logDivider {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--crimson),
+    var(--gold-dim),
+    var(--crimson),
+    transparent
+  );
+  margin-bottom: 2rem;
+}
+
+.logFeed {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 52rem;
+}
+
+.entryPlayer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.entryPlayerName {
+  font-family: var(--font-heading);
+  font-size: 0.575rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+}
+
+.entryPlayerBubble {
+  background: var(--void-raised);
+  border: var(--rule-thin);
+  padding: 0.625rem 0.875rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ivory);
+  max-width: 80%;
+  line-height: 1.55;
+}
+
+.entryAgent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.entryAgentLabel {
+  display: inline-block;
+  font-family: var(--font-heading);
+  font-size: 0.575rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  background: rgb(0 0 0 / 30%);
+  border: 1px solid;
+}
+
+.entryAgentBubble {
+  background: var(--surface-card);
+  border-left: 2px solid var(--crimson-dim);
+  padding: 0.625rem 0.875rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ivory);
+  line-height: 1.55;
+  max-width: 80%;
+  white-space: pre-wrap;
+}
+
+.entryTime {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  color: var(--ivory-dim);
+}
+
+.logEmpty {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ivory-dim);
+  font-style: italic;
+}

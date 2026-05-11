@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import styles from './page.module.css';
 
 interface TranscriptEntry {
   role?: string;
@@ -69,159 +70,26 @@ export default async function SessionLogPage({ params }: Props) {
   });
 
   return (
-    <div className="log-root">
-      <style jsx>{`
-        .log-root {
-          min-height: 100vh;
-          background: var(--void);
-          padding: 2rem 1.5rem;
-        }
-
-        .log-back {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-family: var(--font-body);
-          font-size: 0.875rem;
-          color: var(--ivory-muted);
-          text-decoration: none;
-          margin-bottom: 1.5rem;
-          transition: color 0.15s;
-        }
-        .log-back:hover { color: var(--gold); }
-
-        .log-header { margin-bottom: 1.5rem; }
-
-        .log-title {
-          font-family: var(--font-heading);
-          font-size: 1.5rem;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--ivory);
-          margin: 0 0 0.25rem;
-        }
-
-        .log-meta {
-          font-family: var(--font-body);
-          font-size: 0.875rem;
-          color: var(--ivory-muted);
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-
-        .active-badge {
-          font-family: var(--font-heading);
-          font-size: 0.575rem;
-          font-weight: 600;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: #4a9a5a;
-          border: 1px solid #4a9a5a;
-          padding: 0.15rem 0.5rem;
-        }
-
-        .log-divider {
-          height: 2px;
-          background: linear-gradient(90deg, transparent, var(--crimson), var(--gold-dim), var(--crimson), transparent);
-          margin-bottom: 2rem;
-        }
-
-        .log-feed {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          max-width: 52rem;
-        }
-
-        .entry-player {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 0.25rem;
-        }
-        .entry-player-name {
-          font-family: var(--font-heading);
-          font-size: 0.575rem;
-          font-weight: 600;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--ivory-muted);
-        }
-        .entry-player-bubble {
-          background: var(--void-raised);
-          border: var(--rule-thin);
-          padding: 0.625rem 0.875rem;
-          font-family: var(--font-body);
-          font-size: 0.9rem;
-          color: var(--ivory);
-          max-width: 80%;
-          line-height: 1.55;
-        }
-
-        .entry-agent {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 0.25rem;
-        }
-        .entry-agent-label {
-          display: inline-block;
-          font-family: var(--font-heading);
-          font-size: 0.575rem;
-          font-weight: 600;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          padding: 0.15rem 0.5rem;
-          background: rgba(0,0,0,0.3);
-          border: 1px solid;
-        }
-        .entry-agent-bubble {
-          background: var(--surface-card);
-          border-left: 2px solid var(--crimson-dim);
-          padding: 0.625rem 0.875rem;
-          font-family: var(--font-body);
-          font-size: 0.9rem;
-          color: var(--ivory);
-          line-height: 1.55;
-          max-width: 80%;
-          white-space: pre-wrap;
-        }
-
-        .entry-time {
-          font-family: var(--font-body);
-          font-size: 0.65rem;
-          color: var(--ivory-dim);
-        }
-
-        .log-empty {
-          font-family: var(--font-body);
-          font-size: 0.9rem;
-          color: var(--ivory-dim);
-          font-style: italic;
-        }
-      `}</style>
-
-      <Link href={`/campaigns/${id}`} className="log-back">
+    <div className={styles.logRoot}>
+      <Link href={`/campaigns/${id}`} className={styles.logBack}>
         ← {campaign?.name ?? 'Campaign'}
       </Link>
 
-      <div className="log-header">
-        <h1 className="log-title">Session Log</h1>
-        <div className="log-meta">
+      <div className={styles.logHeader}>
+        <h1 className={styles.logTitle}>Session Log</h1>
+        <div className={styles.logMeta}>
           <span>{startDate} · {startTime}</span>
           <span>·</span>
           <span>{formatDuration(session.started_at as string, session.ended_at as string | null)}</span>
-          {isActive && <span className="active-badge">Active</span>}
+          {isActive && <span className={styles.activeBadge}>Active</span>}
         </div>
       </div>
 
-      <div className="log-divider" />
+      <div className={styles.logDivider} />
 
-      <div className="log-feed">
+      <div className={styles.logFeed}>
         {entries.length === 0 ? (
-          <p className="log-empty">
+          <p className={styles.logEmpty}>
             {isActive
               ? 'No messages yet in this session.'
               : 'No messages were recorded in this session.'}
@@ -237,10 +105,10 @@ export default async function SessionLogPage({ params }: Props) {
 
             if (entry.role === 'player') {
               return (
-                <div key={i} className="entry-player">
-                  <span className="entry-player-name">You</span>
-                  <div className="entry-player-bubble">{entry.content}</div>
-                  {time && <span className="entry-time">{time}</span>}
+                <div key={i} className={styles.entryPlayer}>
+                  <span className={styles.entryPlayerName}>You</span>
+                  <div className={styles.entryPlayerBubble}>{entry.content}</div>
+                  {time && <span className={styles.entryTime}>{time}</span>}
                 </div>
               );
             }
@@ -249,15 +117,15 @@ export default async function SessionLogPage({ params }: Props) {
               const agentKey = entry.agentType ?? 'narrator';
               const agent = agentLabels[agentKey] ?? agentLabels.narrator;
               return (
-                <div key={i} className="entry-agent">
+                <div key={i} className={styles.entryAgent}>
                   <span
-                    className="entry-agent-label"
+                    className={styles.entryAgentLabel}
                     style={{ color: agent.accent, borderColor: agent.accent + '40' }}
                   >
                     {agent.label}
                   </span>
-                  <div className="entry-agent-bubble">{entry.content}</div>
-                  {time && <span className="entry-time">{time}</span>}
+                  <div className={styles.entryAgentBubble}>{entry.content}</div>
+                  {time && <span className={styles.entryTime}>{time}</span>}
                 </div>
               );
             }
