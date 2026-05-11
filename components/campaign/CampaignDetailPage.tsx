@@ -246,30 +246,47 @@ export function CampaignDetailPage({
           <h3 className={styles.infoPanelTitle}>Session History</h3>
           {recentSessions.length > 0 ? (
             <div className={styles.sessionList}>
-              {recentSessions.map((session) => (
-                <div
-                  key={session.id}
-                  className={styles.sessionRow}
-                  onClick={() => router.push(`/campaigns/${id}/sessions/${session.id}`)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) =>
-                    (e.key === 'Enter' || e.key === ' ') &&
-                    router.push(`/campaigns/${id}/sessions/${session.id}`)
-                  }
-                >
-                  <span className={styles.sessionDate}>
-                    {new Date(session.started_at).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </span>
-                  <span className={styles.sessionDuration}>
-                    {formatSessionDuration(session.started_at, session.ended_at)}
-                  </span>
-                </div>
-              ))}
+              {recentSessions.map((session) => {
+                const isActive = !session.ended_at;
+                // Active sessions go to the live session page; completed go to transcript viewer
+                const href = isActive
+                  ? `/campaigns/${id}/session`
+                  : `/campaigns/${id}/sessions/${session.id}`;
+
+                const sessionDate = new Date(session.started_at).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                });
+                const sessionTime = new Date(session.started_at).toLocaleTimeString('en-US', {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                });
+
+                return (
+                  <div
+                    key={session.id}
+                    className={styles.sessionRow}
+                    onClick={() => router.push(href)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) =>
+                      (e.key === 'Enter' || e.key === ' ') && router.push(href)
+                    }
+                  >
+                    <span
+                      className={styles.sessionStatusDot}
+                      style={{ backgroundColor: isActive ? '#4a9a5a' : 'var(--ivory-dim)' }}
+                    />
+                    <span className={styles.sessionDate}>
+                      {sessionDate} · {sessionTime}
+                    </span>
+                    <span className={styles.sessionDuration}>
+                      {isActive ? 'Active' : formatSessionDuration(session.started_at, session.ended_at)}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p className={styles.infoPanelPlaceholder}>

@@ -113,6 +113,10 @@ lore_keeper
     "Who was that person we met at the crossroads?"
     "Remind me what is going on with the storyline"
     "What happened to the missing miners?"
+    "What was the merchant name?"
+    "What was his name again?"
+    "Do you remember the sheriff name?"
+    "What was the name of that guard we met?"
 
 encounter_builder
   Handles requests to generate, design, or build a combat encounter or enemy group.
@@ -235,6 +239,10 @@ const NPC_KEYWORDS = [
 ];
 
 const LORE_KEYWORDS = [
+  // Past-tense name and fact recall — checked before NPC keywords
+  'what was', 'who was', 'name again', 'his name', 'her name', 'their name',
+  "what's his name", "what's her name", 'do you remember',
+  // Existing keywords
   'what happened', 'last session', 'in session', 'who is', 'tell me about',
   'history of', 'lore', 'story so far', 'recap', 'remember when',
   'campaign notes', 'world history', 'backstory',
