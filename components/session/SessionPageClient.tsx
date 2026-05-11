@@ -141,7 +141,6 @@ export default function SessionPageClient({
             partyMembers={partyNav}
             isDM
             campaignId={campaignId}
-            onStopSession={() => setConfirmStop(true)}
           />
         </div>
 
