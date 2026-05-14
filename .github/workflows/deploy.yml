@@ -53,12 +53,15 @@ jobs:
           supabase db push --debug
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-
+          
+      - name: Remove local Vercel metadata
+        run: rm -rf .vercel
+        
       - name: Deploy to Vercel (Production)
         id: deploy
         run: |
           npm i -g vercel
-          DEPLOYMENT_URL=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --confirm)
+          DEPLOYMENT_URL=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes)
           echo "url=$DEPLOYMENT_URL" >> "$GITHUB_OUTPUT"
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
