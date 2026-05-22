@@ -13,10 +13,15 @@ import type { AgentRole } from './types';
 // Haiku classifier
 // ---------------------------------------------------------------------------
 
-const HAIKU_MODEL = process.env.ANTHROPIC_HAIKU_MODEL!;
-if (!HAIKU_MODEL) {
-  throw new Error('ANTHROPIC_HAIKU_MODEL environment variable is required');
+function getRequiredHaikuModel(): string {
+  const model = process.env.ANTHROPIC_HAIKU_MODEL;
+  if (!model) {
+    throw new Error('ANTHROPIC_HAIKU_MODEL environment variable is required');
+  }
+  return model;
 }
+
+const HAIKU_MODEL = getRequiredHaikuModel();
 
 const ROUTER_SYSTEM_PROMPT = `You are a message router for a tabletop RPG assistant.
 Classify the player's message into exactly one of these agent roles and reply with ONLY the role name — no punctuation, no explanation.
