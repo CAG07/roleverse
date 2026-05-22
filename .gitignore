@@ -115,3 +115,6 @@ reports/
 # Generated files
 public/sw.js
 public/workbox-*.js
+
+# Claude
+CLAUDE.md
