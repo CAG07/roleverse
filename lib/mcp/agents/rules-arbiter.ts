@@ -10,7 +10,15 @@ import { searchRules } from '@/lib/rag/search';
 
 import type { AgentMessage, AgentResponse, MCPContext } from '../types';
 
-const MODEL = 'claude-sonnet-4-20250514';
+function getRequiredModel(): string {
+  const model = process.env.ANTHROPIC_MODEL;
+  if (!model) {
+    throw new Error('ANTHROPIC_MODEL environment variable is required');
+  }
+  return model;
+}
+
+const MODEL = getRequiredModel();
 const MAX_TOKENS = 1024;
 
 /** Build the system prompt for the Rules Arbiter */
