@@ -7,7 +7,7 @@ import { getGameSystem } from '@/lib/game-systems/registry';
 import { executeTool, getToolDefinitions } from '../server';
 import type { AgentMessage, AgentResponse, MCPContext, MCPToolCall, MCPToolResult } from '../types';
 
-const MODEL = 'claude-sonnet-4-20250514';
+const MODEL = process.env.ANTHROPIC_MODEL!;
 const MAX_TOKENS = 1024;
 
 /** Build the system prompt for the Narrator agent */
