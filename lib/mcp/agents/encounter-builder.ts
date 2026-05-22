@@ -10,6 +10,9 @@ import { getGameSystem } from '@/lib/game-systems/registry';
 import type { AgentMessage, AgentResponse, MCPContext } from '../types';
 
 const MODEL = process.env.ANTHROPIC_MODEL!;
+if (!MODEL) {
+  throw new Error('ANTHROPIC_MODEL environment variable is required');
+}
 const MAX_TOKENS = 1024;
 
 /** Build the system prompt for the Encounter Builder */
