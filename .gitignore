@@ -118,3 +118,4 @@ public/workbox-*.js
 
 # Claude
 CLAUDE.md
+.claude/
