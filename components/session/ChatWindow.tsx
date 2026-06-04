@@ -5,6 +5,8 @@ import { Send, Mic, Keyboard, Image as ImageIcon } from 'lucide-react';
 import styles from './ChatWindow.module.css';
 import type { ChatMessage, SceneMedia, AgentType } from '@/lib/types/session';
 import type { AgentMessage } from '@/lib/mcp/types';
+import type { NpcProposal } from '@/lib/types/npc';
+import { NpcProposalCard } from '@/components/npc/NpcProposalCard';
 
 // Agent color/label mapping — matches design spec
 const agentConfig: Record<AgentType, { accent: string; label: string }> = {
@@ -48,9 +50,10 @@ function relativeTime(date: Date): string {
 interface ChatWindowProps {
   onSceneMediaUpdate?: (media: SceneMedia) => void;
   sessionId: string;
+  campaignId: string;
 }
 
-export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindowProps) {
+export default function ChatWindow({ onSceneMediaUpdate, sessionId, campaignId }: ChatWindowProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'msg-init',
@@ -61,8 +64,10 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindow
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // Track which message IDs have had their proposals handled
+  const [handledProposals, setHandledProposals] = useState<Set<string>>(new Set());
+  const [processingProposal, setProcessingProposal] = useState<string | null>(null);
   const feedRef = useRef<HTMLDivElement>(null);
-  // Keep a ref to messages so handleSend can read the latest without being in deps
   const messagesRef = useRef(messages);
   useEffect(() => {
     messagesRef.current = messages;
@@ -130,6 +135,7 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindow
         role: 'agent',
         agentType: (data.agentRole as AgentType) ?? 'narrator',
         content: data.content,
+        proposal: (data.proposal as NpcProposal | undefined),
         timestamp: new Date(),
       };
 
@@ -169,6 +175,38 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindow
     }
   };
 
+  const handleProposalApprove = useCallback(async (msgId: string, proposal: NpcProposal) => {
+    setProcessingProposal(msgId);
+    try {
+      if (proposal.kind === 'new_npc') {
+        await fetch(`/api/campaigns/${campaignId}/npcs`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(proposal.npc_data ?? { name: proposal.npc_name }),
+        });
+      } else if (proposal.kind === 'append_facts' && proposal.npc_id) {
+        await fetch(`/api/campaigns/${campaignId}/npcs/${proposal.npc_id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ known_facts: proposal.facts_to_add ?? [] }),
+        });
+      } else if (proposal.kind === 'disposition_shift' && proposal.npc_id && proposal.disposition_change) {
+        await fetch(`/api/campaigns/${campaignId}/npcs/${proposal.npc_id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ disposition: proposal.disposition_change.to }),
+        });
+      }
+      setHandledProposals((prev) => new Set([...prev, msgId]));
+    } finally {
+      setProcessingProposal(null);
+    }
+  }, [campaignId]);
+
+  const handleProposalReject = useCallback((msgId: string) => {
+    setHandledProposals((prev) => new Set([...prev, msgId]));
+  }, []);
+
   return (
     <div className={styles.chatWindow}>
       {/* Message feed */}
@@ -185,6 +223,7 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindow
 
           if (msg.role === 'agent' && msg.agentType) {
             const agent = agentConfig[msg.agentType];
+            const showProposal = msg.proposal && !handledProposals.has(msg.id);
             return (
               <div key={msg.id} className={styles.msgAgent}>
                 <span
@@ -203,6 +242,14 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindow
                   )}
                 </div>
                 <span className={styles.msgTimestamp}>{relativeTime(msg.timestamp)}</span>
+                {showProposal && msg.proposal && (
+                  <NpcProposalCard
+                    proposal={msg.proposal}
+                    onApprove={(approved) => handleProposalApprove(msg.id, approved)}
+                    onReject={() => handleProposalReject(msg.id)}
+                    isProcessing={processingProposal === msg.id}
+                  />
+                )}
               </div>
             );
           }
@@ -256,4 +303,3 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindow
     </div>
   );
 }
-

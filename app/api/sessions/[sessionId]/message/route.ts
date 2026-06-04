@@ -12,6 +12,7 @@ import { routeMessage } from '@/lib/mcp/coordinator';
 import { registerRollDiceTool } from '@/lib/mcp/tools/roll-dice';
 import type { AgentMessage, AgentResponse, MCPContext } from '@/lib/mcp/types';
 import { createClient } from '@/lib/supabase/server';
+import type { NpcProposal } from '@/lib/types/npc';
 
 // Register MCP tools on module load (runs once per cold start)
 registerRollDiceTool();
@@ -118,6 +119,38 @@ export async function POST(
         return NextResponse.json({ error: `Unknown agent role: "${agentRole}"` }, { status: 400 });
     }
 
+    // --- Parse NPC proposal from NPC Dialogue responses ---
+    let proposal: NpcProposal | undefined;
+    if (agentRole === 'npc_dialogue') {
+      const proposalMatch = result.content.match(
+        /\[NPC_PROPOSAL_START\]([\s\S]*?)\[NPC_PROPOSAL_END\]/
+      );
+      if (proposalMatch) {
+        try {
+          const parsed = JSON.parse(proposalMatch[1].trim()) as NpcProposal;
+          // Inject the current sessionId into any facts with null learned_in_session
+          if (parsed.kind === 'append_facts' && parsed.facts_to_add) {
+            const now = new Date().toISOString();
+            parsed.facts_to_add = parsed.facts_to_add.map((f) => ({
+              ...f,
+              learned_in_session: f.learned_in_session ?? sessionId,
+              learned_at: f.learned_at ?? now,
+            }));
+          }
+          proposal = parsed;
+        } catch {
+          // Malformed proposal — ignore, don't break the response
+        }
+        // Strip the sentinel block from content the player sees
+        result = {
+          ...result,
+          content: result.content
+            .replace(/\[NPC_PROPOSAL_START\][\s\S]*?\[NPC_PROPOSAL_END\]/g, '')
+            .trim(),
+        };
+      }
+    }
+
     // --- Persist transcript (non-blocking — failure logs but does not block the response) ---
     try {
       const { data: currentSession } = await supabase
@@ -152,7 +185,7 @@ export async function POST(
       console.warn('[transcript] Failed to save transcript entry:', transcriptErr);
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json(proposal ? { ...result, proposal } : result);
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : 'Internal server error';
     console.error('Agent request failed:', err);

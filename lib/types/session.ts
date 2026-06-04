@@ -1,6 +1,8 @@
 // lib/types/session.ts
 // Shared types for the session UI components
 
+import type { NpcProposal } from './npc';
+
 export type SceneMediaSource = 'campaign_asset' | 'ai_generated';
 
 export interface SceneMedia {
@@ -31,6 +33,7 @@ export interface ChatMessage {
   content: string;
   source?: MessageSource; // how the message was input
   sceneMedia?: SceneMedia; // attached media if agent sent one
+  proposal?: NpcProposal; // NPC change proposal from NPC Dialogue agent
   timestamp: Date;
 }
 
