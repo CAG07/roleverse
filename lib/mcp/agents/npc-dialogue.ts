@@ -34,8 +34,13 @@ async function fetchCampaignNpcs(campaignId: string): Promise<Npc[]> {
 
 /** Return NPCs whose names appear (case-insensitive) in the given text */
 function findMentionedNpcs(text: string, npcs: Npc[]): Npc[] {
-  const lower = text.toLowerCase();
-  return npcs.filter((npc) => lower.includes(npc.name.toLowerCase()));
+  return npcs.filter((npc) => {
+    const name = npc.name.toLowerCase().trim();
+    if (!name) return false;
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`\\b${escaped}\\b`, 'i');
+    return re.test(text);
+  });
 }
 
 /** Format an NPC record for inclusion in the system prompt */
