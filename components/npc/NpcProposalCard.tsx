@@ -58,7 +58,15 @@ function NewNpcCard({
   const handleApprove = async () => {
     setApprovalError(null);
     try {
-      await onApprove({ ...proposal, npc_name: fields.name, npc_data: { ...fields } });
+      const cleaned: Partial<NpcInput> = {
+        ...fields,
+        name: fields.name?.trim() ?? '',
+        race: fields.race?.trim() || null,
+        occupation: fields.occupation?.trim() || null,
+        description: fields.description?.trim() || null,
+        personality: fields.personality?.trim() || null,
+      };
+      await onApprove({ ...proposal, npc_name: cleaned.name, npc_data: cleaned });
     } catch (err) {
       setApprovalError(err instanceof Error ? err.message : 'Save failed');
     }
