@@ -68,7 +68,13 @@ CREATE POLICY "Owners can insert NPCs in their campaigns"
 CREATE POLICY "Owners can update their NPCs"
   ON public.npcs FOR UPDATE
   USING (auth.uid() = owner_id)
-  WITH CHECK (auth.uid() = owner_id);
+  WITH CHECK (
+    auth.uid() = owner_id
+    AND EXISTS (
+      SELECT 1 FROM public.campaigns c
+      WHERE c.id = campaign_id AND c.owner_id = auth.uid()
+    )
+  );
 
 CREATE POLICY "Owners can delete their NPCs"
   ON public.npcs FOR DELETE
