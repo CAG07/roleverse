@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import styles from './page.module.css';
+import { ExtractNpcsButton } from '@/components/session/ExtractNpcsButton';
 
 interface TranscriptEntry {
   role?: string;
@@ -86,6 +87,8 @@ export default async function SessionLogPage({ params }: Props) {
       </div>
 
       <div className={styles.logDivider} />
+
+      <ExtractNpcsButton campaignId={id} sessionId={sessionId} />
 
       <div className={styles.logFeed}>
         {entries.length === 0 ? (

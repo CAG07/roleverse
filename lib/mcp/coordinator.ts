@@ -170,7 +170,8 @@ KEY DISTINCTIONS:
 - "Who was that person we met before?" (past recall) → lore_keeper
 - "What does this symbol mean?" (current scene) → narrator
 - "What did that symbol mean that we found before?" (past recall) → lore_keeper
-- "Let's return to / pick up where / where did we leave off" → lore_keeper (session continuity recall)`;
+- "Let's return to / pick up where / where did we leave off" → lore_keeper (session continuity recall)
+- "I rolled a 14 on Charisma" / "rolled 8" (resolving a pending roll from an NPC interaction) → npc_dialogue`;
 
 /**
  * Route a player message to the most appropriate agent role using Claude Haiku.

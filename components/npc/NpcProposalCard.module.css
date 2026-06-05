@@ -1,0 +1,294 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ * See comment in NpcProposalCard.tsx for details.
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+.card {
+  position: relative;
+  background: var(--void-surface);
+  border: 1px solid var(--gold-dim);
+  padding: 1rem 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.kindBadge {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--gold-tint);
+  border: 1px solid var(--gold-dim);
+  padding: 0.2rem 0.5rem;
+  white-space: nowrap;
+}
+
+.npcName {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ivory);
+}
+
+.hint {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--ivory-dim);
+  font-style: italic;
+}
+
+.required {
+  color: var(--crimson-bright);
+}
+
+/* Form grid */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 0.75rem;
+}
+
+.fieldLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+}
+
+.input,
+.select {
+  width: 100%;
+  background: var(--void);
+  border: var(--rule-thin);
+  color: var(--ivory);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  padding: 0.4rem 0.6rem;
+  outline: none;
+  transition: border-color 0.2s;
+  appearance: none;
+}
+.input:focus,
+.select:focus {
+  border-color: var(--gold-dim);
+}
+.input:disabled,
+.select:disabled,
+.textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.textarea {
+  width: 100%;
+  background: var(--void);
+  border: var(--rule-thin);
+  color: var(--ivory);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  padding: 0.4rem 0.6rem;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+.textarea:focus {
+  border-color: var(--gold-dim);
+}
+
+/* Fact list */
+.factList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.factRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.checkbox {
+  margin-top: 0.15rem;
+  accent-color: var(--gold);
+  flex-shrink: 0;
+}
+
+.factText {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory-muted);
+  line-height: 1.4;
+}
+
+/* Disposition shift */
+.shiftRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.shiftArrow {
+  color: var(--ivory-dim);
+  font-size: 1rem;
+}
+
+.dispBadge {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid;
+}
+
+.disp_friendly { color: var(--gold); border-color: var(--gold-dim); background: var(--gold-tint); }
+.disp_helpful  { color: var(--gold-light); border-color: var(--gold-dim); background: var(--gold-subtle); }
+.disp_neutral  { color: var(--ivory-muted); border-color: var(--void-border); background: transparent; }
+.disp_wary     { color: var(--crimson-bright); border-color: var(--crimson-dim); background: var(--crimson-glow); }
+.disp_hostile  { color: var(--crimson-bright); border-color: var(--crimson); background: var(--crimson-glow); }
+
+.shiftReason {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Roll block */
+.rollBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  background: var(--void);
+  border: var(--rule-thin);
+  padding: 0.6rem 0.75rem;
+}
+
+.rollLabel {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.rollInputRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.rollInput {
+  width: 6rem;
+  background: var(--void-surface);
+  border: var(--rule-thin);
+  color: var(--ivory);
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.375rem 0.5rem;
+  outline: none;
+}
+.rollInput:focus {
+  border-color: var(--gold-dim);
+}
+
+.rollOutcomes {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--ivory-dim);
+}
+
+/* Inline approval error */
+.approvalError {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--crimson-bright);
+  margin: 0;
+}
+
+/* Action buttons */
+.actions {
+  display: flex;
+  gap: 0.625rem;
+  margin-top: 0.25rem;
+}
+
+.btnApprove {
+  padding: 0.45rem 1rem;
+  background: var(--gold-dim);
+  border: 1px solid var(--gold);
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--void);
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+.btnApprove:hover:not(:disabled) {
+  background: var(--gold);
+  box-shadow: 0 0 10px var(--gold-glow);
+}
+.btnApprove:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btnReject {
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: 1px solid var(--void-border);
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ivory-dim);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btnReject:hover:not(:disabled) {
+  border-color: var(--crimson-dim);
+  color: var(--crimson-bright);
+}
+.btnReject:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

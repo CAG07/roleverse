@@ -1,0 +1,183 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+.root {
+  padding: 2rem 1.5rem;
+  min-height: 100vh;
+  background: var(--void);
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory-muted);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: color 0.15s;
+}
+.backLink:hover { color: var(--gold); }
+
+.header {
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ivory);
+  margin: 0 0 0.25rem;
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory-muted);
+  margin: 0;
+}
+
+.formCard {
+  position: relative;
+  max-width: 38rem;
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.formCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--crimson), var(--gold-dim), var(--crimson), transparent);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+}
+
+.fieldLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+}
+
+.required {
+  color: var(--crimson-bright);
+}
+
+.input,
+.select {
+  width: 100%;
+  background: var(--void-surface);
+  border: var(--rule-thin);
+  color: var(--ivory);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: 0.55rem 0.75rem;
+  outline: none;
+  transition: border-color 0.2s;
+  appearance: none;
+}
+.input:focus,
+.select:focus {
+  border-color: var(--crimson);
+}
+.input:disabled,
+.select:disabled,
+.textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.textarea {
+  width: 100%;
+  background: var(--void-surface);
+  border: var(--rule-thin);
+  color: var(--ivory);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: 0.55rem 0.75rem;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+.textarea:focus {
+  border-color: var(--crimson);
+}
+
+.errorMsg {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--crimson-bright);
+  margin: 0;
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btnSubmit {
+  padding: 0.65rem 1.5rem;
+  background: var(--crimson);
+  border: 1px solid var(--crimson-bright);
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+.btnSubmit:hover:not(:disabled) {
+  background: var(--crimson-bright);
+  box-shadow: 0 0 16px var(--crimson-glow);
+}
+.btnSubmit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnCancel {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.65rem 1.25rem;
+  background: transparent;
+  border: 1px solid var(--void-border);
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ivory-dim);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btnCancel:hover {
+  border-color: var(--crimson-dim);
+  color: var(--ivory-muted);
+}
