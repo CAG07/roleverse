@@ -83,7 +83,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
       for (const incoming_fact of incoming) {
         const lowerIncoming = incoming_fact.fact.toLowerCase();
-        const isDuplicate = existing.some((ef) => {
+        const isDuplicate = merged.some((ef) => {
           const lowerExisting = ef.fact.toLowerCase();
           return lowerExisting.includes(lowerIncoming) || lowerIncoming.includes(lowerExisting);
         });
