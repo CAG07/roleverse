@@ -61,6 +61,8 @@ export function ExtractNpcsButton({ campaignId, sessionId }: ExtractNpcsButtonPr
           body: JSON.stringify({ known_facts: proposal.facts_to_add ?? [] }),
         });
       } else {
+        setError(`Unsupported NPC proposal kind: ${proposal.kind}`);
+        setHandledIndices((prev) => new Set([...prev, index]));
         return;
       }
       if (!res.ok) {
