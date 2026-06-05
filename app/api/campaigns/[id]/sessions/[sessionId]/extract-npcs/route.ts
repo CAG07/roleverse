@@ -165,9 +165,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
           typeof p === 'object' &&
           p !== null &&
           typeof (p as Record<string, unknown>).kind === 'string' &&
-          ['new_npc', 'append_facts', 'disposition_shift'].includes(
-            (p as Record<string, unknown>).kind as string
-          )
+          ['new_npc', 'append_facts'].includes((p as Record<string, unknown>).kind as string)
       );
 
       // Inject session ID into any facts_to_add entries that have null learned_in_session
