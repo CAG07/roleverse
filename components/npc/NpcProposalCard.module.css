@@ -234,6 +234,14 @@
   color: var(--ivory-dim);
 }
 
+/* Inline approval error */
+.approvalError {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--crimson-bright);
+  margin: 0;
+}
+
 /* Action buttons */
 .actions {
   display: flex;

@@ -47,18 +47,25 @@ export function ExtractNpcsButton({ campaignId, sessionId }: ExtractNpcsButtonPr
   const handleApprove = async (index: number, proposal: NpcProposal) => {
     setProcessingIndex(index);
     try {
+      let res: Response;
       if (proposal.kind === 'new_npc') {
-        await fetch(`/api/campaigns/${campaignId}/npcs`, {
+        res = await fetch(`/api/campaigns/${campaignId}/npcs`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(proposal.npc_data ?? { name: proposal.npc_name }),
         });
       } else if (proposal.kind === 'append_facts' && proposal.npc_id) {
-        await fetch(`/api/campaigns/${campaignId}/npcs/${proposal.npc_id}`, {
+        res = await fetch(`/api/campaigns/${campaignId}/npcs/${proposal.npc_id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ known_facts: proposal.facts_to_add ?? [] }),
         });
+      } else {
+        return;
+      }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Request failed' }));
+        throw new Error((data as { error?: string }).error ?? 'Request failed');
       }
       setHandledIndices((prev) => new Set([...prev, index]));
     } finally {

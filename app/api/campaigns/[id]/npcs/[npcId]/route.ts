@@ -56,7 +56,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
   const updatePayload: Record<string, unknown> = {};
 
-  if (body.name !== undefined) updatePayload.name = body.name;
+  if (body.name !== undefined) {
+    const trimmedName = body.name.trim();
+    if (!trimmedName) {
+      return NextResponse.json({ error: 'name is required' }, { status: 400 });
+    }
+    updatePayload.name = trimmedName;
+  }
   if (body.race !== undefined) updatePayload.race = body.race;
   if (body.occupation !== undefined) updatePayload.occupation = body.occupation;
   if (body.description !== undefined) updatePayload.description = body.description;
