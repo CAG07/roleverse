@@ -96,11 +96,27 @@ export async function POST(
   };
 
   const encoder = new TextEncoder();
+  let cancelled = false;
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
+      const onAbort = () => {
+        cancelled = true;
+        try {
+          controller.close();
+        } catch {
+          // ignore
+        }
+      };
+      request.signal.addEventListener('abort', onAbort);
+
       function emit(event: string, data: unknown) {
-        controller.enqueue(encoder.encode(formatSSE(event, data)));
+        if (cancelled) return;
+        try {
+          controller.enqueue(encoder.encode(formatSSE(event, data)));
+        } catch {
+          cancelled = true;
+        }
       }
 
       // Accumulate full content server-side for transcript (includes proposal block if any)
