@@ -47,13 +47,42 @@ function relativeTime(date: Date): string {
   return date.toLocaleDateString();
 }
 
+function parseSSEEvent(raw: string): { event: string; data: unknown } | null {
+  const lines = raw.split('\n');
+  let event = 'message';
+  let dataStr = '';
+
+  for (const line of lines) {
+    if (line.startsWith('event: ')) {
+      event = line.slice(7);
+    } else if (line.startsWith('data: ')) {
+      dataStr += line.slice(6);
+    }
+  }
+
+  if (!dataStr) return null;
+
+  try {
+    return { event, data: JSON.parse(dataStr) as unknown };
+  } catch {
+    return { event, data: dataStr };
+  }
+}
+
+interface StreamingMsg {
+  id: string;
+  agentType: AgentType;
+  content: string;
+  proposal?: NpcProposal;
+}
+
 interface ChatWindowProps {
   onSceneMediaUpdate?: (media: SceneMedia) => void;
   sessionId: string;
   campaignId: string;
 }
 
-export default function ChatWindow({ onSceneMediaUpdate, sessionId, campaignId }: ChatWindowProps) {
+export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, sessionId, campaignId }: ChatWindowProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'msg-init',
@@ -64,20 +93,49 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId, campaignId }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  // Track which message IDs have had their proposals handled
+  const [streamingMessage, setStreamingMessage] = useState<StreamingMsg | null>(null);
   const [handledProposals, setHandledProposals] = useState<Set<string>>(new Set());
   const [processingProposal, setProcessingProposal] = useState<string | null>(null);
+
   const feedRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef(messages);
+  const streamingMsgRef = useRef<StreamingMsg | null>(null);
+
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
+  // Auto-scroll: always on new finalized messages; near-bottom check during streaming
   useEffect(() => {
-    if (feedRef.current) {
-      feedRef.current.scrollTop = feedRef.current.scrollHeight;
-    }
+    const el = feedRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  useEffect(() => {
+    const el = feedRef.current;
+    if (!el || !streamingMessage) return;
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+    if (isNearBottom) el.scrollTop = el.scrollHeight;
+  }, [streamingMessage?.content]);
+
+  const finalizeStream = useCallback(() => {
+    const sm = streamingMsgRef.current;
+    if (!sm) return;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: sm.id,
+        role: 'agent' as const,
+        agentType: sm.agentType,
+        content: sm.content,
+        proposal: sm.proposal,
+        timestamp: new Date(),
+      },
+    ]);
+    streamingMsgRef.current = null;
+    setStreamingMessage(null);
+  }, []);
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
@@ -96,7 +154,6 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId, campaignId }
     setInput('');
     setIsLoading(true);
 
-    // Build conversation history for Claude context from current messages + new player message
     const currentMessages = [...messagesRef.current, playerMsg];
     const history: AgentMessage[] = currentMessages
       .filter((m) => m.role === 'player' || m.role === 'agent')
@@ -106,53 +163,101 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId, campaignId }
       }));
 
     try {
-      const res = await fetch(`/api/sessions/${sessionId}/message`, {
+      const response = await fetch(`/api/sessions/${sessionId}/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          conversationHistory: history,
-        }),
+        body: JSON.stringify({ message: text, conversationHistory: history }),
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+      if (!response.ok || !response.body) {
+        const err = await response.json().catch(() => ({ error: 'Unknown error' }));
         setMessages((prev) => [
           ...prev,
           {
             id: `msg-err-${Date.now()}`,
             role: 'system',
-            content: `Error: ${err.error ?? 'Request failed'}`,
+            content: `Error: ${(err as { error?: string }).error ?? 'Request failed'}`,
             timestamp: new Date(),
           },
         ]);
         return;
       }
 
-      const data = await res.json();
-      const agentMsg: ChatMessage = {
-        id: `msg-${Date.now()}`,
-        role: 'agent',
-        agentType: (data.agentRole as AgentType) ?? 'narrator',
-        content: data.content,
-        proposal: (data.proposal as NpcProposal | undefined),
-        timestamp: new Date(),
-      };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
 
-      if (data.sceneMedia && onSceneMediaUpdate) {
-        const media: SceneMedia = {
-          id: `scene-${Date.now()}`,
-          type: data.sceneMedia.type,
-          url: data.sceneMedia.url,
-          caption: data.sceneMedia.caption,
-          source: data.sceneMedia.source,
-          timestamp: new Date(),
-        };
-        agentMsg.sceneMedia = media;
-        onSceneMediaUpdate(media);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split('\n\n');
+        buffer = events.pop() ?? '';
+
+        for (const eventText of events) {
+          const parsed = parseSSEEvent(eventText);
+          if (!parsed) continue;
+
+          switch (parsed.event) {
+            case 'agent_type': {
+              const agentType = (parsed.data as { agentType: AgentType }).agentType;
+              const id = `msg-stream-${Date.now()}`;
+              const sm: StreamingMsg = { id, agentType, content: '' };
+              streamingMsgRef.current = sm;
+              setStreamingMessage(sm);
+              break;
+            }
+            case 'token': {
+              const chunk = (parsed.data as { text: string }).text;
+              if (streamingMsgRef.current) {
+                const updated = { ...streamingMsgRef.current, content: streamingMsgRef.current.content + chunk };
+                streamingMsgRef.current = updated;
+                setStreamingMessage(updated);
+              }
+              break;
+            }
+            case 'proposal': {
+              if (streamingMsgRef.current) {
+                const updated = { ...streamingMsgRef.current, proposal: parsed.data as NpcProposal };
+                streamingMsgRef.current = updated;
+                setStreamingMessage(updated);
+              }
+              break;
+            }
+            case 'error': {
+              const errorText = (parsed.data as { error: string }).error;
+              if (streamingMsgRef.current) {
+                const prev = streamingMsgRef.current;
+                const updated = {
+                  ...prev,
+                  content: prev.content
+                    ? `${prev.content}\n\n[Error: ${errorText}]`
+                    : `[Error: ${errorText}]`,
+                };
+                streamingMsgRef.current = updated;
+                setStreamingMessage(updated);
+                finalizeStream();
+              } else {
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: `msg-err-${Date.now()}`,
+                    role: 'system',
+                    content: `Error: ${errorText}`,
+                    timestamp: new Date(),
+                  },
+                ]);
+              }
+              break;
+            }
+            case 'done': {
+              finalizeStream();
+              break;
+            }
+          }
+        }
       }
-
-      setMessages((prev) => [...prev, agentMsg]);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -165,8 +270,12 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId, campaignId }
       ]);
     } finally {
       setIsLoading(false);
+      // Safety: finalize if stream closed without a done event
+      if (streamingMsgRef.current) {
+        finalizeStream();
+      }
     }
-  }, [input, isLoading, sessionId, onSceneMediaUpdate]);
+  }, [input, isLoading, sessionId, finalizeStream]);
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -278,8 +387,26 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId, campaignId }
           );
         })}
 
-        {/* Loading indicator */}
-        {isLoading && (
+        {/* Streaming message — builds up token by token */}
+        {streamingMessage && (
+          <div className={styles.msgAgent}>
+            <span
+              className={styles.agentLabel}
+              style={{
+                color: agentConfig[streamingMessage.agentType].accent,
+                borderColor: agentConfig[streamingMessage.agentType].accent + '40',
+              }}
+            >
+              {agentConfig[streamingMessage.agentType].label}
+            </span>
+            <div className={`${styles.agentBubble}${!streamingMessage.content ? ` ${styles.loading}` : ''}`}>
+              {streamingMessage.content ? renderMarkdown(streamingMessage.content) : '▍'}
+            </div>
+          </div>
+        )}
+
+        {/* Loading indicator — shown only before agent_type event arrives */}
+        {isLoading && !streamingMessage && (
           <div className={styles.msgAgent}>
             <span
               className={styles.agentLabel}

@@ -5,7 +5,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { executeTool, getToolDefinitions } from '../server';
-import type { AgentMessage, AgentResponse, MCPContext, MCPToolCall, MCPToolResult } from '../types';
+import type { AgentMessage, AgentResponse, AgentStreamResult, MCPContext, MCPToolCall, MCPToolResult } from '../types';
 
 function getRequiredModel(): string {
   const model = process.env.ANTHROPIC_MODEL;
@@ -74,6 +74,87 @@ function toAnthropicTools(
       ...def.inputSchema,
     },
   }));
+}
+
+/** Stream the Narrator agent, yielding text chunks */
+export async function* streamNarratorAgent(
+  message: string,
+  context: MCPContext,
+  conversationHistory: AgentMessage[] = []
+): AsyncGenerator<string, AgentStreamResult, undefined> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY environment variable is not set');
+  }
+
+  const client = new Anthropic({ apiKey });
+  const systemPrompt = buildSystemPrompt(context);
+  const tools = toAnthropicTools(getToolDefinitions());
+
+  const messages: Anthropic.Messages.MessageParam[] = [
+    ...conversationHistory.map(
+      (msg): Anthropic.Messages.MessageParam => ({
+        role: msg.role,
+        content: msg.content,
+      })
+    ),
+    { role: 'user', content: message },
+  ];
+
+  let fullContent = '';
+  const toolCalls: MCPToolCall[] = [];
+  const toolResults: MCPToolResult[] = [];
+
+  while (true) {
+    const stream = client.messages.stream({
+      model: MODEL,
+      max_tokens: MAX_TOKENS,
+      system: systemPrompt,
+      tools,
+      messages,
+    });
+
+    for await (const event of stream) {
+      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+        yield event.delta.text;
+        fullContent += event.delta.text;
+      }
+    }
+
+    const finalMsg = await stream.finalMessage();
+    if (finalMsg.stop_reason !== 'tool_use') break;
+
+    const toolUseBlocks = finalMsg.content.filter(
+      (block): block is Anthropic.Messages.ToolUseBlock => block.type === 'tool_use'
+    );
+    const toolResultBlocks: Anthropic.Messages.ToolResultBlockParam[] = [];
+
+    for (const block of toolUseBlocks) {
+      const call: MCPToolCall = {
+        name: block.name,
+        arguments: (block.input as Record<string, unknown>) ?? {},
+      };
+      toolCalls.push(call);
+      const result = await executeTool(call, context);
+      toolResults.push(result);
+      toolResultBlocks.push({
+        type: 'tool_result',
+        tool_use_id: block.id,
+        content: result.error ?? result.content,
+        is_error: !!result.error,
+      });
+    }
+
+    messages.push({ role: 'assistant', content: finalMsg.content });
+    messages.push({ role: 'user', content: toolResultBlocks });
+  }
+
+  return {
+    content: fullContent,
+    agentRole: 'narrator',
+    toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+    toolResults: toolResults.length > 0 ? toolResults : undefined,
+  };
 }
 
 /** Run the Narrator agent against the Claude API */

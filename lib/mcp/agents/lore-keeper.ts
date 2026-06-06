@@ -8,7 +8,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { createClient } from '@/lib/supabase/server';
 
-import type { AgentMessage, AgentResponse, MCPContext } from '../types';
+import type { AgentMessage, AgentResponse, AgentStreamResult, MCPContext } from '../types';
 
 function getRequiredModel(): string {
   const model = process.env.ANTHROPIC_MODEL;
@@ -139,6 +139,49 @@ function buildSystemPrompt(
   }
 
   return parts.join('\n');
+}
+
+/** Stream the Lore Keeper agent, yielding text chunks */
+export async function* streamLoreKeeperAgent(
+  message: string,
+  context: MCPContext,
+  conversationHistory: AgentMessage[] = []
+): AsyncGenerator<string, AgentStreamResult, undefined> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY environment variable is not set');
+  }
+
+  const client = new Anthropic({ apiKey });
+  const { campaignNotes, sessionSummaries } = await fetchLoreContext(context.campaignId);
+  const systemPrompt = buildSystemPrompt(context, campaignNotes, sessionSummaries);
+
+  const messages: Anthropic.Messages.MessageParam[] = [
+    ...conversationHistory.map(
+      (msg): Anthropic.Messages.MessageParam => ({
+        role: msg.role,
+        content: msg.content,
+      })
+    ),
+    { role: 'user', content: message },
+  ];
+
+  let content = '';
+  const stream = client.messages.stream({
+    model: MODEL,
+    max_tokens: MAX_TOKENS,
+    system: systemPrompt,
+    messages,
+  });
+
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+      yield event.delta.text;
+      content += event.delta.text;
+    }
+  }
+
+  return { content, agentRole: 'lore_keeper' };
 }
 
 /** Run the Lore Keeper agent */

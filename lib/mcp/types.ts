@@ -51,6 +51,14 @@ export interface AgentMessage {
   content: string;
 }
 
+/** Streaming result returned from an async generator agent */
+export interface AgentStreamResult {
+  content: string;
+  agentRole: AgentRole;
+  toolCalls?: MCPToolCall[];
+  toolResults?: MCPToolResult[];
+}
+
 /** Response from an AI agent */
 export interface AgentResponse {
   content: string; // agent's text response

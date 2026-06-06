@@ -8,7 +8,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { createClient } from '@/lib/supabase/server';
 
-import type { AgentMessage, AgentResponse, MCPContext } from '../types';
+import type { AgentMessage, AgentResponse, AgentStreamResult, MCPContext } from '../types';
 import type { Npc, NpcKnownFact } from '@/lib/types/npc';
 
 function getRequiredModel(): string {
@@ -123,6 +123,53 @@ function buildSystemPrompt(context: MCPContext, matchedNpcs: Npc[]): string {
   );
 
   return parts.join('\n');
+}
+
+/** Stream the NPC Dialogue agent, yielding text chunks */
+export async function* streamNpcDialogueAgent(
+  message: string,
+  context: MCPContext,
+  conversationHistory: AgentMessage[] = []
+): AsyncGenerator<string, AgentStreamResult, undefined> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY environment variable is not set');
+
+  const allNpcs = await fetchCampaignNpcs(context.campaignId);
+  const recentText = [
+    ...conversationHistory.slice(-5).map((m) => m.content),
+    message,
+  ].join(' ');
+  const matchedNpcs = findMentionedNpcs(recentText, allNpcs);
+
+  const client = new Anthropic({ apiKey });
+  const systemPrompt = buildSystemPrompt(context, matchedNpcs);
+
+  const messages: Anthropic.Messages.MessageParam[] = [
+    ...conversationHistory.map(
+      (msg): Anthropic.Messages.MessageParam => ({
+        role: msg.role,
+        content: msg.content,
+      })
+    ),
+    { role: 'user', content: message },
+  ];
+
+  let content = '';
+  const stream = client.messages.stream({
+    model: MODEL,
+    max_tokens: MAX_TOKENS,
+    system: systemPrompt,
+    messages,
+  });
+
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+      yield event.delta.text;
+      content += event.delta.text;
+    }
+  }
+
+  return { content, agentRole: 'npc_dialogue' };
 }
 
 /** Run the NPC Dialogue agent */
