@@ -112,12 +112,14 @@ export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, se
     el.scrollTop = el.scrollHeight;
   }, [messages]);
 
+  const streamingContent = streamingMessage?.content;
+
   useEffect(() => {
     const el = feedRef.current;
-    if (!el || !streamingMessage) return;
+    if (!el || streamingContent === undefined) return;
     const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
     if (isNearBottom) el.scrollTop = el.scrollHeight;
-  }, [streamingMessage?.content]);
+  }, [streamingContent]);
 
   const finalizeStream = useCallback(() => {
     const sm = streamingMsgRef.current;
