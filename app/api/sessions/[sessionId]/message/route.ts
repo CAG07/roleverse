@@ -145,9 +145,7 @@ export async function POST(
             break;
           default:
             emit('error', { error: `Unknown agent role: "${agentRole}"` });
-            controller.close();
             return;
-        }
 
         // --- Stream tokens, with proposal-block interception for npc_dialogue ---
         const useProposalParsing = agentRole === 'npc_dialogue';
