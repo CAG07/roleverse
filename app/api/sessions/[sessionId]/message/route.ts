@@ -239,6 +239,10 @@ export async function POST(
 
           const currentTranscript = (currentSession?.transcript as unknown[]) ?? [];
           const now = new Date().toISOString();
+          const transcriptContent =
+            agentRole === 'npc_dialogue'
+              ? fullContent.replace(/\[NPC_PROPOSAL_START\][\s\S]*?\[NPC_PROPOSAL_END\]/g, '').trim()
+              : fullContent;
 
           await supabase
             .from('sessions')
@@ -246,7 +250,7 @@ export async function POST(
               transcript: [
                 ...currentTranscript,
                 { role: 'player', content: message, timestamp: now },
-                { role: 'agent', agentType: agentRole, content: fullContent, timestamp: now },
+                { role: 'agent', agentType: agentRole, content: transcriptContent, timestamp: now },
               ],
             })
             .eq('id', sessionId);
