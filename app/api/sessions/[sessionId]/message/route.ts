@@ -279,7 +279,7 @@ export async function POST(
                 transcript: [
                   ...currentTranscript,
                   { role: 'player', content: message, timestamp: now },
-                  { role: 'agent', agentType: agentRole, content: fullContent + ' [truncated]', timestamp: now },
+                  { role: 'agent', agentType: agentRole, content: (agentRole === 'npc_dialogue' ? fullContent.replace(/\[NPC_PROPOSAL_START\][\s\S]*?\[NPC_PROPOSAL_END\]/g, '').trim() : fullContent) + ' [truncated]', timestamp: now }
                 ],
               })
               .eq('id', sessionId);
