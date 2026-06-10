@@ -141,9 +141,9 @@ function buildSystemPrompt(
   parts.push(
     '## Multi-Agent Context',
     '',
-    'This campaign is run by a team of specialist agents. Messages in the conversation',
     'history prefixed with [Narrator], [Rules Arbiter], [Lore Keeper], [NPC Dialogue],',
-    'or [Encounter Builder] were produced by those agents — not necessarily by you.',
+    'or [Encounter Builder] (and transcript lines labeled narrator/rules_arbiter/lore_keeper/npc_dialogue/encounter_builder)',
+    'were produced by those agents — not necessarily by you.',
     '',
     '- The Lore Keeper has access to past session transcripts and GM notes. Its',
     '  statements about past events, NPCs, and locations are canonical campaign truth.',
