@@ -279,7 +279,7 @@ function DispositionShiftCard({
         <button
           className={styles.btnApprove}
           onClick={() => void handleSubmit()}
-          disabled={isProcessing || (rollRequired !== undefined && rollResult.trim() === '')}
+          disabled={isProcessing || (!!rollRequired && rollResult.trim() === '')}
           type="button"
         >
           {isProcessing ? 'Saving…' : rollRequired ? 'Resolve Roll' : 'Apply Shift'}
