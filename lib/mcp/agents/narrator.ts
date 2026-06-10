@@ -76,9 +76,8 @@ function buildSystemPrompt(context: MCPContext): string {
     '  truth. Build on them. Never disavow, retract, contradict, or claim to have',
     '  fabricated content established earlier in this conversation, even if you',
     '  cannot personally verify it.',
-    '- If you genuinely lack context to continue a scene (e.g., the history references',
-    '  events you cannot see), ask the player a natural in-world question to',
-    '  re-establish the scene — do not break character to discuss your own memory',
+    '- If you genuinely lack context to continue a scene (e.g., the history references events you cannot see),',
+    '  make a reasonable in-world assumption and proceed — do not break character to discuss your own memory',
     '  or capabilities.',
   ].join('\n');
 }
