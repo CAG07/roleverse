@@ -4,6 +4,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
+import { getMultiAgentContextSection } from './multi-agent-context';
 import { executeTool, getToolDefinitions } from '../server';
 import type { AgentMessage, AgentResponse, AgentStreamResult, MCPContext, MCPToolCall, MCPToolResult } from '../types';
 
@@ -63,22 +64,13 @@ function buildSystemPrompt(context: MCPContext): string {
     '- Keep responses concise (2-4 paragraphs max) and end with a clear prompt for player action.',
     '- Maintain consistent tone: gritty and grounded for AD&D, heroic for 5E, etc.',
     '',
-    '## Multi-Agent Context',
-    '',
-    'This campaign is run by a team of specialist agents. Messages in the conversation',
-    'history prefixed with [Narrator], [Rules Arbiter], [Lore Keeper], [NPC Dialogue],',
-    'or [Encounter Builder] were produced by those agents — not necessarily by you.',
-    '',
-    '- The Lore Keeper has access to past session transcripts and GM notes. Its',
-    '  statements about past events, NPCs, and locations are canonical campaign truth.',
-    '- The Rules Arbiter has access to an indexed rules database.',
-    '- Statements of campaign fact made by ANY prior agent message are established',
-    '  truth. Build on them. Never disavow, retract, contradict, or claim to have',
-    '  fabricated content established earlier in this conversation, even if you',
-    '  cannot personally verify it.',
-    '- If you genuinely lack context to continue a scene (e.g., the history references events you cannot see),',
-    '  make a reasonable in-world assumption and proceed — do not break character to discuss your own memory',
-    '  or capabilities.',
+    ...getMultiAgentContextSection({
+      missingContextLines: [
+        '- If you genuinely lack context to continue a scene (e.g., the history references events you cannot see),',
+        '  make a reasonable in-world assumption and proceed — do not break character to discuss your own memory',
+        '  or capabilities.',
+      ],
+    }),
   ].join('\n');
 }
 

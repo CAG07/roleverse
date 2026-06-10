@@ -7,6 +7,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { searchRules } from '@/lib/rag/search';
+import { getMultiAgentContextSection } from './multi-agent-context';
 
 import type { AgentMessage, AgentResponse, AgentStreamResult, MCPContext } from '../types';
 
@@ -65,25 +66,7 @@ function buildSystemPrompt(context: MCPContext, ragContext: string): string {
     );
   }
 
-  parts.push(
-    '## Multi-Agent Context',
-    '',
-    'This campaign is run by a team of specialist agents. Messages in the conversation',
-    'history prefixed with [Narrator], [Rules Arbiter], [Lore Keeper], [NPC Dialogue],',
-    'or [Encounter Builder] were produced by those agents — not necessarily by you.',
-    '',
-    '- The Lore Keeper has access to past session transcripts and GM notes. Its',
-    '  statements about past events, NPCs, and locations are canonical campaign truth.',
-    '- The Rules Arbiter has access to an indexed rules database.',
-    '- Statements of campaign fact made by ANY prior agent message are established',
-    '  truth. Build on them. Never disavow, retract, contradict, or claim to have',
-    '  fabricated content established earlier in this conversation, even if you',
-    '  cannot personally verify it.',
-    '- If you genuinely lack context to continue a scene (e.g., the history references',
-    '  events you cannot see), ask the player a natural in-world question to',
-    '  re-establish the scene — do not break character to discuss your own memory',
-    '  or capabilities.',
-  );
+  parts.push(...getMultiAgentContextSection());
 
   return parts.join('\n');
 }

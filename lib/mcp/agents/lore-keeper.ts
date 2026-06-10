@@ -7,6 +7,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { createClient } from '@/lib/supabase/server';
+import { getMultiAgentContextSection } from './multi-agent-context';
 
 import type { AgentMessage, AgentResponse, AgentStreamResult, MCPContext } from '../types';
 
@@ -139,22 +140,16 @@ function buildSystemPrompt(
   }
 
   parts.push(
-    '## Multi-Agent Context',
-    '',
-    'history prefixed with [Narrator], [Rules Arbiter], [Lore Keeper], [NPC Dialogue],',
-    'or [Encounter Builder] (and transcript lines labeled narrator/rules_arbiter/lore_keeper/npc_dialogue/encounter_builder)',
-    'were produced by those agents — not necessarily by you.',
-    '',
-    '- The Lore Keeper has access to past session transcripts and GM notes. Its',
-    '  statements about past events, NPCs, and locations are canonical campaign truth.',
-    '- The Rules Arbiter has access to an indexed rules database.',
-    '- For current-scene continuity, treat prior agent messages in this conversation as the established scene state.',
-    '- For questions about past sessions / campaign lore, ONLY treat the GM notes and session transcripts above as canonical.',
-    '  If something is not in them, say so rather than asserting it as fact.',
-    '- If you genuinely lack context to continue a scene (e.g., the history references',
-    '  events you cannot see), ask the player a natural in-world question to',
-    '  re-establish the scene — do not break character to discuss your own memory',
-    '  or capabilities.',
+    ...getMultiAgentContextSection({
+      includeCampaignLine: false,
+      additionalHistoryLine:
+        '(and transcript lines labeled narrator/rules_arbiter/lore_keeper/npc_dialogue/encounter_builder)',
+      continuityLines: [
+        '- For current-scene continuity, treat prior agent messages in this conversation as the established scene state.',
+        '- For questions about past sessions / campaign lore, ONLY treat the GM notes and session transcripts above as canonical.',
+        '  If something is not in them, say so rather than asserting it as fact.',
+      ],
+    })
   );
 
   return parts.join('\n');
