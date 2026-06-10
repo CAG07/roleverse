@@ -159,10 +159,11 @@ export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, se
     const currentMessages = [...messagesRef.current, playerMsg];
     const history: AgentMessage[] = currentMessages
       .filter((m) => m.role === 'player' || m.role === 'agent')
-      .map((m) => ({
-        role: m.role === 'player' ? ('user' as const) : ('assistant' as const),
-        content: m.content,
-      }));
+      .map((m) => {
+        if (m.role === 'player') return { role: 'user' as const, content: m.content };
+        const label = m.agentType ? (agentConfig[m.agentType]?.label ?? 'Agent') : 'Agent';
+        return { role: 'assistant' as const, content: `[${label}] ${m.content}` };
+      });
 
     try {
       const response = await fetch(`/api/sessions/${sessionId}/message`, {

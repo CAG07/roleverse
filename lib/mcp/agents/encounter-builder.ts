@@ -6,6 +6,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
+import { getMultiAgentContextSection } from './multi-agent-context';
 
 import type { AgentMessage, AgentResponse, AgentStreamResult, MCPContext } from '../types';
 
@@ -45,6 +46,8 @@ function buildSystemPrompt(context: MCPContext): string {
     '**Enemies:** [List]',
     '**Tactics:** [Notes]',
     '**Rewards:** [XP, treasure, or other rewards]',
+    '',
+    ...getMultiAgentContextSection(),
   ].join('\n');
 }
 

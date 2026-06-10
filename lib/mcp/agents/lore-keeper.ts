@@ -7,6 +7,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { createClient } from '@/lib/supabase/server';
+import { getMultiAgentContextSection } from './multi-agent-context';
 
 import type { AgentMessage, AgentResponse, AgentStreamResult, MCPContext } from '../types';
 
@@ -137,6 +138,19 @@ function buildSystemPrompt(
       ''
     );
   }
+
+  parts.push(
+    ...getMultiAgentContextSection({
+      includeCampaignLine: false,
+      additionalHistoryLine:
+        '(and transcript lines labeled narrator/rules_arbiter/lore_keeper/npc_dialogue/encounter_builder)',
+      continuityLines: [
+        '- For current-scene continuity, treat prior agent messages in this conversation as the established scene state.',
+        '- For questions about past sessions / campaign lore, ONLY treat the GM notes and session transcripts above as canonical.',
+        '  If something is not in them, say so rather than asserting it as fact.',
+      ],
+    })
+  );
 
   return parts.join('\n');
 }

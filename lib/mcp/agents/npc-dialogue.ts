@@ -7,6 +7,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { createClient } from '@/lib/supabase/server';
+import { getMultiAgentContextSection } from './multi-agent-context';
 
 import type { AgentMessage, AgentResponse, AgentStreamResult, MCPContext } from '../types';
 import type { Npc, NpcKnownFact } from '@/lib/types/npc';
@@ -120,7 +121,9 @@ function buildSystemPrompt(context: MCPContext, matchedNpcs: Npc[]): string {
     '',
     'Do NOT propose new_npc — that is handled by the session extraction tool.',
     'Do NOT propose changes for NPCs not in the roster.',
-    'If no change is warranted, omit the proposal block entirely.'
+    'If no change is warranted, omit the proposal block entirely.',
+    '',
+    ...getMultiAgentContextSection(),
   );
 
   return parts.join('\n');

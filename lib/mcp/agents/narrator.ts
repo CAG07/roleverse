@@ -4,6 +4,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
+import { getMultiAgentContextSection } from './multi-agent-context';
 import { executeTool, getToolDefinitions } from '../server';
 import type { AgentMessage, AgentResponse, AgentStreamResult, MCPContext, MCPToolCall, MCPToolResult } from '../types';
 
@@ -43,6 +44,9 @@ function buildSystemPrompt(context: MCPContext): string {
     '  world appropriate to the game system. Invent names, places, and NPCs from scratch.',
     '- If the player names a location, NPC, or detail, treat it as canonical and build around',
     '  it -- do not contradict or replace what the player has established.',
+    '- Scene state inherited from prior agent messages in this conversation is canonical — not',
+    '  invented content. The constraint against fabrication applies to NEW details you generate,',
+    '  not to facts established earlier in this conversation by any agent.',
     '',
     'GAME SYSTEM RULES:',
     rulesPrompt,
@@ -59,6 +63,14 @@ function buildSystemPrompt(context: MCPContext): string {
     '- Never roll dice for tactical combat -- Fantasy Grounds handles that.',
     '- Keep responses concise (2-4 paragraphs max) and end with a clear prompt for player action.',
     '- Maintain consistent tone: gritty and grounded for AD&D, heroic for 5E, etc.',
+    '',
+    ...getMultiAgentContextSection({
+      missingContextLines: [
+        '- If you genuinely lack context to continue a scene (e.g., the history references events you cannot see),',
+        '  make a reasonable in-world assumption and proceed — do not break character to discuss your own memory',
+        '  or capabilities.',
+      ],
+    }),
   ].join('\n');
 }
 

@@ -7,6 +7,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { searchRules } from '@/lib/rag/search';
+import { getMultiAgentContextSection } from './multi-agent-context';
 
 import type { AgentMessage, AgentResponse, AgentStreamResult, MCPContext } from '../types';
 
@@ -64,6 +65,8 @@ function buildSystemPrompt(context: MCPContext, ragContext: string): string {
       '',
     );
   }
+
+  parts.push(...getMultiAgentContextSection());
 
   return parts.join('\n');
 }
