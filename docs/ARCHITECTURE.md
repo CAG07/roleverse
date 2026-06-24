@@ -1,14 +1,14 @@
 # RoleVerse — Architecture
 
-> **Canonical reference:** This Markdown file is the authoritative architecture document.
-> `ARCHITECTURE.png` (if present in this directory) is deprecated and may be out of date.
+> This markdown file is the canonical architecture reference. If an `ARCHITECTURE.png`
+> exists in the repo, it is deprecated in favor of this document (which can be
+> version-controlled and diffed).
 
----
-
-## Stack Overview
+## Stack
 
 | Layer | Technology |
 |-------|-----------|
+<<<<<<< Updated upstream
 | **Frontend** | Next.js 16 (App Router, no `src/`), React 19, CSS Modules |
 | **Backend** | Next.js API Routes (serverless, Vercel) |
 | **Database** | Supabase — PostgreSQL + pgvector + Auth + RLS |
@@ -16,28 +16,36 @@
 | **Embeddings** | Voyage AI (`voyage-3-lite`, 512-dimensional) |
 | **Ingestion** | GitHub Actions — manual-trigger workflow per game system |
 | **Hosting** | Vercel |
+=======
+| Framework | Next.js 15 (App Router, no `src/`), React 19, TypeScript |
+| Backend | Supabase — PostgreSQL, pgvector, Auth (Google SSO), Row Level Security |
+| AI — agents & router | Anthropic Claude API |
+| AI — embeddings | Voyage AI (`voyage-3-lite`, 512 dims) |
+| Hosting | Vercel |
+| Ingestion | GitHub Actions |
+| Styling | CSS Modules (per-component `.module.css`) |
+| Protocol | MCP server embedded within the Next.js app |
+>>>>>>> Stashed changes
 
-Auth is Google OAuth SSO only (via Supabase Auth). No email/password, no third-party bots or integrations.
+Auth is Google OAuth SSO only. Each user's data is isolated at the Postgres level via RLS.
 
----
-
-## Request Lifecycle
+## Request lifecycle
 
 ```mermaid
 flowchart TD
-    Player[Player sends message] --> Route["POST /api/sessions/[sessionId]/message"]
-    Route --> Router["routeMessage() — Haiku classifier\nlib/mcp/coordinator.ts"]
-    Router -->|narrator| Narrator[Narrator Agent]
-    Router -->|rules_arbiter| Rules[Rules Arbiter Agent]
-    Router -->|lore_keeper| Lore[Lore Keeper Agent]
-    Router -->|npc_dialogue| NPC[NPC Dialogue Agent]
-    Router -->|encounter_builder| Enc[Encounter Builder Agent]
+    Player[Player sends message] --> Route["/api/sessions/[sessionId]/message"]
+    Route --> Router["routeMessage() — Haiku classifier<br/>lib/mcp/coordinator.ts"]
+    Router -->|narration| Narrator[Narrator Agent]
+    Router -->|rules query| Rules[Rules Arbiter Agent]
+    Router -->|recall| Lore[Lore Keeper Agent]
+    Router -->|NPC speech| NPC[NPC Dialogue Agent]
+    Router -->|encounter| Enc[Encounter Builder Agent]
 
-    Rules --> Voyage[Voyage AI embed query]
-    Voyage --> PgVector[(pgvector\nmatch_rules_embeddings)]
+    Rules --> Voyage[Voyage embed query]
+    Voyage --> PgVector[(pgvector<br/>match_rules_embeddings)]
     PgVector --> Rules
 
-    Lore --> Transcript[(sessions.transcript\n+ campaigns.notes)]
+    Lore --> Transcript[(sessions.transcript<br/>+ campaigns.notes)]
     NPC --> NpcTable[(npcs table)]
     Enc --> PgVector
 
@@ -47,109 +55,67 @@ flowchart TD
     NPC --> Claude
     Enc --> Claude
 
-    Claude --> SSE[SSE stream → client]
+    Claude --> SSE[SSE stream to client]
     SSE --> Persist[(Save to sessions.transcript)]
 ```
 
----
+## The orchestrator
 
-## The Orchestrator
+The orchestrator does **routing, not coordination**. For each player message:
 
-The architecture is **routing, not coordination**. The Haiku classifier in `lib/mcp/coordinator.ts` picks exactly **one** agent per player message. Agents do not call each other or share state mid-message. The multi-specialist feel comes from different messages going to different agents over the course of a session.
+1. The session message route calls `routeMessage()` in `lib/mcp/coordinator.ts`.
+2. That function sends the message plus a disambiguation prompt to Claude Haiku (fast, cheap) and gets back a single classification — which one of the five agents handles this message.
+3. Exactly one agent runs. Agents do not call each other. The "multi-agent" experience comes from different messages across a conversation going to different specialists, not from agents collaborating on a single response.
 
-Conversation history is shared across all agents and annotated with `[Agent Name]` prefixes, so each agent can see what prior agents said without mistaking another agent's statement for its own.
+Conversation history is shared across all agents. Each prior assistant message is annotated with an `[Agent Name]` prefix so an agent does not mistake another agent's statements for its own. A cross-agent trust rule in each agent's system prompt establishes that prior agents' statements of campaign fact are canonical and must not be disavowed.
 
-If the Haiku API call fails or returns an unexpected value, `routeMessage()` falls back to keyword matching — the system degrades gracefully without crashing.
+## Per-agent context
 
----
+| Agent | Context it gathers | Label color |
+|-------|-------------------|-------------|
+| Narrator | Scene narration + previous session's summary (cross-session continuity) | Gold |
+| Rules Arbiter | Voyage-embedded query → `match_rules_embeddings` (pgvector, threshold 0.3, active generation, game-system filtered) → cited SRD chunks | Slate |
+| Lore Keeper | `campaigns.notes` + last 5 sessions' transcripts | Purple |
+| NPC Dialogue | Campaign NPC roster (disposition, known facts, personality); may emit player-confirmed proposals | Green |
+| Encounter Builder | Party composition + monster index from the embeddings | Amber |
 
-## Per-Agent Context
+## Data layer
 
-| Agent | What it pulls in |
-|-------|-----------------|
-| **Narrator** | Scene state; prior-session summary injected into system prompt |
-| **Rules Arbiter** | Voyage AI embedding of the query → pgvector similarity search on `campaign_embeddings` |
-| **Lore Keeper** | Session transcripts (`sessions.transcript`) + `campaigns.notes` |
-| **NPC Dialogue** | `npcs` table for the current campaign (disposition, location, known_facts) |
-| **Encounter Builder** | Party composition; pgvector monster/encounter index |
+Core Postgres tables: `campaigns`, `characters`, `sessions`, `npcs`, `campaign_embeddings`.
 
----
+- **RAG:** `campaign_embeddings` holds baseline rules chunks (campaign_id NULL) and may hold per-campaign content. pgvector powers similarity search via `match_rules_embeddings`.
+- **Generation swap:** baseline embeddings are versioned by a `generation` column with an `embedding_generations` state table, enabling zero-downtime re-ingestion (write new generation, atomically promote, delete old).
+- **RLS:** every table is owner-scoped (`auth.uid() = owner_id`) for per-user isolation.
+- **NPC roster:** `npcs` per campaign with a 5-value disposition enum and structured `known_facts` JSONB.
+- **Sessions:** find-or-create logic (one active session per campaign), transcript persisted per exchange, AI-generated summary on end, summary injected into the Narrator at the next session's start.
 
-## Data Layer
+## Ingestion
 
-### Supabase Tables
+Baseline rules content is ingested via a GitHub Actions workflow (`workflow_dispatch`). The pipeline fetches from source (Open5e for 5E SRD, with `document__slug=wotc-srd` filter), chunks, embeds via Voyage, and writes under a new generation, promoting atomically on success. 5E_2014 has ~2335 chunks. ADD2E and PATHFINDER_2E are stubs (training-knowledge fallback / data deferred).
 
-| Table | Purpose |
-|-------|---------|
-| `campaigns` | Campaign metadata, game system ID, owner, notes |
-| `characters` | Character sheets — JSON schema varies by game system |
-| `sessions` | Session records — transcript (JSONB array), start/end timestamps |
-| `npcs` | Per-campaign NPC roster — disposition enum, location, known_facts |
-| `campaign_embeddings` | pgvector embeddings with generation tag for zero-downtime re-ingestion |
+## Streaming
 
-### pgvector RAG
-
-- Embedding model: Voyage AI `voyage-3-lite` (512 dimensions)
-- Similarity operator: `operator(extensions.<=>)` (cosine distance)
-- Match threshold: `0.3`
-- Match function: `match_rules_embeddings` — no `embedding_generations` JOIN; generation filtering is handled in application code
-- Zero-downtime re-ingestion: generation swap pattern — new generation written in full, then old generation dropped atomically
-
-### Row-Level Security
-
-All tables enforce per-user isolation via RLS policies. `SECURITY DEFINER` helper functions break RLS recursion where needed (e.g., campaign membership checks). The Supabase anon key is intentionally exposed in the browser — RLS is the enforcement layer.
-
----
-
-## Ingestion Pipeline
-
-1. **Trigger** — GitHub Actions `ingest-rules.yml` (manual `workflow_dispatch`), one system at a time: `5E_2014`, `ADD2E`, or `PATHFINDER_2E`.
-2. **Script** — `scripts/run-ingestion.ts` (called by the workflow via `npx tsx`).
-3. **Fetchers** (`lib/rag/fetchers/`) — system-specific data sources:
-   - `open5e.ts` — Open5e REST API for D&D 5E 2014 SRD (~2,335 chunks)
-   - `osric.ts` — OSRIC stub for AD&D 2E (training-knowledge fallback; no clean machine-readable SRD found)
-   - `pf2e.ts` — Foundry VTT PF2E compendium data (data sourced; full ingestion deferred)
-4. **Chunking** — `lib/rag/chunk.ts` splits content into embedding-ready segments.
-5. **Embedding** — `lib/rag/embed.ts` calls Voyage AI API.
-6. **Upsert** — chunks written to `campaign_embeddings` under a new generation value.
-7. **Generation swap** — old generation dropped; new generation goes live. Zero downtime.
-
----
-
-## Streaming — SSE Protocol
-
-The session message route (`app/api/sessions/[sessionId]/message/route.ts`) streams the agent response as Server-Sent Events:
+Agent responses stream to the client via Server-Sent Events:
 
 ```
-event: agent_type
-data: "narrator"
-
-event: token
-data: "The"
-
-event: token
-data: " tavern door swings open..."
-
-event: done
-data: {}
+event: agent_type   → which agent is responding (sets label immediately)
+event: token        → incremental text chunks
+event: proposal     → NPC proposal block (NPC Dialogue only, after narrative)
+event: done         → stream complete
 ```
 
-An NPC Dialogue response may also emit a `proposal` event before `done` when the agent proposes adding or updating an NPC in the campaign roster.
+The route strips NPC proposal sentinel blocks out of the streamed text and emits them as a separate `proposal` event so markers never appear in chat. The full response is accumulated server-side and saved to `sessions.transcript`.
 
----
+## Fantasy Grounds bridge
 
-## Fantasy Grounds Bridge
+Desktop sync from Fantasy Grounds into RoleVerse is complete — FG backup-file parsing maps rulesets to game systems and characters into the app.
 
-A companion desktop sync agent bridges Fantasy Grounds Unity to RoleVerse, syncing characters, combat state, and dice rolls in real time. The bridge is complete. A user-facing setup guide for the desktop sync agent is coming soon.
+## Deferred / planned (not yet built)
 
----
+- TTS / voice output for NPCs (optional, off-by-default)
+- Voice input via browser microphone → Whisper (no Discord)
+- PDF ingestion + house rules editor + Lore Keeper semantic search
+- Kanka integration for external lore management
+- PF2E proper data sourcing
 
-## Deferred / Planned
-
-| Feature | Status |
-|---------|--------|
-| Voice input (browser mic → Whisper STT) | Planned — Batch 4, optional, off by default |
-| PF2E full data ingestion | Planned — data sourced, ingestion deferred |
-| AD&D 2E full RAG beyond OSRIC stub | Planned — no clean machine-readable SRD found |
-| User PDF upload (custom rulebooks) | Planned |
-| Session log improvements (pagination, AI summary, search) | Deferred |
+Discord integration was evaluated and **removed from the project** — it is not planned.
