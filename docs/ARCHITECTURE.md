@@ -9,7 +9,7 @@
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | Next.js 15 (App Router, no `src/`), React 19, CSS Modules |
+| **Frontend** | Next.js 16 (App Router, no `src/`), React 19, CSS Modules |
 | **Backend** | Next.js API Routes (serverless, Vercel) |
 | **Database** | Supabase — PostgreSQL + pgvector + Auth + RLS |
 | **AI Agents** | Anthropic Claude API (Sonnet for agents, Haiku for routing) |
