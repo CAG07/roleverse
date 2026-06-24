@@ -1,6 +1,6 @@
 # <img src="assets/dice-d20-svgrepo-com.svg" width="28" height="28"> RoleVerse - AI-Powered RPG Companion
 
-A tabletop RPG companion that brings **AI-powered DM assistance**, **Fantasy Grounds integration**, and **voice-enabled gameplay** to your solo RPG campaigns.
+A tabletop RPG companion that brings **AI-powered DM assistance** and **Fantasy Grounds integration** to your solo RPG campaigns.
 
 ## 🖥️ Demo
 
@@ -18,14 +18,6 @@ Real-time sync with Fantasy Grounds Unity — combat tracker, character sheets, 
 
 > [Fantasy Grounds Unity](https://www.fantasygrounds.com) is a virtual tabletop by SmiteWorks. RoleVerse syncs character data, combat state, and dice rolls in real time via a local bridge application.
 
-### Discord Integration
-Voice chat via Discord is transcribed and displayed in the web app chat. The RoleVerse Bot relays AI agent responses as rich embeds.
-
-<a href="https://discord.com">
-  <img src="https://github.com/user-attachments/assets/96f0267a-e371-45d6-8880-bb68ee66c9fe" alt="Discord" />
-</a>
-
-> [Discord](https://discord.com) voice channels connect to RoleVerse for speech-to-text transcription. Player voice is captured, transcribed, and displayed as chat messages in the web app with a 🎤 indicator.
 
 ## ✨ Features
 
@@ -44,19 +36,13 @@ Voice chat via Discord is transcribed and displayed in the web app chat. The Rol
 - **Seamless data flow** between FG and web app
 - **Desktop app** for cross-platform integration
 
-### Voice-Enabled Gameplay
+### Campaign Management
 
-- **Push-to-talk** interface powered by OpenAI Whisper
-- **Text-to-speech** responses from AI DM
-- **Natural conversation** - no typing needed during play
-
-### Campaign Management and Kanka Integration
-
-- Upload your **RPG rulebooks** (PDFs)
+- Upload your **RPG rulebooks** (PDFs, planned)
 - **RAG ingestion** for AI to reference rules
 - **Character sheets** synced from Fantasy Grounds
 - **Session history** and transcripts
-- **Kanka.io integration** for worldbuilding and campaign management
+- **NPC Roster** — persistent per-campaign NPCs with disposition and known facts
 
 ### Supported Game Systems
 
@@ -74,13 +60,12 @@ Voice chat via Discord is transcribed and displayed in the web app chat. The Rol
 
 | Layer          | Technology                       |
 | -------------- | -------------------------------- |
-| **Frontend**   | Next.js 16 + React 19            |
+| **Frontend**   | Next.js 15 + React 19            |
 | **Backend**    | Next.js API Routes (serverless)  |
 | **Database**   | PostgreSQL + pgvector            |
 | **AI Agents**  | Anthropic Claude                 |
 | **Embeddings** | Voyage AI voyage-3-lite          |
-| **Voice**      | OpenAI Whisper                   |
-| **Desktop**    | Sync Agent                       |
+| **FG Bridge**  | Desktop sync agent               |
 | **Hosting**    | Vercel                           |
 
 ## 🚀 Quick Start
@@ -90,9 +75,7 @@ Placeholder for user setup instructions. See [SETUP.md](docs/SETUP.md) for full 
 ## 📖 Documentation
 
 - **[SETUP.md](docs/SETUP.md)** - Complete user instructions and troubleshooting
-- **[ARCHITECTURE.md](./docs/ARCHITECTURE.png)** - System architecture
-- **[AGENTS.md](./docs/AGENTS.md)** - AI agent implementation details
-- **[FG_INTEGRATION.md](./docs/FG_INTEGRATION.md)** - Fantasy Grounds sync protocol
+- **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System architecture (Mermaid diagram + prose)
 - **[WORKSHOP.pdf](./docs/WORKSHOP.pdf)** - Guidelines for RPG resources and contributions
 
 ## 📝 License
@@ -101,12 +84,11 @@ GNU AFFERO GENERAL PUBLIC LICENSE Version 3
 
 ## 🙏 Acknowledgments
 
-- **Anthropic** - Claude AI powers the DM agents
-- **OpenAI** - Whisper & embeddings for voice and RAG
+- **Anthropic** - Claude AI powers the DM agents and routing
+- **Voyage AI** - Embeddings for RAG
 - **Supabase** - Database, auth, and storage
 - **Vercel** - Hosting and deployment
 - **SmiteWorks** - Fantasy Grounds VTT
-- **Kanka.io** - Campaign management
 
 ## <img src="assets/dice-d20-svgrepo-com.svg" width="22" height="22"> Happy Adventuring!
 
