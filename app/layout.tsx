@@ -1,28 +1,51 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Cinzel, Cinzel_Decorative, EB_Garamond } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 
-// Self-hosted via next/font — zero external request at runtime, eliminating
-// the render-blocking CSS @import url() that caused the FOUC.
-const fontDisplay = Cinzel_Decorative({
-  weight: ['400', '700', '900'],
-  subsets: ['latin'],
+const fontDisplay = localFont({
+  src: '../public/fonts/MedievalSharp-Regular.woff2',
+  weight: '400',
+  style: 'normal',
   variable: '--font-display-loaded',
   display: 'swap',
 });
 
-const fontHeading = Cinzel({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
+const fontHeading = localFont({
+  src: [
+    {
+      path: '../public/fonts/CrimsonText-Regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/CrimsonText-SemiBold.woff2',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/CrimsonText-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
   variable: '--font-heading-loaded',
   display: 'swap',
 });
 
-const fontBody = EB_Garamond({
-  weight: ['400', '500', '600'],
-  style: ['normal', 'italic'],
-  subsets: ['latin'],
+const fontBody = localFont({
+  src: [
+    {
+      path: '../public/fonts/CrimsonText-Regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/CrimsonText-SemiBold.woff2',
+      weight: '600',
+      style: 'normal',
+    },
+  ],
   variable: '--font-body-loaded',
   display: 'swap',
 });
