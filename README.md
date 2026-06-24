@@ -60,7 +60,7 @@ Real-time sync with Fantasy Grounds Unity — combat tracker, character sheets, 
 
 | Layer          | Technology                       |
 | -------------- | -------------------------------- |
-| **Frontend**   | Next.js 15 + React 19            |
+| **Frontend**   | Next.js 16 + React 19            |
 | **Backend**    | Next.js API Routes (serverless)  |
 | **Database**   | PostgreSQL + pgvector            |
 | **AI Agents**  | Anthropic Claude                 |
