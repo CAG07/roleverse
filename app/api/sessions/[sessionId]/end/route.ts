@@ -53,25 +53,27 @@ export async function POST(
     return NextResponse.json({ error: endError.message }, { status: 500 });
   }
 
-  // Step 2: attempt summary generation — failure must not block the response
-  try {
-    const transcript = Array.isArray(session.transcript)
-      ? (session.transcript as { role?: string; content?: string; agentType?: string; timestamp?: string }[])
-      : [];
+  // Step 2: attempt summary generation in the background — failure must not block the response
+  void (async () => {
+    try {
+      const transcript = Array.isArray(session.transcript)
+        ? (session.transcript as { role?: string; content?: string; agentType?: string; timestamp?: string }[])
+        : [];
 
-    const systemId = (campaign?.game_system as string | undefined) ?? '';
-    const gameSystemName = getGameSystem(systemId)?.name ?? systemId;
+      const systemId = (campaign?.game_system as string | undefined) ?? '';
+      const gameSystemName = getGameSystem(systemId)?.name ?? systemId;
 
-    const summary = await generateSessionSummary(transcript, gameSystemName);
+      const summary = await generateSessionSummary(transcript, gameSystemName);
 
-    await supabase
-      .from('sessions')
-      .update({ summary, summary_generated_at: new Date().toISOString() })
-      .eq('id', sessionId);
-  } catch (err) {
-    // Summary is a nice-to-have. Log and continue — session already ended above.
-    console.error('[session-end] Summary generation failed:', err);
-  }
+      await supabase
+        .from('sessions')
+        .update({ summary, summary_generated_at: new Date().toISOString() })
+        .eq('id', sessionId);
+    } catch (err) {
+      // Summary is a nice-to-have. Log and continue — session already ended above.
+      console.error('[session-end] Summary generation failed:', err);
+    }
+  })();
 
   return NextResponse.json({ success: true });
 }
