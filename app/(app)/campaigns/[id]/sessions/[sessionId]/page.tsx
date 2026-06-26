@@ -12,6 +12,16 @@ interface TranscriptEntry {
   timestamp?: string;
 }
 
+interface SessionTranscriptPageRow {
+  user_id: string;
+  started_at: string;
+  ended_at: string | null;
+  summary: string | null;
+  transcript_page: TranscriptEntry[] | null;
+  transcript_total: number | null;
+  page: number | null;
+}
+
 const agentLabels: Record<string, { label: string; accent: string }> = {
   narrator:          { label: 'Narrator',          accent: '#b8882a' },
   rules_arbiter:     { label: 'Rules Arbiter',      accent: '#7a8a9a' },
@@ -53,15 +63,9 @@ export default async function SessionLogPage({ params, searchParams }: Props) {
       p_page: currentPage,
       p_page_size: PAGE_SIZE,
     })
-    .maybeSingle();
+    .maybeSingle<SessionTranscriptPageRow>();
 
   if (!session || session.user_id !== user.id) notFound();
-
-  const { data: campaign } = await supabase
-    .from('campaigns')
-    .select('name')
-    .eq('id', id)
-    .single();
 
   const allEntries: TranscriptEntry[] = Array.isArray(session.transcript_page)
     ? (session.transcript_page as TranscriptEntry[])
