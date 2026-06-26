@@ -1,14 +1,25 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import styles from './page.module.css';
+import Pagination from '@/components/ui/Pagination';
 import { ExtractNpcsButton } from '@/components/session/ExtractNpcsButton';
+import styles from './page.module.css';
 
 interface TranscriptEntry {
   role?: string;
   content?: string;
   agentType?: string;
   timestamp?: string;
+}
+
+interface SessionTranscriptPageRow {
+  user_id: string;
+  started_at: string;
+  ended_at: string | null;
+  summary: string | null;
+  transcript_page: TranscriptEntry[] | null;
+  transcript_total: number | null;
+  page: number | null;
 }
 
 const agentLabels: Record<string, { label: string; accent: string }> = {
@@ -18,6 +29,8 @@ const agentLabels: Record<string, { label: string; accent: string }> = {
   lore_keeper:       { label: 'Lore Keeper',        accent: '#6a3a8a' },
   encounter_builder: { label: 'Encounter Builder',  accent: '#8a6a3a' },
 };
+
+const PAGE_SIZE = 50;
 
 function formatDuration(startedAt: string, endedAt: string | null): string {
   if (!endedAt) return 'Active';
@@ -30,50 +43,53 @@ function formatDuration(startedAt: string, endedAt: string | null): string {
 
 interface Props {
   params: Promise<{ id: string; sessionId: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
-export default async function SessionLogPage({ params }: Props) {
+export default async function SessionLogPage({ params, searchParams }: Props) {
   const { id, sessionId } = await params;
+  const { page: pageParam } = await searchParams;
+  const currentPage = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
+
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) notFound();
 
   const { data: session } = await supabase
-    .from('sessions')
-    .select('id, started_at, ended_at, transcript, campaign_id, user_id')
-    .eq('id', sessionId)
-    .eq('campaign_id', id)
-    .single();
+    .rpc('get_session_transcript_page', {
+      p_session_id: sessionId,
+      p_campaign_id: id,
+      p_page: currentPage,
+      p_page_size: PAGE_SIZE,
+    })
+    .maybeSingle<SessionTranscriptPageRow>();
 
   if (!session || session.user_id !== user.id) notFound();
 
-  const { data: campaign } = await supabase
-    .from('campaigns')
-    .select('name')
-    .eq('id', id)
-    .single();
-
-  const entries: TranscriptEntry[] = Array.isArray(session.transcript)
-    ? (session.transcript as TranscriptEntry[])
+  const allEntries: TranscriptEntry[] = Array.isArray(session.transcript_page)
+    ? (session.transcript_page as TranscriptEntry[])
     : [];
 
+  const totalPages = Math.max(1, Math.ceil((session.transcript_total ?? 0) / PAGE_SIZE));
+  const safePage = Math.max(1, session.page ?? 1);
+  const entries = allEntries;
+
   const isActive = !session.ended_at;
+  const summary = (session.summary as string | null | undefined) ?? null;
 
   const startDate = new Date(session.started_at as string).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
+    month: 'long', day: 'numeric', year: 'numeric',
   });
   const startTime = new Date(session.started_at as string).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
+    hour: 'numeric', minute: '2-digit',
   });
+  const basePath = `/campaigns/${id}/sessions/${sessionId}`;
 
   return (
     <div className={styles.logRoot}>
-      <Link href={`/campaigns/${id}`} className={styles.logBack}>
-        ← {campaign?.name ?? 'Campaign'}
+      <Link href={`/campaigns/${id}/sessions`} className={styles.logBack}>
+        ← Session History
       </Link>
 
       <div className={styles.logHeader}>
@@ -88,6 +104,13 @@ export default async function SessionLogPage({ params }: Props) {
 
       <div className={styles.logDivider} />
 
+      {summary && (
+        <div className={styles.summaryPanel}>
+          <h2 className={styles.summaryTitle}>Session Summary</h2>
+          <div className={styles.summaryBody}>{summary}</div>
+        </div>
+      )}
+
       <ExtractNpcsButton campaignId={id} sessionId={sessionId} />
 
       <div className={styles.logFeed}>
@@ -101,8 +124,7 @@ export default async function SessionLogPage({ params }: Props) {
           entries.map((entry, i) => {
             const time = entry.timestamp
               ? new Date(entry.timestamp).toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: '2-digit',
+                  hour: 'numeric', minute: '2-digit',
                 })
               : null;
 
@@ -137,6 +159,8 @@ export default async function SessionLogPage({ params }: Props) {
           })
         )}
       </div>
+
+      <Pagination currentPage={safePage} totalPages={totalPages} basePath={basePath} />
     </div>
   );
 }
