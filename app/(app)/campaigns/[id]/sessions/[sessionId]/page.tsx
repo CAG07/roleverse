@@ -47,11 +47,13 @@ export default async function SessionLogPage({ params, searchParams }: Props) {
   if (!user) notFound();
 
   const { data: session } = await supabase
-    .from('sessions')
-    .select('id, started_at, ended_at, transcript, summary, campaign_id, user_id')
-    .eq('id', sessionId)
-    .eq('campaign_id', id)
-    .single();
+    .rpc('get_session_transcript_page', {
+      p_session_id: sessionId,
+      p_campaign_id: id,
+      p_page: currentPage,
+      p_page_size: PAGE_SIZE,
+    })
+    .maybeSingle();
 
   if (!session || session.user_id !== user.id) notFound();
 
@@ -61,13 +63,13 @@ export default async function SessionLogPage({ params, searchParams }: Props) {
     .eq('id', id)
     .single();
 
-  const allEntries: TranscriptEntry[] = Array.isArray(session.transcript)
-    ? (session.transcript as TranscriptEntry[])
+  const allEntries: TranscriptEntry[] = Array.isArray(session.transcript_page)
+    ? (session.transcript_page as TranscriptEntry[])
     : [];
 
-  const totalPages = Math.max(1, Math.ceil(allEntries.length / PAGE_SIZE));
-  const safePage = Math.min(currentPage, totalPages);
-  const entries = allEntries.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil((session.transcript_total ?? 0) / PAGE_SIZE));
+  const safePage = Math.max(1, session.page ?? 1);
+  const entries = allEntries;
 
   const isActive = !session.ended_at;
   const summary = (session.summary as string | null | undefined) ?? null;
