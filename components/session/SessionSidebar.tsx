@@ -65,6 +65,9 @@ export default function SessionSidebar({
         <Link href={`/campaigns/${campaignId}`} className={styles.backLink}>
           ← Back to Campaign
         </Link>
+        <Link href={`/campaigns/${campaignId}/sessions`} className={styles.historyLink}>
+          ◆ Session History
+        </Link>
         <CollapsibleSection title="Party Members">
           {partyMembers.length === 0 ? (
             <p className={styles.emptyText}>No members yet.</p>

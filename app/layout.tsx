@@ -1,51 +1,28 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import localFont from 'next/font/local';
+import { Cinzel_Decorative, Cinzel, EB_Garamond } from 'next/font/google';
 import './globals.css';
 
-const fontDisplay = localFont({
-  src: '../public/fonts/MedievalSharp-Regular.woff2',
-  weight: '400',
-  style: 'normal',
+// next/font/google downloads and self-hosts fonts at build time.
+// No runtime Google CDN dependency, no FOUC — this is the reliable approach.
+
+const fontDisplay = Cinzel_Decorative({
+  subsets: ['latin'],
+  weight: ['400', '700', '900'],
   variable: '--font-display-loaded',
   display: 'swap',
 });
 
-const fontHeading = localFont({
-  src: [
-    {
-      path: '../public/fonts/CrimsonText-Regular.woff2',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../public/fonts/CrimsonText-SemiBold.woff2',
-      weight: '600',
-      style: 'normal',
-    },
-    {
-      path: '../public/fonts/CrimsonText-Bold.woff2',
-      weight: '700',
-      style: 'normal',
-    },
-  ],
+const fontHeading = Cinzel({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
   variable: '--font-heading-loaded',
   display: 'swap',
 });
 
-const fontBody = localFont({
-  src: [
-    {
-      path: '../public/fonts/CrimsonText-Regular.woff2',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../public/fonts/CrimsonText-SemiBold.woff2',
-      weight: '600',
-      style: 'normal',
-    },
-  ],
+const fontBody = EB_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
   variable: '--font-body-loaded',
   display: 'swap',
 });
