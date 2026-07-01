@@ -4,23 +4,17 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { streamEncounterBuilderAgent } from '@/lib/mcp/agents/encounter-builder';
+import { streamGameMasterAgent } from '@/lib/mcp/agents/game-master';
 import { streamLoreKeeperAgent } from '@/lib/mcp/agents/lore-keeper';
-import { streamNarratorAgent } from '@/lib/mcp/agents/narrator';
-import { streamNpcDialogueAgent } from '@/lib/mcp/agents/npc-dialogue';
 import { streamRulesArbiterAgent } from '@/lib/mcp/agents/rules-arbiter';
 import { routeMessage } from '@/lib/mcp/coordinator';
 import { registerRollDiceTool } from '@/lib/mcp/tools/roll-dice';
 import type { AgentMessage, AgentStreamResult, MCPContext } from '@/lib/mcp/types';
 import { formatSSE } from '@/lib/sse';
 import { createClient } from '@/lib/supabase/server';
-import type { NpcProposal } from '@/lib/types/npc';
 
 // Register MCP tools on module load (runs once per cold start)
 registerRollDiceTool();
-
-const PROPOSAL_START = '[NPC_PROPOSAL_START]';
-const PROPOSAL_END = '[NPC_PROPOSAL_END]';
 
 interface MessageRequestBody {
   message: string;
@@ -102,11 +96,7 @@ export async function POST(
     async start(controller) {
       const onAbort = () => {
         cancelled = true;
-        try {
-          controller.close();
-        } catch {
-          // ignore
-        }
+        try { controller.close(); } catch { /* ignore */ }
       };
       request.signal.addEventListener('abort', onAbort);
 
@@ -119,7 +109,6 @@ export async function POST(
         }
       }
 
-      // Accumulate full content server-side for transcript (includes proposal block if any)
       let fullContent = '';
 
       try {
@@ -128,107 +117,27 @@ export async function POST(
         // --- Select streaming generator ---
         let agentGen: AsyncGenerator<string, AgentStreamResult, undefined>;
         switch (agentRole) {
-          case 'narrator':
-            agentGen = streamNarratorAgent(message, mcpContext, conversationHistory ?? []);
+          case 'game_master':
+            agentGen = streamGameMasterAgent(message, mcpContext, conversationHistory ?? []);
             break;
           case 'rules_arbiter':
             agentGen = streamRulesArbiterAgent(message, mcpContext, conversationHistory ?? []);
             break;
-          case 'npc_dialogue':
-            agentGen = streamNpcDialogueAgent(message, mcpContext, conversationHistory ?? []);
-            break;
           case 'lore_keeper':
             agentGen = streamLoreKeeperAgent(message, mcpContext, conversationHistory ?? []);
-            break;
-          case 'encounter_builder':
-            agentGen = streamEncounterBuilderAgent(message, mcpContext, conversationHistory ?? []);
             break;
           default:
             emit('error', { error: `Unknown agent role: "${agentRole}"` });
             return;
         }
 
-        // --- Stream tokens, with proposal-block interception for npc_dialogue ---
-        const useProposalParsing = agentRole === 'npc_dialogue';
-        let lookAheadBuffer = '';
-        let inProposalBlock = false;
-        let proposalBuffer = '';
-
+        // --- Stream tokens ---
         for await (const chunk of agentGen) {
           fullContent += chunk;
-
-          if (!useProposalParsing) {
-            emit('token', { text: chunk });
-            continue;
-          }
-
-          if (inProposalBlock) {
-            proposalBuffer += chunk;
-            continue;
-          }
-
-          // Look-ahead buffering to detect [NPC_PROPOSAL_START] across chunk boundaries
-          lookAheadBuffer += chunk;
-
-          const startIdx = lookAheadBuffer.indexOf(PROPOSAL_START);
-          if (startIdx !== -1) {
-            if (startIdx > 0) emit('token', { text: lookAheadBuffer.slice(0, startIdx) });
-            inProposalBlock = true;
-            proposalBuffer = lookAheadBuffer.slice(startIdx + PROPOSAL_START.length);
-            lookAheadBuffer = '';
-            continue;
-          }
-
-          // Flush safe portion — hold back the longest suffix that could be a prefix of the marker
-          let holdLen = 0;
-          for (let len = Math.min(lookAheadBuffer.length, PROPOSAL_START.length - 1); len > 0; len--) {
-            if (PROPOSAL_START.startsWith(lookAheadBuffer.slice(-len))) {
-              holdLen = len;
-              break;
-            }
-          }
-          const safeLen = lookAheadBuffer.length - holdLen;
-          if (safeLen > 0) {
-            emit('token', { text: lookAheadBuffer.slice(0, safeLen) });
-            lookAheadBuffer = lookAheadBuffer.slice(safeLen);
-          }
+          emit('token', { text: chunk });
         }
 
-        // Flush any remaining look-ahead buffer after stream ends
-        if (lookAheadBuffer) {
-          emit('token', { text: lookAheadBuffer });
-        }
-
-        // --- Parse and emit proposal if found ---
-        if (inProposalBlock) {
-          const endIdx = proposalBuffer.indexOf(PROPOSAL_END);
-          const rawJson = endIdx !== -1
-            ? proposalBuffer.slice(0, endIdx)
-            : proposalBuffer;
-
-          try {
-            const parsed = JSON.parse(rawJson.trim()) as NpcProposal;
-            if (parsed.kind === 'append_facts' && parsed.facts_to_add) {
-              const now = new Date().toISOString();
-              parsed.facts_to_add = parsed.facts_to_add.map((f) => ({
-                ...f,
-                learned_in_session: f.learned_in_session ?? sessionId,
-                learned_at: f.learned_at ?? now,
-              }));
-            }
-            emit('proposal', parsed);
-          } catch {
-            // Malformed proposal — ignore, don't break the response
-          }
-
-          // Defensively emit any text after [NPC_PROPOSAL_END]
-          if (endIdx !== -1) {
-            const afterProposal = proposalBuffer.slice(endIdx + PROPOSAL_END.length).trim();
-            if (afterProposal) emit('token', { text: afterProposal });
-          }
-        }
-
-        // --- Persist transcript (non-blocking — failure logs but does not block the response) ---
+        // --- Persist transcript (non-blocking) ---
         try {
           const { data: currentSession } = await supabase
             .from('sessions')
@@ -238,10 +147,6 @@ export async function POST(
 
           const currentTranscript = (currentSession?.transcript as unknown[]) ?? [];
           const now = new Date().toISOString();
-          const transcriptContent =
-            agentRole === 'npc_dialogue'
-              ? fullContent.replace(/\[NPC_PROPOSAL_START\][\s\S]*?\[NPC_PROPOSAL_END\]/g, '').trim()
-              : fullContent;
 
           await supabase
             .from('sessions')
@@ -249,7 +154,7 @@ export async function POST(
               transcript: [
                 ...currentTranscript,
                 { role: 'player', content: message, timestamp: now },
-                { role: 'agent', agentType: agentRole, content: transcriptContent, timestamp: now },
+                { role: 'agent', agentType: agentRole, content: fullContent, timestamp: now },
               ],
             })
             .eq('id', sessionId);
@@ -262,7 +167,6 @@ export async function POST(
         const errMsg = err instanceof Error ? err.message : 'Internal server error';
         console.error('[agent stream] failed:', err);
 
-        // Save whatever partial content was accumulated
         if (fullContent) {
           try {
             const { data: currentSession } = await supabase
@@ -278,7 +182,7 @@ export async function POST(
                 transcript: [
                   ...currentTranscript,
                   { role: 'player', content: message, timestamp: now },
-                  { role: 'agent', agentType: agentRole, content: (agentRole === 'npc_dialogue' ? fullContent.replace(/\[NPC_PROPOSAL_START\][\s\S]*?\[NPC_PROPOSAL_END\]/g, '').trim() : fullContent) + ' [truncated]', timestamp: now }
+                  { role: 'agent', agentType: agentRole, content: fullContent + ' [truncated]', timestamp: now },
                 ],
               })
               .eq('id', sessionId);

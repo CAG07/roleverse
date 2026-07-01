@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import Pagination from '@/components/ui/Pagination';
-import { ExtractNpcsButton } from '@/components/session/ExtractNpcsButton';
 import styles from './page.module.css';
 
 interface TranscriptEntry {
@@ -23,10 +22,12 @@ interface SessionTranscriptPageRow {
 }
 
 const agentLabels: Record<string, { label: string; accent: string }> = {
+  game_master:   { label: 'Game Master',   accent: '#b8882a' },
+  rules_arbiter: { label: 'Rules Arbiter', accent: '#7a8a9a' },
+  lore_keeper:   { label: 'Lore Keeper',   accent: '#6a3a8a' },
+  // Legacy aliases — old transcripts may carry these agentType values
   narrator:          { label: 'Narrator',          accent: '#b8882a' },
-  rules_arbiter:     { label: 'Rules Arbiter',      accent: '#7a8a9a' },
   npc_dialogue:      { label: 'NPC Dialogue',       accent: '#2a7a4a' },
-  lore_keeper:       { label: 'Lore Keeper',        accent: '#6a3a8a' },
   encounter_builder: { label: 'Encounter Builder',  accent: '#8a6a3a' },
 };
 
@@ -111,8 +112,6 @@ export default async function SessionLogPage({ params, searchParams }: Props) {
         </div>
       )}
 
-      <ExtractNpcsButton campaignId={id} sessionId={sessionId} />
-
       <div className={styles.logFeed}>
         {entries.length === 0 ? (
           <p className={styles.logEmpty}>
@@ -139,8 +138,8 @@ export default async function SessionLogPage({ params, searchParams }: Props) {
             }
 
             if (entry.role === 'agent' && entry.content) {
-              const agentKey = entry.agentType ?? 'narrator';
-              const agent = agentLabels[agentKey] ?? agentLabels.narrator;
+              const agentKey = entry.agentType ?? 'game_master';
+              const agent = agentLabels[agentKey] ?? agentLabels.game_master;
               return (
                 <div key={i} className={styles.entryAgent}>
                   <span
