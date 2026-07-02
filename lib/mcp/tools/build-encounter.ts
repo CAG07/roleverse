@@ -38,18 +38,21 @@ const XP_THRESHOLDS_5E: Record<number, Record<string, number>> = {
 // ---------------------------------------------------------------------------
 
 function encounterMultiplier(monsterCount: number, partySize: number): number {
-  let mult: number;
-  if (monsterCount === 1)       mult = 1;
-  else if (monsterCount === 2)  mult = 1.5;
-  else if (monsterCount <= 6)   mult = 2;
-  else if (monsterCount <= 10)  mult = 2.5;
-  else if (monsterCount <= 14)  mult = 3;
-  else                          mult = 4;
+  const multipliers = [1, 1.5, 2, 2.5, 3, 4];
 
-  if (partySize <= 2) mult *= 1.5;
-  else if (partySize >= 6) mult *= 0.5;
+  let idx = 0;
+  if (monsterCount === 1) idx = 0;
+  else if (monsterCount === 2) idx = 1;
+  else if (monsterCount <= 6) idx = 2;
+  else if (monsterCount <= 10) idx = 3;
+  else if (monsterCount <= 14) idx = 4;
+  else idx = 5;
 
-  return mult;
+  // DMG adjustment: parties of 1–2 treat as one step higher; parties of 6+ treat as one step lower.
+  if (partySize <= 2) idx = Math.min(idx + 1, multipliers.length - 1);
+  else if (partySize >= 6) idx = Math.max(idx - 1, 0);
+
+  return multipliers[idx];
 }
 
 // ---------------------------------------------------------------------------
