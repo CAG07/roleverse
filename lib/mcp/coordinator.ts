@@ -188,7 +188,7 @@ const LORE_KEYWORDS = [
 
 function keywordFallback(message: string): AgentRole {
   const lower = message.toLowerCase();
-  if (LORE_KEYWORDS.some((kw) => lower.includes(kw))) return 'lore_keeper';
   if (RULES_KEYWORDS.some((kw) => lower.includes(kw))) return 'rules_arbiter';
+  if (LORE_KEYWORDS.some((kw) => lower.includes(kw))) return 'lore_keeper';
   return 'game_master';
 }
