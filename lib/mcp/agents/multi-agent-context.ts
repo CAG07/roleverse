@@ -36,8 +36,8 @@ export function getMultiAgentContextSection(
   }
 
   section.push(
-    'history prefixed with [Narrator], [Rules Arbiter], [Lore Keeper], [NPC Dialogue],',
-    'or [Encounter Builder] were produced by those agents — not necessarily by you.'
+    'history prefixed with [Game Master], [Rules Arbiter], or [Lore Keeper]',
+    'were produced by those agents — not necessarily by you.'
   );
 
   if (additionalHistoryLine) {
