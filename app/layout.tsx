@@ -1,28 +1,28 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Cinzel, Cinzel_Decorative, EB_Garamond } from 'next/font/google';
+import { Cinzel_Decorative, Cinzel, EB_Garamond } from 'next/font/google';
 import './globals.css';
 
-// Self-hosted via next/font — zero external request at runtime, eliminating
-// the render-blocking CSS @import url() that caused the FOUC.
+// next/font/google downloads and self-hosts fonts at build time.
+// No runtime Google CDN dependency, no FOUC — this is the reliable approach.
+
 const fontDisplay = Cinzel_Decorative({
-  weight: ['400', '700', '900'],
   subsets: ['latin'],
+  weight: ['400', '700', '900'],
   variable: '--font-display-loaded',
   display: 'swap',
 });
 
 const fontHeading = Cinzel({
-  weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
   variable: '--font-heading-loaded',
   display: 'swap',
 });
 
 const fontBody = EB_Garamond({
-  weight: ['400', '500', '600'],
-  style: ['normal', 'italic'],
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
   variable: '--font-body-loaded',
   display: 'swap',
 });

@@ -1,200 +1,130 @@
 roleverse/
-├── README.md                       
+├── README.md
 ├── package.json
 ├── next.config.js
-├── .env.local             
+├── postcss.config.js
+├── tsconfig.json
+├── .env.local
+├── scripts/run-ingestion.ts            # CLI entry point (called by GitHub Actions)
 │
 ├── app/
 │   ├── layout.tsx
-│   ├── page.tsx                    # Landing: "Sign in with Google"
+│   ├── page.tsx                         # Landing: "Sign in with Google"
+│   ├── globals.css
 │   │
 │   ├── auth/
-│   │   ├── callback/route.ts       # Google OAuth callback
-│   │   └── signout/page.tsx
+│   │   ├── callback/route.ts            # Google OAuth callback (excluded from middleware)
+│   │   ├── signout/route.ts
+│   │   └── auth-code-error/page.tsx
 │   │
-│   ├── (app)/                      # Protected routes
-│   │   ├── layout.tsx              # Check auth
-│   │   ├── dashboard/page.tsx      # "Your Campaigns"
+│   ├── unauthorized/page.tsx
+│   │
+│   ├── (app)/                           # Protected routes (auth-gated layout)
+│   │   ├── layout.tsx
+│   │   ├── loading.tsx
+│   │   ├── (admin)/admin/page.tsx       # Admin dashboard (ingestion triggers)
+│   │   ├── dashboard/page.tsx           # "Your Campaigns"
 │   │   │
-│   │   ├── campaigns/
-│   │   │   ├── new/page.tsx        # Create campaign + SELECT GAME SYSTEM
-│   │   │   └── [id]/
-│   │   │       ├── page.tsx        # Campaign overview
-│   │   │       ├── upload/page.tsx # Upload game system PDFs (drag & drop)
-│   │   │       └── session/page.tsx # Live game session
-│   │   │
-│   │   ├── characters/
-│   │   │   ├── page.tsx            # Character list (filtered by campaign/system)
-│   │   │   ├── new/page.tsx        # Create character (inherits campaign system)
-│   │   │   └── [id]/page.tsx       # Dynamic character sheet (system-specific)
-│   │   │
-│   │   └── settings/
-│   │       ├── profile/page.tsx
-│   │       ├── discord/page.tsx    # Link Discord account, configure voice prefs
-│   │       └── fg-desktop/page.tsx # Download desktop app
+│   │   └── campaigns/
+│   │       ├── page.tsx
+│   │       ├── new/page.tsx             # Create campaign + select game system
+│   │       └── [id]/
+│   │           ├── page.tsx             # Campaign overview
+│   │           ├── edit/page.tsx
+│   │           ├── session/page.tsx     # Find-or-create active session, redirect
+│   │           ├── sessions/[sessionId]/page.tsx  # Active session view (SSE consumer)
+│   │           ├── characters/
+│   │           │   ├── page.tsx
+│   │           │   ├── new/page.tsx
+│   │           │   └── [charId]/{page,edit}/page.tsx
+│   │           └── npcs/               # NPC roster (Phase 6c)
+│   │               ├── page.tsx
+│   │               ├── new/page.tsx
+│   │               └── [npcId]/{page,edit}/page.tsx
 │   │
 │   └── api/
-│       ├── auth/
-│       │   └── [...supabase]/route.ts # Google OAuth handler
-│       │
-│       ├── session/
-│       │   ├── start/route.ts
-│       │   └── process/route.ts    # Process player action (system-aware)
-│       │
-│       ├── agents/
-│       │   └── orchestrate/route.ts # Main agent coordinator (uses system prompts)
-│       │
-│       ├── mcp/
-│       │   └── route.ts            # MCP server endpoint
-│       │
-│       ├── voice/
-│       │   ├── transcribe/route.ts # Whisper STT (uses shared lib/voice/whisper.ts)
-│       │   └── synthesize/route.ts # TTS (uses shared lib/voice/tts.ts)
-│       │
-│       ├── discord/
-│       │   ├── interactions/route.ts  # Discord interaction webhook endpoint
-│       │   └── link/route.ts          # Link Discord account to RoleVerse account
-│       │
-│       ├── campaigns/
-│       │   └── upload-pdf/route.ts # Process user PDF → RAG (system-tagged)
-│       │
-│       └── fg-bridge/
-│           └── sync/route.ts       # Receive from desktop app (auto-detect system)
+│       ├── health/route.ts
+│       ├── sessions/[sessionId]/
+│       │   ├── message/route.ts         # Player message → Haiku router → agent → SSE stream
+│       │   └── end/route.ts
+│       ├── campaigns/[id]/
+│       │   ├── npcs/route.ts
+│       │   ├── npcs/[npcId]/route.ts
+│       │   └── sessions/[sessionId]/extract-npcs/route.ts
+│       └── admin/
+│           ├── ingest/route.ts          # POST: start ingestion job
+│           ├── ingest/[jobId]/route.ts  # GET: job status polling
+│           └── trigger-ingestion/route.ts
 │
-├── components/
-│   ├── auth/
-│   │   └── GoogleSignInButton.tsx  # One-click sign in
-│   │
-│   ├── session/
-│   │   ├── ChatWindow.tsx          # Game narrative feed
-│   │   ├── VoiceControls.tsx       # Push-to-talk button
-│   │   ├── DiceRoller.tsx
-│   │   ├── CombatDisplay.tsx       # Shows FG combat if connected
-│   │   └── InitiativeTracker.tsx
-│   │
+├── components/                          # Every component has a paired .module.css
+│   ├── auth/{GoogleSignInButton,SignInPage}.tsx
 │   ├── campaign/
-│   │   ├── CampaignCard.tsx        # Shows game system badge
-│   │   ├── CampaignList.tsx        # Can filter by system
-│   │   ├── PDFUploader.tsx         
-│   │   └── GameSystemSelector.tsx  
-│   │
+│   │   ├── CampaignCard.tsx            # Shows game system badge
+│   │   ├── CampaignDetailPage.tsx
+│   │   ├── CampaignList.tsx
+│   │   ├── EditCampaignPage.tsx
+│   │   └── GameSystemSelector.tsx      # Dropdown (supported systems only)
+│   ├── campaigns/CampaignsListPage.tsx
 │   ├── character/
-│   │   ├── CharacterSheet.tsx      # Dynamic based on game_system
-│   │   ├── CharacterCard.tsx
-│   │   └── sheets/                 # System-specific sheets
-│   │       ├── ADD2ESheet.tsx      # AD&D 2E
-│   │       ├── DND5ESheet.tsx      # D&D 5E
-│   │       ├── PathfinderSheet.tsx # Pathfinder
-│   │       └── GenericSheet.tsx    # Other systems
-│   │
-│   └── ui/                         # shadcn/ui components
-│       ├── button.tsx
-│       ├── card.tsx
-│       ├── dialog.tsx
-│       ├── select.tsx              # For game system dropdown
-│       └── ...
+│   │   ├── CharacterSheet.tsx          # Delegates to system-specific sheet
+│   │   ├── {CharacterDetailPage,CharactersListPage,CharactersPage,EditCharacterPage,NewCharacterForm}.tsx
+│   │   └── sheets/
+│   │       ├── ADD2ESheet.tsx          # AD&D 2E (THAC0, proficiencies, kits)
+│   │       ├── DND5ESheet.tsx
+│   │       ├── GenericSheet.tsx        # Fallback for unsupported systems
+│   │       └── PF2ESheet.tsx
+│   ├── dashboard/DashboardOnboarding.tsx
+│   ├── layout/Sidebar.tsx
+│   ├── npc/                            # NPC roster UI (Phase 6c)
+│   │   ├── NpcDetailPage.tsx
+│   │   ├── NpcForm.tsx
+│   │   ├── NpcProposalCard.tsx         # Approve/reject an agent-proposed NPC
+│   │   └── NpcProposalList.tsx
+│   ├── session/
+│   │   ├── ChatWindow.tsx              # AI narrative chat feed (SSE consumer)
+│   │   ├── ExtractNpcsButton.tsx       # Extract NPCs from session transcript
+│   │   ├── FGConnectionStatus.tsx      # Fantasy Grounds connection indicator
+│   │   ├── SessionPageClient.tsx       # Client shell for session view
+│   │   ├── VoiceStatus.tsx             # Placeholder: voice input is planned (Batch 4)
+│   │   └── {PartyStatus,SceneDisplay,SessionNotes,SessionSidebar}.tsx
+│   └── ui/                             # button, card, input, select, badge, avatar, label, textarea
 │
 ├── lib/
 │   ├── supabase/
-│   │   ├── client.ts               # Browser client (RLS-protected)
-│   │   ├── server.ts               # Server client
-│   │   └── middleware.ts           # Auth middleware
-│   │
-│   ├── auth/
-│   │   └── google.ts               # Google OAuth setup
-│   │
-│   ├── game-systems/               
-│   │   ├── types.ts                # GameSystem, CharacterData types
-│   │   ├── registry.ts             # Central system registry + FG mapping
-│   │   ├── add1e.ts                # AD&D 1st Edition
-│   │   ├── add2e.ts                # AD&D 2nd Edition 
-│   │   ├── 3-5e.ts                 # D&D 3.5
-│   │   ├── 4e.ts                   # D&D 4E
-│   │   ├── 5e-2014.ts              # D&D 5E 2014 
-│   │   ├── 5e-2024.ts              # D&D 5E 2024
-│   │   ├── pathfinder.ts           # Pathfinder 1E
-│   │   ├── pathfinder-2e.ts        # Pathfinder 2E
-│   │   ├── dcc.ts                  # Dungeon Crawl Classics
-│   │   ├── tor1e.ts                # The One Ring 1E
-│   │   ├── tor2e.ts                # The One Ring 2E
-│   │   └── cyberpunk-2020.ts       # Cyberpunk 2020
-│   │
-│   ├── agents/
-│   │   ├── coordinator.ts          # Main orchestrator (uses game system)
-│   │   ├── rules-arbiter.ts        # Uses system.rulesPrompt
-│   │   ├── lore-keeper.ts
-│   │   ├── encounter-builder.ts
-│   │   ├── narrator.ts             
-│   │   └── npc-dialogue.ts
-│   │
+│   │   ├── client.ts                   # Browser client (RLS-protected, anon key)
+│   │   ├── server.ts                   # Server-side client
+│   │   ├── admin.ts                    # Service-role client (server only)
+│   │   └── middleware.ts               # Auth middleware (callback route excluded)
+│   ├── character/assembleCharacterData.ts
+│   ├── game-systems/
+│   │   ├── types.ts                    # GameSystem type + characterSchema types
+│   │   └── registry.ts                 # 12-system registry + FG ruleset mapping
+│   │                                   # supported=true: ADD2E, 5E_2014, PATHFINDER_2E
 │   ├── mcp/
-│   │   ├── server.ts               # MCP protocol
-│   │   ├── types.ts                # MCPContext includes game_system
-│   │   └── tools/
-│   │       ├── roll-dice.ts        # System-aware (uses system.primaryDie)
-│   │       ├── query-rules.ts      # Filters by game_system 
-│   │       ├── get-character.ts    # Returns system schema 
-│   │       └── get-lore.ts         
-│   │
-│   ├── voice/                      # Shared voice lib (used by both web UI + Discord)
-│   │   ├── whisper.ts              # OpenAI Whisper STT client
-│   │   ├── tts.ts                  # TTS client (OpenAI TTS / ElevenLabs)
-│   │   └── voice-profiles.ts      # Named voice configs (DM voice, NPC voices)
-│   │
-│   ├── discord/
-│   │   ├── bot.ts                  # Discord.js bot setup, event handlers
-│   │   ├── voice-session.ts        # Manages voice channel connection per campaign
-│   │   ├── audio-pipeline.ts       # Capture stream → Whisper → Agent → TTS → playback
-│   │   ├── user-mapping.ts         # Discord user ↔ RoleVerse user linking
-│   │   ├── text-commands.ts        # Slash commands (/roll, /status, /initiative)
-│   │   └── tts-voices.ts          # Voice profiles per agent/NPC (voice ID mapping)
-│   │
+│   │   ├── coordinator.ts              # Haiku classifier (routeMessage) with keyword fallback
+│   │   ├── server.ts
+│   │   ├── types.ts                    # AgentRole, MCPContext, AgentMessage
+│   │   ├── agents/
+│   │   │   ├── narrator.ts
+│   │   │   ├── rules-arbiter.ts        # Voyage + pgvector retrieval
+│   │   │   ├── lore-keeper.ts          # Session transcripts + campaign notes
+│   │   │   ├── npc-dialogue.ts         # Roster-aware: loads npcs table for campaign
+│   │   │   ├── encounter-builder.ts
+│   │   │   └── multi-agent-context.ts  # Shared conversation history assembly
+│   │   └── tools/roll-dice.ts
 │   ├── rag/
-│   │   ├── ingest-pdf.ts           # PDF → embeddings (tags with game_system)
-│   │   ├── query.ts                # Similarity search
-│   │   ├── embeddings.ts           # OpenAI embedding generation
-│   │   └── chunking.ts
-│   │
-│   └── fg-bridge/
-│       ├── desktop-protocol.ts     # Communication protocol
-│       ├── sync-handler.ts         # Maps FG ruleset → game_system
-│       └── parsers/                # FG parsers per system
-│           ├── add2e-parser.ts     # Parse 2E XML → CharacterData
-│           ├── 5e-parser.ts        # Parse 5E XML → CharacterData
-│           └── ...
+│   │   ├── embed.ts                    # Voyage AI embedding generation (voyage-3-lite, 512-dim)
+│   │   ├── ingest.ts                   # Orchestrates fetch → chunk → embed → upsert
+│   │   ├── chunk.ts
+│   │   ├── search.ts                   # pgvector similarity search (threshold 0.3)
+│   │   ├── types.ts
+│   │   └── fetchers/
+│   │       ├── open5e.ts               # 5E_2014: Open5e REST API (~2,335 chunks)
+│   │       ├── osric.ts                # ADD2E: OSRIC stub (training-knowledge fallback)
+│   │       ├── pf2e.ts                 # PATHFINDER_2E: Foundry VTT compendium data
+│   │       └── utils.ts
+│   ├── types/                          # character.ts · npc.ts · session.ts
+│   ├── sse.ts                          # SSE stream helpers
+│   └── utils.ts
 │
-├── supabase/
-│   ├── config.toml                 # Supabase CLI configuration
-│   ├── migrations/
-│   │   └── YYYYMMDDHHMMSS_*.sql    # Timestamped migrations
-│   │   
-│   └── seed.sql                    # Sample campaigns for all systems
-│
-├── discord-bot/                    # Standalone bot process (runs separately from Next.js)
-│   ├── index.ts                    # Bot entry point
-│   ├── Dockerfile                  # For deployment
-│   └── package.json
-│
-├── desktop/                        # Electron app (Phase 9)
-│   ├── main.js                     # Main process
-│   ├── preload.js
-│   ├── fg-detector.js              # Auto-detect FG + ruleset
-│   ├── fg-sync.js                  # Sync FG → Cloud (system-aware)
-│   └── tray-menu.js                # System tray UI
-│
-├── docs/
-│   ├── SETUP.md                    # Setup instructions
-│   ├── ROLEVERSE.txt               # Project skeleton
-│   ├── ARCHITECTURE.md             # System architecture
-│   ├── GAME_SYSTEMS.md             # Supported game systems details
-│   ├── AGENTS.md                   # AI agent designs
-│   └── DISCORD.md                  # Discord bot setup & voice architecture
-│   
-└── .github/                        # GitHub Actions CI/CD
-    ├── workflows/
-    │   ├── ci.yml                  
-    │   ├── deploy.yml              
-    │   ├── security.yml            
-    │   └── pr-labeler.yml          
-    ├── dependabot.yml             
-    └── labeler.yml
+└── .github/workflows/                  # ci, deploy, security, pr-labeler, ingest-rules
