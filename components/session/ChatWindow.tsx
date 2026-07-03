@@ -5,17 +5,18 @@ import { Send, Mic, Keyboard, Image as ImageIcon } from 'lucide-react';
 import styles from './ChatWindow.module.css';
 import type { ChatMessage, SceneMedia, AgentType } from '@/lib/types/session';
 import type { AgentMessage } from '@/lib/mcp/types';
-import type { NpcProposal } from '@/lib/types/npc';
-import { NpcProposalCard } from '@/components/npc/NpcProposalCard';
 
 // Agent color/label mapping — matches design spec
-const agentConfig: Record<AgentType, { accent: string; label: string }> = {
-  narrator: { accent: '#b8882a', label: 'Narrator' },
-  rules_arbiter: { accent: '#7a8a9a', label: 'Rules Arbiter' },
-  npc_dialogue: { accent: '#2a7a4a', label: 'NPC Dialogue' },
-  lore_keeper: { accent: '#6a3a8a', label: 'Lore Keeper' },
-  encounter_builder: { accent: '#8a6a3a', label: 'Encounter Builder' },
+const AGENT_CONFIG: Record<string, { accent: string; label: string }> = {
+  game_master:    { accent: '#b8882a', label: 'Game Master' },
+  rules_arbiter:  { accent: '#7a8a9a', label: 'Rules Arbiter' },
+  lore_keeper:    { accent: '#6a3a8a', label: 'Lore Keeper' },
 };
+const DEFAULT_AGENT = AGENT_CONFIG.game_master;
+
+function getAgentConfig(agentType: string | undefined): { accent: string; label: string } {
+  return (agentType ? AGENT_CONFIG[agentType] : null) ?? DEFAULT_AGENT;
+}
 
 // Simple markdown: **bold** and *italic*
 function renderMarkdown(text: string) {
@@ -73,7 +74,6 @@ interface StreamingMsg {
   id: string;
   agentType: AgentType;
   content: string;
-  proposal?: NpcProposal;
 }
 
 interface ChatWindowProps {
@@ -82,7 +82,7 @@ interface ChatWindowProps {
   campaignId: string;
 }
 
-export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, sessionId, campaignId }: ChatWindowProps) {
+export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, sessionId, campaignId: _campaignId }: ChatWindowProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'msg-init',
@@ -94,8 +94,6 @@ export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, se
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState<StreamingMsg | null>(null);
-  const [handledProposals, setHandledProposals] = useState<Set<string>>(new Set());
-  const [processingProposal, setProcessingProposal] = useState<string | null>(null);
 
   const feedRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef(messages);
@@ -131,7 +129,6 @@ export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, se
         role: 'agent' as const,
         agentType: sm.agentType,
         content: sm.content,
-        proposal: sm.proposal,
         timestamp: new Date(),
       },
     ]);
@@ -161,8 +158,8 @@ export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, se
       .filter((m) => m.role === 'player' || m.role === 'agent')
       .map((m) => {
         if (m.role === 'player') return { role: 'user' as const, content: m.content };
-        const label = m.agentType ? (agentConfig[m.agentType]?.label ?? 'Agent') : 'Agent';
-        return { role: 'assistant' as const, content: `[${label}] ${m.content}` };
+        const cfg = getAgentConfig(m.agentType);
+        return { role: 'assistant' as const, content: `[${cfg.label}] ${m.content}` };
       });
 
     try {
@@ -220,14 +217,6 @@ export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, se
               }
               break;
             }
-            case 'proposal': {
-              if (streamingMsgRef.current) {
-                const updated = { ...streamingMsgRef.current, proposal: parsed.data as NpcProposal };
-                streamingMsgRef.current = updated;
-                setStreamingMessage(updated);
-              }
-              break;
-            }
             case 'error': {
               const errorText = (parsed.data as { error: string }).error;
               if (streamingMsgRef.current) {
@@ -267,13 +256,12 @@ export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, se
         {
           id: `msg-err-${Date.now()}`,
           role: 'system',
-          content: 'Error: Could not reach the narrator. Please try again.',
+          content: 'Error: Could not reach the Game Master. Please try again.',
           timestamp: new Date(),
         },
       ]);
     } finally {
       setIsLoading(false);
-      // Safety: finalize if stream closed without a done event
       if (streamingMsgRef.current) {
         finalizeStream();
       }
@@ -286,45 +274,6 @@ export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, se
       void handleSend();
     }
   };
-
-  const handleProposalApprove = useCallback(async (msgId: string, proposal: NpcProposal) => {
-    setProcessingProposal(msgId);
-    try {
-      let res: Response;
-      if (proposal.kind === 'new_npc') {
-        res = await fetch(`/api/campaigns/${campaignId}/npcs`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(proposal.npc_data ?? { name: proposal.npc_name }),
-        });
-      } else if (proposal.kind === 'append_facts' && proposal.npc_id) {
-        res = await fetch(`/api/campaigns/${campaignId}/npcs/${proposal.npc_id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ known_facts: proposal.facts_to_add ?? [] }),
-        });
-      } else if (proposal.kind === 'disposition_shift' && proposal.npc_id && proposal.disposition_change) {
-        res = await fetch(`/api/campaigns/${campaignId}/npcs/${proposal.npc_id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ disposition: proposal.disposition_change.to }),
-        });
-      } else {
-        return;
-      }
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: 'Request failed' }));
-        throw new Error((data as { error?: string }).error ?? 'Request failed');
-      }
-      setHandledProposals((prev) => new Set([...prev, msgId]));
-    } finally {
-      setProcessingProposal(null);
-    }
-  }, [campaignId]);
-
-  const handleProposalReject = useCallback((msgId: string) => {
-    setHandledProposals((prev) => new Set([...prev, msgId]));
-  }, []);
 
   return (
     <div className={styles.chatWindow}>
@@ -341,8 +290,7 @@ export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, se
           }
 
           if (msg.role === 'agent' && msg.agentType) {
-            const agent = agentConfig[msg.agentType];
-            const showProposal = msg.proposal && !handledProposals.has(msg.id);
+            const agent = getAgentConfig(msg.agentType);
             return (
               <div key={msg.id} className={styles.msgAgent}>
                 <span
@@ -361,14 +309,6 @@ export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, se
                   )}
                 </div>
                 <span className={styles.msgTimestamp}>{relativeTime(msg.timestamp)}</span>
-                {showProposal && msg.proposal && (
-                  <NpcProposalCard
-                    proposal={msg.proposal}
-                    onApprove={(approved) => handleProposalApprove(msg.id, approved)}
-                    onReject={() => handleProposalReject(msg.id)}
-                    isProcessing={processingProposal === msg.id}
-                  />
-                )}
               </div>
             );
           }
@@ -396,11 +336,11 @@ export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, se
             <span
               className={styles.agentLabel}
               style={{
-                color: agentConfig[streamingMessage.agentType].accent,
-                borderColor: agentConfig[streamingMessage.agentType].accent + '40',
+                color: getAgentConfig(streamingMessage.agentType).accent,
+                borderColor: getAgentConfig(streamingMessage.agentType).accent + '40',
               }}
             >
-              {agentConfig[streamingMessage.agentType].label}
+              {getAgentConfig(streamingMessage.agentType).label}
             </span>
             <div className={`${styles.agentBubble}${!streamingMessage.content ? ` ${styles.loading}` : ''}`}>
               {streamingMessage.content ? renderMarkdown(streamingMessage.content) : '▍'}
@@ -413,9 +353,9 @@ export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, se
           <div className={styles.msgAgent}>
             <span
               className={styles.agentLabel}
-              style={{ color: agentConfig.narrator.accent, borderColor: agentConfig.narrator.accent + '40' }}
+              style={{ color: DEFAULT_AGENT.accent, borderColor: DEFAULT_AGENT.accent + '40' }}
             >
-              Narrator
+              {DEFAULT_AGENT.label}
             </span>
             <div className={`${styles.agentBubble} ${styles.loading}`}>▍</div>
           </div>

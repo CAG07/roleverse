@@ -143,7 +143,7 @@ function buildSystemPrompt(
     ...getMultiAgentContextSection({
       includeCampaignLine: false,
       additionalHistoryLine:
-        '(and transcript lines labeled narrator/rules_arbiter/lore_keeper/npc_dialogue/encounter_builder)',
+        '(and transcript lines labeled game_master/rules_arbiter/lore_keeper)',
       continuityLines: [
         '- For current-scene continuity, treat prior agent messages in this conversation as the established scene state.',
         '- For questions about past sessions / campaign lore, ONLY treat the GM notes and session transcripts above as canonical.',
