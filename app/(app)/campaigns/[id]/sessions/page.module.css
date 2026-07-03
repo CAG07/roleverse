@@ -1,0 +1,139 @@
+/* app/(app)/campaigns/[id]/sessions/page.module.css */
+
+.root {
+  min-height: 100vh;
+  background: var(--void);
+  padding: 2rem 1.5rem;
+  max-width: 56rem;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory-muted);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: color 0.15s;
+}
+
+.backLink:hover {
+  color: var(--gold);
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  margin: 0;
+}
+
+.count {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--ivory-dim);
+}
+
+.divider {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--crimson),
+    var(--gold-dim),
+    var(--crimson),
+    transparent
+  );
+  margin-bottom: 2rem;
+}
+
+.empty {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ivory-dim);
+  font-style: italic;
+}
+
+.sessionList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sessionRow {
+  display: block;
+  text-decoration: none;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--void-border);
+  border-bottom: none;
+  background: var(--surface-card);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sessionRow:last-child {
+  border-bottom: 1px solid var(--void-border);
+}
+
+.sessionRow:hover {
+  background: var(--surface-hover);
+  border-color: var(--crimson-dim);
+}
+
+.sessionMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sessionDate {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory);
+  flex: 1;
+}
+
+.sessionDuration {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--ivory-muted);
+}
+
+.activeBadge {
+  font-family: var(--font-heading);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--status-healthy);
+  border: 1px solid var(--status-healthy);
+  padding: 0.15rem 0.4rem;
+}
+
+.sessionPreview {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--ivory-dim);
+  line-height: 1.5;
+  margin: 0.5rem 0 0;
+  padding-left: 1rem;
+  border-left: 2px solid var(--void-border);
+}

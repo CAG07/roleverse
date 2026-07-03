@@ -203,6 +203,14 @@ export function CampaignDetailPage({
           <h3 className={styles.actionCardTitle}>Characters</h3>
           <p className={styles.actionCardBody}>View and manage party characters.</p>
         </Link>
+        <Link href={`/campaigns/${id}/npcs`} className={styles.actionCard}>
+          <h3 className={styles.actionCardTitle}>NPCs</h3>
+          <p className={styles.actionCardBody}>Manage the NPC roster with disposition and facts.</p>
+        </Link>
+        <Link href={`/campaigns/${id}/sessions`} className={styles.actionCard}>
+          <h3 className={styles.actionCardTitle}>Session History</h3>
+          <p className={styles.actionCardBody}>Browse all sessions, transcripts, and AI summaries.</p>
+        </Link>
       </div>
 
       <div className={styles.sectionLabel}>

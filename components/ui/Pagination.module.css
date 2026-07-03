@@ -1,0 +1,43 @@
+/* components/ui/Pagination.module.css */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: var(--rule-thin);
+}
+
+.pageBtn {
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+  text-decoration: none;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--void-border);
+  background: var(--void-raised);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.pageBtn:not(.disabled):hover {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+}
+
+.disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
+.pageIndicator {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--ivory-dim);
+  flex: 1;
+  text-align: center;
+}

@@ -17,11 +17,9 @@ export interface SceneMedia {
 export type MessageSource = 'typed' | 'discord_voice';
 
 export type AgentType =
-  | 'narrator'
+  | 'game_master'
   | 'rules_arbiter'
-  | 'npc_dialogue'
-  | 'lore_keeper'
-  | 'encounter_builder';
+  | 'lore_keeper';
 
 export interface ChatMessage {
   id: string;
