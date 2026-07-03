@@ -7,8 +7,9 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { searchRules } from '@/lib/rag/search';
+import { getMultiAgentContextSection } from './multi-agent-context';
 
-import type { AgentMessage, AgentResponse, MCPContext } from '../types';
+import type { AgentMessage, AgentResponse, AgentStreamResult, MCPContext } from '../types';
 
 function getRequiredModel(): string {
   const model = process.env.ANTHROPIC_MODEL;
@@ -65,6 +66,8 @@ function buildSystemPrompt(context: MCPContext, ragContext: string): string {
     );
   }
 
+  parts.push(...getMultiAgentContextSection());
+
   return parts.join('\n');
 }
 
@@ -94,6 +97,55 @@ async function retrieveRulesContext(
   return {
     ragContext: contextBlocks.join('\n\n---\n\n'),
     matchCount: results.length,
+  };
+}
+
+/** Stream the Rules Arbiter agent, yielding text chunks */
+export async function* streamRulesArbiterAgent(
+  message: string,
+  context: MCPContext,
+  conversationHistory: AgentMessage[] = []
+): AsyncGenerator<string, AgentStreamResult, undefined> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY environment variable is not set');
+  }
+
+  const client = new Anthropic({ apiKey });
+  const { ragContext, matchCount } = await retrieveRulesContext(message, context);
+  const systemPrompt = buildSystemPrompt(context, ragContext);
+
+  const messages: Anthropic.Messages.MessageParam[] = [
+    ...conversationHistory.map(
+      (msg): Anthropic.Messages.MessageParam => ({
+        role: msg.role,
+        content: msg.content,
+      })
+    ),
+    { role: 'user', content: message },
+  ];
+
+  let content = '';
+  const stream = client.messages.stream({
+    model: MODEL,
+    max_tokens: MAX_TOKENS,
+    system: systemPrompt,
+    messages,
+  });
+
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+      yield event.delta.text;
+      content += event.delta.text;
+    }
+  }
+
+  return {
+    content,
+    agentRole: 'rules_arbiter',
+    toolResults: matchCount > 0
+      ? [{ content: `Retrieved ${matchCount} rules chunk(s) from index.`, data: { matchCount } }]
+      : undefined,
   };
 }
 

@@ -153,6 +153,7 @@ export default function SessionPageClient({
             <ChatWindow
               onSceneMediaUpdate={setSceneMedia}
               sessionId={sessionId}
+              campaignId={campaignId}
             />
           </div>
         </div>

@@ -144,3 +144,31 @@
   color: var(--ivory-dim);
   font-style: italic;
 }
+
+/* ── Summary panel ───────────────────────────────────────────────────── */
+
+.summaryPanel {
+  background: var(--void-raised);
+  border: var(--rule-gold);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  max-width: 52rem;
+}
+
+.summaryTitle {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 0.875rem;
+}
+
+.summaryBody {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ivory-muted);
+  line-height: 1.65;
+  white-space: pre-wrap;
+}

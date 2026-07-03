@@ -1,16 +1,16 @@
 // app/api/sessions/[sessionId]/message/route.ts
-// POST /api/sessions/[sessionId]/message — route a player message to the correct agent via Haiku
+// POST /api/sessions/[sessionId]/message — route a player message to the correct agent via Haiku,
+// then stream the response as Server-Sent Events.
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { runEncounterBuilderAgent } from '@/lib/mcp/agents/encounter-builder';
-import { runLoreKeeperAgent } from '@/lib/mcp/agents/lore-keeper';
-import { runNarratorAgent } from '@/lib/mcp/agents/narrator';
-import { runNpcDialogueAgent } from '@/lib/mcp/agents/npc-dialogue';
-import { runRulesArbiterAgent } from '@/lib/mcp/agents/rules-arbiter';
+import { streamGameMasterAgent } from '@/lib/mcp/agents/game-master';
+import { streamLoreKeeperAgent } from '@/lib/mcp/agents/lore-keeper';
+import { streamRulesArbiterAgent } from '@/lib/mcp/agents/rules-arbiter';
 import { routeMessage } from '@/lib/mcp/coordinator';
 import { registerRollDiceTool } from '@/lib/mcp/tools/roll-dice';
-import type { AgentMessage, AgentResponse, MCPContext } from '@/lib/mcp/types';
+import type { AgentMessage, AgentStreamResult, MCPContext } from '@/lib/mcp/types';
+import { formatSSE } from '@/lib/sse';
 import { createClient } from '@/lib/supabase/server';
 
 // Register MCP tools on module load (runs once per cold start)
@@ -78,7 +78,7 @@ export async function POST(
     return NextResponse.json({ error: 'Missing required field: message' }, { status: 400 });
   }
 
-  // --- Route via Haiku coordinator ---
+  // --- Route via Haiku coordinator (runs before stream opens) ---
   const agentRole = await routeMessage(message);
   console.log(`[router] "${message.slice(0, 80)}" -> ${agentRole}`);
 
@@ -89,73 +89,121 @@ export async function POST(
     userId: user.id,
   };
 
-  // --- Dispatch to the correct agent ---
-  try {
-    let result: AgentResponse;
+  const encoder = new TextEncoder();
+  let cancelled = false;
 
-    switch (agentRole) {
-      case 'narrator':
-        result = await runNarratorAgent(message, mcpContext, conversationHistory);
-        break;
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const onAbort = () => {
+        cancelled = true;
+        try { controller.close(); } catch { /* ignore */ }
+      };
+      request.signal.addEventListener('abort', onAbort);
 
-      case 'rules_arbiter':
-        result = await runRulesArbiterAgent(message, mcpContext, conversationHistory);
-        break;
+      function emit(event: string, data: unknown) {
+        if (cancelled) return;
+        try {
+          controller.enqueue(encoder.encode(formatSSE(event, data)));
+        } catch {
+          cancelled = true;
+        }
+      }
 
-      case 'npc_dialogue':
-        result = await runNpcDialogueAgent(message, mcpContext, conversationHistory);
-        break;
+      let fullContent = '';
 
-      case 'lore_keeper':
-        result = await runLoreKeeperAgent(message, mcpContext, conversationHistory);
-        break;
+      try {
+        emit('agent_type', { agentType: agentRole });
 
-      case 'encounter_builder':
-        result = await runEncounterBuilderAgent(message, mcpContext, conversationHistory);
-        break;
+        // --- Select streaming generator ---
+        let agentGen: AsyncGenerator<string, AgentStreamResult, undefined>;
+        switch (agentRole) {
+          case 'game_master':
+            agentGen = streamGameMasterAgent(message, mcpContext, conversationHistory ?? []);
+            break;
+          case 'rules_arbiter':
+            agentGen = streamRulesArbiterAgent(message, mcpContext, conversationHistory ?? []);
+            break;
+          case 'lore_keeper':
+            agentGen = streamLoreKeeperAgent(message, mcpContext, conversationHistory ?? []);
+            break;
+          default:
+            emit('error', { error: `Unknown agent role: "${agentRole}"` });
+            return;
+        }
 
-      default:
-        return NextResponse.json({ error: `Unknown agent role: "${agentRole}"` }, { status: 400 });
-    }
+        // --- Stream tokens ---
+        for await (const chunk of agentGen) {
+          fullContent += chunk;
+          emit('token', { text: chunk });
+        }
 
-    // --- Persist transcript (non-blocking — failure logs but does not block the response) ---
-    try {
-      const { data: currentSession } = await supabase
-        .from('sessions')
-        .select('transcript')
-        .eq('id', sessionId)
-        .single();
+        // --- Persist transcript (non-blocking) ---
+        try {
+          const { data: currentSession } = await supabase
+            .from('sessions')
+            .select('transcript')
+            .eq('id', sessionId)
+            .single();
 
-      const currentTranscript = (currentSession?.transcript as unknown[]) ?? [];
-      const now = new Date().toISOString();
+          const currentTranscript = (currentSession?.transcript as unknown[]) ?? [];
+          const now = new Date().toISOString();
 
-      await supabase
-        .from('sessions')
-        .update({
-          transcript: [
-            ...currentTranscript,
-            {
-              role: 'player',
-              content: message,
-              timestamp: now,
-            },
-            {
-              role: 'agent',
-              agentType: result.agentRole,
-              content: result.content,
-              timestamp: now,
-            },
-          ],
-        })
-        .eq('id', sessionId);
-    } catch (transcriptErr) {
-      console.warn('[transcript] Failed to save transcript entry:', transcriptErr);
-    }
+          await supabase
+            .from('sessions')
+            .update({
+              transcript: [
+                ...currentTranscript,
+                { role: 'player', content: message, timestamp: now },
+                { role: 'agent', agentType: agentRole, content: fullContent, timestamp: now },
+              ],
+            })
+            .eq('id', sessionId);
+        } catch (transcriptErr) {
+          console.warn('[transcript] Failed to save transcript entry:', transcriptErr);
+        }
 
-    return NextResponse.json(result);
-  } catch (err) {
-    const errMsg = err instanceof Error ? err.message : 'Internal server error';
-    console.error('Agent request failed:', err);
-    return NextResponse.json({ error: errMsg }, { status: 500 });
-  }
+        emit('done', {});
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : 'Internal server error';
+        console.error('[agent stream] failed:', err);
+
+        if (fullContent) {
+          try {
+            const { data: currentSession } = await supabase
+              .from('sessions')
+              .select('transcript')
+              .eq('id', sessionId)
+              .single();
+            const currentTranscript = (currentSession?.transcript as unknown[]) ?? [];
+            const now = new Date().toISOString();
+            await supabase
+              .from('sessions')
+              .update({
+                transcript: [
+                  ...currentTranscript,
+                  { role: 'player', content: message, timestamp: now },
+                  { role: 'agent', agentType: agentRole, content: fullContent + ' [truncated]', timestamp: now },
+                ],
+              })
+              .eq('id', sessionId);
+          } catch {
+            // swallow — already in error path
+          }
+        }
+
+        emit('error', { error: errMsg });
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    },
+  });
 }

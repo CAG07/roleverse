@@ -7,13 +7,16 @@ import type { ChatMessage, SceneMedia, AgentType } from '@/lib/types/session';
 import type { AgentMessage } from '@/lib/mcp/types';
 
 // Agent color/label mapping — matches design spec
-const agentConfig: Record<AgentType, { accent: string; label: string }> = {
-  narrator: { accent: '#b8882a', label: 'Narrator' },
-  rules_arbiter: { accent: '#7a8a9a', label: 'Rules Arbiter' },
-  npc_dialogue: { accent: '#2a7a4a', label: 'NPC Dialogue' },
-  lore_keeper: { accent: '#6a3a8a', label: 'Lore Keeper' },
-  encounter_builder: { accent: '#8a6a3a', label: 'Encounter Builder' },
+const AGENT_CONFIG: Record<string, { accent: string; label: string }> = {
+  game_master:    { accent: '#b8882a', label: 'Game Master' },
+  rules_arbiter:  { accent: '#7a8a9a', label: 'Rules Arbiter' },
+  lore_keeper:    { accent: '#6a3a8a', label: 'Lore Keeper' },
 };
+const DEFAULT_AGENT = AGENT_CONFIG.game_master;
+
+function getAgentConfig(agentType: string | undefined): { accent: string; label: string } {
+  return (agentType ? AGENT_CONFIG[agentType] : null) ?? DEFAULT_AGENT;
+}
 
 // Simple markdown: **bold** and *italic*
 function renderMarkdown(text: string) {
@@ -45,12 +48,41 @@ function relativeTime(date: Date): string {
   return date.toLocaleDateString();
 }
 
+function parseSSEEvent(raw: string): { event: string; data: unknown } | null {
+  const lines = raw.split('\n');
+  let event = 'message';
+  let dataStr = '';
+
+  for (const line of lines) {
+    if (line.startsWith('event: ')) {
+      event = line.slice(7);
+    } else if (line.startsWith('data: ')) {
+      dataStr += line.slice(6);
+    }
+  }
+
+  if (!dataStr) return null;
+
+  try {
+    return { event, data: JSON.parse(dataStr) as unknown };
+  } catch {
+    return { event, data: dataStr };
+  }
+}
+
+interface StreamingMsg {
+  id: string;
+  agentType: AgentType;
+  content: string;
+}
+
 interface ChatWindowProps {
   onSceneMediaUpdate?: (media: SceneMedia) => void;
   sessionId: string;
+  campaignId: string;
 }
 
-export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindowProps) {
+export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, sessionId, campaignId: _campaignId }: ChatWindowProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'msg-init',
@@ -61,18 +93,48 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindow
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState<StreamingMsg | null>(null);
+
   const feedRef = useRef<HTMLDivElement>(null);
-  // Keep a ref to messages so handleSend can read the latest without being in deps
   const messagesRef = useRef(messages);
+  const streamingMsgRef = useRef<StreamingMsg | null>(null);
+
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
+  // Auto-scroll: always on new finalized messages; near-bottom check during streaming
   useEffect(() => {
-    if (feedRef.current) {
-      feedRef.current.scrollTop = feedRef.current.scrollHeight;
-    }
+    const el = feedRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  const streamingContent = streamingMessage?.content;
+
+  useEffect(() => {
+    const el = feedRef.current;
+    if (!el || streamingContent === undefined) return;
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+    if (isNearBottom) el.scrollTop = el.scrollHeight;
+  }, [streamingContent]);
+
+  const finalizeStream = useCallback(() => {
+    const sm = streamingMsgRef.current;
+    if (!sm) return;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: sm.id,
+        role: 'agent' as const,
+        agentType: sm.agentType,
+        content: sm.content,
+        timestamp: new Date(),
+      },
+    ]);
+    streamingMsgRef.current = null;
+    setStreamingMessage(null);
+  }, []);
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
@@ -91,76 +153,120 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindow
     setInput('');
     setIsLoading(true);
 
-    // Build conversation history for Claude context from current messages + new player message
     const currentMessages = [...messagesRef.current, playerMsg];
     const history: AgentMessage[] = currentMessages
       .filter((m) => m.role === 'player' || m.role === 'agent')
-      .map((m) => ({
-        role: m.role === 'player' ? ('user' as const) : ('assistant' as const),
-        content: m.content,
-      }));
-
-    try {
-      const res = await fetch(`/api/sessions/${sessionId}/message`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          conversationHistory: history,
-        }),
+      .map((m) => {
+        if (m.role === 'player') return { role: 'user' as const, content: m.content };
+        const cfg = getAgentConfig(m.agentType);
+        return { role: 'assistant' as const, content: `[${cfg.label}] ${m.content}` };
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, conversationHistory: history }),
+      });
+
+      if (!response.ok || !response.body) {
+        const err = await response.json().catch(() => ({ error: 'Unknown error' }));
         setMessages((prev) => [
           ...prev,
           {
             id: `msg-err-${Date.now()}`,
             role: 'system',
-            content: `Error: ${err.error ?? 'Request failed'}`,
+            content: `Error: ${(err as { error?: string }).error ?? 'Request failed'}`,
             timestamp: new Date(),
           },
         ]);
         return;
       }
 
-      const data = await res.json();
-      const agentMsg: ChatMessage = {
-        id: `msg-${Date.now()}`,
-        role: 'agent',
-        agentType: (data.agentRole as AgentType) ?? 'narrator',
-        content: data.content,
-        timestamp: new Date(),
-      };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
 
-      if (data.sceneMedia && onSceneMediaUpdate) {
-        const media: SceneMedia = {
-          id: `scene-${Date.now()}`,
-          type: data.sceneMedia.type,
-          url: data.sceneMedia.url,
-          caption: data.sceneMedia.caption,
-          source: data.sceneMedia.source,
-          timestamp: new Date(),
-        };
-        agentMsg.sceneMedia = media;
-        onSceneMediaUpdate(media);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split('\n\n');
+        buffer = events.pop() ?? '';
+
+        for (const eventText of events) {
+          const parsed = parseSSEEvent(eventText);
+          if (!parsed) continue;
+
+          switch (parsed.event) {
+            case 'agent_type': {
+              const agentType = (parsed.data as { agentType: AgentType }).agentType;
+              const id = `msg-stream-${Date.now()}`;
+              const sm: StreamingMsg = { id, agentType, content: '' };
+              streamingMsgRef.current = sm;
+              setStreamingMessage(sm);
+              break;
+            }
+            case 'token': {
+              const chunk = (parsed.data as { text: string }).text;
+              if (streamingMsgRef.current) {
+                const updated = { ...streamingMsgRef.current, content: streamingMsgRef.current.content + chunk };
+                streamingMsgRef.current = updated;
+                setStreamingMessage(updated);
+              }
+              break;
+            }
+            case 'error': {
+              const errorText = (parsed.data as { error: string }).error;
+              if (streamingMsgRef.current) {
+                const prev = streamingMsgRef.current;
+                const updated = {
+                  ...prev,
+                  content: prev.content
+                    ? `${prev.content}\n\n[Error: ${errorText}]`
+                    : `[Error: ${errorText}]`,
+                };
+                streamingMsgRef.current = updated;
+                setStreamingMessage(updated);
+                finalizeStream();
+              } else {
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: `msg-err-${Date.now()}`,
+                    role: 'system',
+                    content: `Error: ${errorText}`,
+                    timestamp: new Date(),
+                  },
+                ]);
+              }
+              break;
+            }
+            case 'done': {
+              finalizeStream();
+              break;
+            }
+          }
+        }
       }
-
-      setMessages((prev) => [...prev, agentMsg]);
     } catch {
       setMessages((prev) => [
         ...prev,
         {
           id: `msg-err-${Date.now()}`,
           role: 'system',
-          content: 'Error: Could not reach the narrator. Please try again.',
+          content: 'Error: Could not reach the Game Master. Please try again.',
           timestamp: new Date(),
         },
       ]);
     } finally {
       setIsLoading(false);
+      if (streamingMsgRef.current) {
+        finalizeStream();
+      }
     }
-  }, [input, isLoading, sessionId, onSceneMediaUpdate]);
+  }, [input, isLoading, sessionId, finalizeStream]);
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -184,7 +290,7 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindow
           }
 
           if (msg.role === 'agent' && msg.agentType) {
-            const agent = agentConfig[msg.agentType];
+            const agent = getAgentConfig(msg.agentType);
             return (
               <div key={msg.id} className={styles.msgAgent}>
                 <span
@@ -224,14 +330,32 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindow
           );
         })}
 
-        {/* Loading indicator */}
-        {isLoading && (
+        {/* Streaming message — builds up token by token */}
+        {streamingMessage && (
           <div className={styles.msgAgent}>
             <span
               className={styles.agentLabel}
-              style={{ color: agentConfig.narrator.accent, borderColor: agentConfig.narrator.accent + '40' }}
+              style={{
+                color: getAgentConfig(streamingMessage.agentType).accent,
+                borderColor: getAgentConfig(streamingMessage.agentType).accent + '40',
+              }}
             >
-              Narrator
+              {getAgentConfig(streamingMessage.agentType).label}
+            </span>
+            <div className={`${styles.agentBubble}${!streamingMessage.content ? ` ${styles.loading}` : ''}`}>
+              {streamingMessage.content ? renderMarkdown(streamingMessage.content) : '▍'}
+            </div>
+          </div>
+        )}
+
+        {/* Loading indicator — shown only before agent_type event arrives */}
+        {isLoading && !streamingMessage && (
+          <div className={styles.msgAgent}>
+            <span
+              className={styles.agentLabel}
+              style={{ color: DEFAULT_AGENT.accent, borderColor: DEFAULT_AGENT.accent + '40' }}
+            >
+              {DEFAULT_AGENT.label}
             </span>
             <div className={`${styles.agentBubble} ${styles.loading}`}>▍</div>
           </div>
@@ -256,4 +380,3 @@ export default function ChatWindow({ onSceneMediaUpdate, sessionId }: ChatWindow
     </div>
   );
 }
-

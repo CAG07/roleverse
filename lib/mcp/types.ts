@@ -31,11 +31,9 @@ export interface MCPContext {
 
 /** Agent message types for Claude API integration */
 export type AgentRole =
-  | 'narrator'
+  | 'game_master'
   | 'rules_arbiter'
-  | 'npc_dialogue'
-  | 'lore_keeper'
-  | 'encounter_builder';
+  | 'lore_keeper';
 
 /** Request sent to an AI agent */
 export interface AgentRequest {
@@ -49,6 +47,14 @@ export interface AgentRequest {
 export interface AgentMessage {
   role: 'user' | 'assistant';
   content: string;
+}
+
+/** Streaming result returned from an async generator agent */
+export interface AgentStreamResult {
+  content: string;
+  agentRole: AgentRole;
+  toolCalls?: MCPToolCall[];
+  toolResults?: MCPToolResult[];
 }
 
 /** Response from an AI agent */

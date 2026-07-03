@@ -60,6 +60,8 @@ jobs:
       - uses: supabase/setup-cli@v2
         with:
           version: latest
+        env:
+          SUPABASE_CLI_GITHUB_TOKEN: ${{ github.token }}
 
       - name: Start Supabase (DB only)
         run: supabase start -x gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
