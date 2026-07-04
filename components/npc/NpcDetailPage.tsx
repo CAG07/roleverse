@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './NpcDetailPage.module.css';
-import type { Npc, NpcDisposition, NpcKnownFact } from '@/lib/types/npc';
+import type { Npc, NpcDisposition, NpcKnownFact, NpcSource } from '@/lib/types/npc';
 
 interface NpcDetailPageProps {
   campaignId: string;
@@ -23,6 +23,12 @@ const DISPOSITION_LABELS: Record<NpcDisposition, string> = {
   neutral: 'Neutral',
   wary: 'Wary',
   hostile: 'Hostile',
+};
+
+const SOURCE_LABELS: Record<NpcSource, string> = {
+  manual: 'Manual',
+  extracted: 'Extracted',
+  imported: 'Imported',
 };
 
 function formatDate(iso: string | null): string {
@@ -108,6 +114,9 @@ export function NpcDetailPage({ campaignId, campaignName, npc }: NpcDetailPagePr
       <div className={styles.header}>
         <div className={styles.titleRow}>
           <h1 className={styles.title}>{npc.name}</h1>
+          <span className={`${styles.sourceBadge} ${styles[`source_${npc.source}`]}`}>
+            {SOURCE_LABELS[npc.source]}
+          </span>
           <span className={`${styles.dispBadge} ${styles[`disp_${npc.disposition}`]}`}>
             {DISPOSITION_LABELS[npc.disposition]}
           </span>
@@ -120,6 +129,11 @@ export function NpcDetailPage({ campaignId, campaignName, npc }: NpcDetailPagePr
             <span className={styles.location}>📍 {npc.current_location}</span>
           )}
         </div>
+        {npc.last_extracted_at && (
+          <p className={styles.lastExtracted}>
+            Last updated from play: {formatDate(npc.last_extracted_at)}
+          </p>
+        )}
         <div className={styles.headerActions}>
           <Link href={`/campaigns/${campaignId}/npcs/${npc.id}/edit`} className={styles.btnEdit}>
             ✎ Edit NPC

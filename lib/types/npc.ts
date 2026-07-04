@@ -7,6 +7,15 @@ export type NpcDisposition =
   | 'wary'
   | 'hostile';
 
+/**
+ * Provenance of an NPC record — determines whether extraction is allowed to
+ * overwrite core fields (see lib/sessions/extract-npcs.ts upsert rules).
+ * - manual: created via CRUD, protected from extraction overwrites.
+ * - extracted: written by transcript extraction, refreshed on every run.
+ * - imported: written by lib/npcs/import-npcs.ts, protected like manual.
+ */
+export type NpcSource = 'manual' | 'extracted' | 'imported';
+
 export interface NpcKnownFact {
   fact: string;
   learned_in_session: string | null;
@@ -26,6 +35,8 @@ export interface Npc {
   disposition: NpcDisposition;
   current_location: string | null;
   known_facts: NpcKnownFact[];
+  source: NpcSource;
+  last_extracted_at: string | null;
   created_at: string;
   updated_at: string;
 }

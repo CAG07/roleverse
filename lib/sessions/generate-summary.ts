@@ -3,13 +3,7 @@
 // Called synchronously from the session-end route; fails gracefully.
 
 import Anthropic from '@anthropic-ai/sdk';
-
-interface TranscriptEntry {
-  role?: string;
-  content?: string;
-  agentType?: string;
-  timestamp?: string;
-}
+import type { TranscriptEntry } from '@/lib/types/session';
 
 const PLACEHOLDER = 'This session contained no significant events.';
 const MIN_PLAYER_MESSAGES = 2;

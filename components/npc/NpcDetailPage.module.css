@@ -66,6 +66,28 @@
 .disp_wary     { color: var(--crimson-bright); border-color: var(--crimson-dim); background: var(--crimson-glow); }
 .disp_hostile  { color: var(--crimson-bright); border-color: var(--crimson); background: var(--crimson-glow); }
 
+.sourceBadge {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.source_manual    { color: var(--ivory-muted); border-color: var(--void-border); background: transparent; }
+.source_extracted { color: var(--gold-light); border-color: var(--gold-dim); background: var(--gold-subtle); }
+.source_imported  { color: var(--crimson-bright); border-color: var(--crimson-dim); background: transparent; }
+
+.lastExtracted {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--ivory-dim);
+  margin: 0 0 0.75rem;
+}
+
 .headerMeta {
   display: flex;
   align-items: center;

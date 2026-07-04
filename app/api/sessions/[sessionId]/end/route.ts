@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { generateSessionSummary } from '@/lib/sessions/generate-summary';
+import { extractNpcsFromSession } from '@/lib/sessions/extract-npcs';
+import type { TranscriptEntry } from '@/lib/types/session';
 
 export async function POST(
   _request: NextRequest,
@@ -53,16 +55,17 @@ export async function POST(
     return NextResponse.json({ error: endError.message }, { status: 500 });
   }
 
-  // Step 2: attempt summary generation in the background — failure must not block the response
+  // Step 2: attempt summary generation + NPC extraction in the background —
+  // neither must block the response, and each is independent of the other's failure.
   void (async () => {
+    const transcript: TranscriptEntry[] = Array.isArray(session.transcript)
+      ? (session.transcript as TranscriptEntry[])
+      : [];
+
+    const systemId = (campaign?.game_system as string | undefined) ?? '';
+    const gameSystemName = getGameSystem(systemId)?.name ?? systemId;
+
     try {
-      const transcript = Array.isArray(session.transcript)
-        ? (session.transcript as { role?: string; content?: string; agentType?: string; timestamp?: string }[])
-        : [];
-
-      const systemId = (campaign?.game_system as string | undefined) ?? '';
-      const gameSystemName = getGameSystem(systemId)?.name ?? systemId;
-
       const summary = await generateSessionSummary(transcript, gameSystemName);
 
       await supabase
@@ -72,6 +75,20 @@ export async function POST(
     } catch (err) {
       // Summary is a nice-to-have. Log and continue — session already ended above.
       console.error('[session-end] Summary generation failed:', err);
+    }
+
+    try {
+      await extractNpcsFromSession(
+        supabase,
+        session.campaign_id,
+        user.id,
+        sessionId,
+        transcript,
+        gameSystemName
+      );
+    } catch (err) {
+      // Extraction is a nice-to-have. Log and continue — session already ended above.
+      console.error('[session-end] NPC extraction failed:', err);
     }
   })();
 
