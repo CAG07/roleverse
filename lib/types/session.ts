@@ -1,6 +1,17 @@
 // lib/types/session.ts
 // Shared types for the session UI components
 
+/**
+ * Loose shape of a transcript entry as stored in sessions.transcript JSONB.
+ * Fields are optional because older rows may be missing some of them.
+ */
+export interface TranscriptEntry {
+  role?: string;
+  content?: string;
+  agentType?: string;
+  timestamp?: string;
+}
+
 export type SceneMediaSource = 'campaign_asset' | 'ai_generated';
 
 export interface SceneMedia {

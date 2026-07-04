@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
 import type { NpcInput, NpcKnownFact } from '@/lib/types/npc';
+import { mergeKnownFacts } from '@/lib/npcs/merge-facts';
 
 type RouteParams = { params: Promise<{ id: string; npcId: string }> };
 
@@ -76,23 +77,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       // Direct replacement — used by delete-fact UI
       updatePayload.known_facts = body.known_facts;
     } else {
-      // Append with case-insensitive substring deduplication — used by agent proposals
+      // Append with case-insensitive substring deduplication
       const existing = (npc.known_facts as NpcKnownFact[]) ?? [];
-      const incoming = body.known_facts;
-      const merged = [...existing];
-
-      for (const incoming_fact of incoming) {
-        const lowerIncoming = incoming_fact.fact.toLowerCase();
-        const isDuplicate = merged.some((ef) => {
-          const lowerExisting = ef.fact.toLowerCase();
-          return lowerExisting.includes(lowerIncoming) || lowerIncoming.includes(lowerExisting);
-        });
-        if (!isDuplicate) {
-          merged.push(incoming_fact);
-        }
-      }
-
-      updatePayload.known_facts = merged;
+      updatePayload.known_facts = mergeKnownFacts(existing, body.known_facts);
     }
   }
 

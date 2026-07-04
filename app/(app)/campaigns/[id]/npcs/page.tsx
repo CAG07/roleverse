@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import styles from './page.module.css';
-import type { Npc, NpcDisposition } from '@/lib/types/npc';
+import type { Npc, NpcDisposition, NpcSource } from '@/lib/types/npc';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -14,6 +14,12 @@ const DISPOSITION_LABELS: Record<NpcDisposition, string> = {
   neutral: 'Neutral',
   wary: 'Wary',
   hostile: 'Hostile',
+};
+
+const SOURCE_LABELS: Record<NpcSource, string> = {
+  manual: 'Manual',
+  extracted: 'Extracted',
+  imported: 'Imported',
 };
 
 export default async function NpcsListPage({ params }: Props) {
@@ -71,9 +77,14 @@ export default async function NpcsListPage({ params }: Props) {
             >
               <div className={styles.cardTop}>
                 <span className={styles.npcName}>{npc.name}</span>
-                <span className={`${styles.dispBadge} ${styles[`disp_${npc.disposition}`]}`}>
-                  {DISPOSITION_LABELS[npc.disposition]}
-                </span>
+                <div className={styles.badgeGroup}>
+                  <span className={`${styles.sourceBadge} ${styles[`source_${npc.source}`]}`}>
+                    {SOURCE_LABELS[npc.source]}
+                  </span>
+                  <span className={`${styles.dispBadge} ${styles[`disp_${npc.disposition}`]}`}>
+                    {DISPOSITION_LABELS[npc.disposition]}
+                  </span>
+                </div>
               </div>
               {(npc.race ?? npc.occupation) && (
                 <div className={styles.npcMeta}>
