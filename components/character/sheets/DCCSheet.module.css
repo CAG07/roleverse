@@ -1,0 +1,249 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ *
+ * This is a 'use client' component rendered inside a server layout.
+ * styled-jsx styles in client components are injected at runtime after JS hydration,
+ * causing a Flash of Unstyled Content (FOUC) — components briefly appear
+ * unstyled before styles are applied.
+ *
+ * CSS Modules are statically extracted at build time and injected as a <link> tag
+ * in the <head>, guaranteeing styles are present before the first paint.
+ *
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+.sheetRoot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  overflow-y: auto;
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  padding: 0.75rem;
+  font-size: 0.775rem;
+}
+
+/* Funnel roster — compact stacked list of level-0 party members */
+.funnelRoster {
+  border-bottom: 1px solid var(--crimson-dim);
+  padding-bottom: 0.5rem;
+}
+.funnelList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.funnelCard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  background: var(--void-raised);
+  border: var(--rule-thin);
+  padding: 0.3rem 0.5rem;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+}
+.funnelName {
+  color: var(--ivory);
+  font-weight: 600;
+}
+.funnelOccupation {
+  color: var(--ivory-muted);
+}
+.funnelHp {
+  color: var(--status-healthy);
+}
+.funnelAc {
+  color: var(--gold);
+}
+
+/* Header */
+.sheetHeader {
+  border-bottom: 1px solid var(--crimson-dim);
+  padding-bottom: 0.5rem;
+}
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.sheetName {
+  font-family: var(--font-heading);
+  font-size: 0.975rem;
+  font-weight: 600;
+  color: var(--ivory);
+  margin: 0;
+}
+.funnelBadge {
+  font-family: var(--font-heading);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--crimson-bright);
+  background: rgba(176, 32, 32, 0.12);
+  border: 1px solid var(--crimson-dim);
+  padding: 0.15rem 0.4rem;
+}
+.sheetMeta {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--ivory-muted);
+  margin: 0.2rem 0 0;
+}
+.occupationLine,
+.luckySignLine {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--ivory-muted);
+  margin: 0.2rem 0 0;
+}
+.occupationLabel {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* Section label */
+.sectionLabel {
+  font-family: var(--font-heading);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 0.3rem;
+}
+
+/* Stat blocks grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.2rem;
+}
+.statBox {
+  background: var(--void-raised);
+  border: var(--rule-thin);
+  padding: 0.3rem 0.2rem;
+  text-align: center;
+}
+.statLabel {
+  font-family: var(--font-heading);
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+  display: block;
+}
+.statValue {
+  font-family: var(--font-heading);
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: var(--ivory);
+  display: block;
+}
+
+/* Combat row */
+.combatGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.3rem;
+}
+.combatBox {
+  background: var(--void-raised);
+  border: var(--rule-thin);
+  padding: 0.4rem;
+  text-align: center;
+}
+.combatLabel {
+  font-family: var(--font-heading);
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+  display: block;
+}
+.combatValue {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  display: block;
+}
+.combatValue.ac {
+  color: var(--gold);
+}
+.combatValue.hp {
+  color: var(--status-healthy);
+}
+.combatValue.deedDie {
+  color: var(--crimson-bright);
+}
+
+/* Luck */
+.luckGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.3rem;
+}
+.luckBox {
+  background: var(--void-raised);
+  border: var(--rule-thin);
+  padding: 0.4rem;
+  text-align: center;
+}
+.combatValue.luck {
+  color: var(--crimson-bright);
+}
+
+/* Saves */
+.saveRow {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid var(--void-border);
+}
+.saveRow:last-child {
+  border-bottom: none;
+}
+.saveName {
+  color: var(--ivory-muted);
+}
+.saveVal {
+  color: var(--ivory);
+  font-weight: 600;
+}
+
+.profText {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--ivory-muted);
+  margin: 0;
+}
+
+.plainList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.plainListItem {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--ivory-muted);
+}
+.spellName {
+  color: var(--ivory);
+  font-weight: 600;
+}

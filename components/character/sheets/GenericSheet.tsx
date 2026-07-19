@@ -1,10 +1,12 @@
 'use client';
 
 import styles from './GenericSheet.module.css';
+import EquipmentList from '../EquipmentList';
 
 interface GenericSheetProps {
   data: Record<string, unknown>;
   systemName: string;
+  equipment?: unknown[];
 }
 
 function renderValue(value: unknown): string {
@@ -13,7 +15,7 @@ function renderValue(value: unknown): string {
   return String(value);
 }
 
-export default function GenericSheet({ data, systemName }: GenericSheetProps) {
+export default function GenericSheet({ data, systemName, equipment = [] }: GenericSheetProps) {
   const entries = Object.entries(data);
 
   return (
@@ -31,6 +33,8 @@ export default function GenericSheet({ data, systemName }: GenericSheetProps) {
           </div>
         ))}
       </div>
+
+      <EquipmentList items={equipment} />
     </div>
   );
 }

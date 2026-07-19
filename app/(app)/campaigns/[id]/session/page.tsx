@@ -52,7 +52,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
   // Fetch characters for this campaign
   const { data: charactersRaw } = await supabase
     .from('characters')
-    .select('id, user_id, campaign_id, name, game_system, level, class, race, hp, max_hp, game_data_stats, game_data_combat, created_at')
+    .select('id, user_id, campaign_id, name, game_system, level, class, race, hp, max_hp, game_data_stats, game_data_combat, equipment, created_at')
     .eq('campaign_id', id);
 
   const characters: Character[] = (charactersRaw ?? []) as Character[];

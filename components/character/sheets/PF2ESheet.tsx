@@ -1,9 +1,14 @@
 'use client';
 
 import styles from './PF2ESheet.module.css';
+import InlineNumberEditor from '../InlineNumberEditor';
+import EquipmentList from '../EquipmentList';
+import { updateCharacterHp } from '@/lib/characters/character-updates';
 
 interface PF2ESheetProps {
+  characterId: string;
   data: Record<string, unknown>;
+  equipment?: unknown[];
 }
 
 function getVal<T>(data: Record<string, unknown>, key: string, fallback: T): T {
@@ -35,7 +40,7 @@ const RANK_CSS: Record<string, string> = {
   '4': styles.legendary,
 };
 
-export default function PF2ESheet({ data }: PF2ESheetProps) {
+export default function PF2ESheet({ characterId, data, equipment = [] }: PF2ESheetProps) {
   const name = getVal(data, 'name', 'Unknown');
   const race = getVal(data, 'race', '—');
   const characterClass = getVal(data, 'class', '—');
@@ -102,7 +107,14 @@ export default function PF2ESheet({ data }: PF2ESheetProps) {
           </div>
           <div className={styles.combatBox}>
             <span className={styles.combatLabel}>HP</span>
-            <span className={`${styles.combatValue} ${styles.hp}`}>{hp}/{maxHp}</span>
+            <span className={`${styles.combatValue} ${styles.hp}`}>
+              <InlineNumberEditor
+                value={hp}
+                onSave={(newHp) => void updateCharacterHp(characterId, newHp)}
+                ariaLabel="Current HP"
+              />
+              /{maxHp}
+            </span>
           </div>
           <div className={styles.combatBox}>
             <span className={styles.combatLabel}>Perception</span>
@@ -190,6 +202,8 @@ export default function PF2ESheet({ data }: PF2ESheetProps) {
           <p className={styles.profText}>{feats.join(', ')}</p>
         </div>
       )}
+
+      <EquipmentList items={equipment} />
     </div>
   );
 }

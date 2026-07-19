@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-const VALID_SYSTEMS = ['5E_2014', 'ADD2E', 'PATHFINDER_2E'] as const;
+const VALID_SYSTEMS = ['5E_2014', 'ADD2E', 'PATHFINDER_2E', 'DCC'] as const;
 type IngestableSystem = (typeof VALID_SYSTEMS)[number];
 
 export async function POST(request: NextRequest) {

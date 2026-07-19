@@ -10,12 +10,13 @@ import { ingestSystem, type IngestableSystem } from '@/lib/rag/ingest';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
-const VALID_SYSTEMS: IngestableSystem[] = ['5E_2014', 'PATHFINDER_2E', 'ADD2E'];
+const VALID_SYSTEMS: IngestableSystem[] = ['5E_2014', 'PATHFINDER_2E', 'ADD2E', 'DCC'];
 
 const SOURCE_LABELS: Record<IngestableSystem, string> = {
   '5E_2014': 'open5e',
   PATHFINDER_2E: 'pf2e-foundry',
   ADD2E: 'osric',
+  DCC: 'dcc-stub',
 };
 
 /** Return the list of emails authorised to trigger ingestion */

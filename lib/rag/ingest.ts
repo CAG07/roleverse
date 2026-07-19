@@ -17,7 +17,7 @@ import type { RagChunk } from './types';
 const UPSERT_BATCH_SIZE = 50;
 
 /** Supported game systems for baseline ingestion */
-export type IngestableSystem = '5E_2014' | 'PATHFINDER_2E' | 'ADD2E';
+export type IngestableSystem = '5E_2014' | 'PATHFINDER_2E' | 'ADD2E' | 'DCC';
 
 export interface IngestOptions {
   /** Game system to ingest */
@@ -215,6 +215,11 @@ async function* streamChunksForSystem(gameSystem: IngestableSystem): AsyncGenera
     case 'ADD2E': {
       const { fetchOsricChunks } = await import('./fetchers/osric');
       yield* fetchOsricChunks();
+      break;
+    }
+    case 'DCC': {
+      const { fetchDccChunks } = await import('./fetchers/dcc');
+      yield* fetchDccChunks();
       break;
     }
     default: {
