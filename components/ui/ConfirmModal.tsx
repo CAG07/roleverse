@@ -26,7 +26,7 @@ export function ConfirmModal({
   if (!open) return null;
 
   return (
-    <div className={styles.overlay} role="presentation" onClick={onCancel}>
+    <div className={styles.overlay} role="presentation" onClick={() => { if (!busy) onCancel(); }}>
       <div
         className={styles.dialog}
         role="alertdialog"
