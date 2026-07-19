@@ -1,9 +1,14 @@
 'use client';
 
 import styles from './DND5ESheet.module.css';
+import InlineNumberEditor from '../InlineNumberEditor';
+import EquipmentList from '../EquipmentList';
+import { updateCharacterHp } from '@/lib/characters/character-updates';
 
 interface DND5ESheetProps {
+  characterId: string;
   data: Record<string, unknown>;
+  equipment?: unknown[];
 }
 
 function getVal<T>(data: Record<string, unknown>, key: string, fallback: T): T {
@@ -19,7 +24,7 @@ function abilityModifier(score: number): string {
   return mod >= 0 ? `+${mod}` : `${mod}`;
 }
 
-export default function DND5ESheet({ data }: DND5ESheetProps) {
+export default function DND5ESheet({ characterId, data, equipment = [] }: DND5ESheetProps) {
   const name = getVal(data, 'name', 'Unknown');
   const race = getVal(data, 'race', '—');
   const characterClass = getVal(data, 'class', '—');
@@ -80,7 +85,14 @@ export default function DND5ESheet({ data }: DND5ESheetProps) {
           </div>
           <div className={styles.combatBox}>
             <span className={styles.combatLabel}>HP</span>
-            <span className={`${styles.combatValue} ${styles.hp}`}>{hp}/{maxHp}</span>
+            <span className={`${styles.combatValue} ${styles.hp}`}>
+              <InlineNumberEditor
+                value={hp}
+                onSave={(newHp) => void updateCharacterHp(characterId, newHp)}
+                ariaLabel="Current HP"
+              />
+              /{maxHp}
+            </span>
           </div>
           <div className={styles.combatBox}>
             <span className={styles.combatLabel}>Hit Dice</span>
@@ -134,6 +146,8 @@ export default function DND5ESheet({ data }: DND5ESheetProps) {
           </ul>
         </div>
       )}
+
+      <EquipmentList items={equipment} />
     </div>
   );
 }

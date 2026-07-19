@@ -28,7 +28,7 @@ interface IngestionJob {
   completed_at: string | null;
 }
 
-type IngestableSystem = '5E_2014' | 'PATHFINDER_2E' | 'ADD2E';
+type IngestableSystem = '5E_2014' | 'PATHFINDER_2E' | 'ADD2E' | 'DCC';
 
 interface SystemConfig {
   id: IngestableSystem;
@@ -55,6 +55,12 @@ const SYSTEMS: SystemConfig[] = [
     label: 'AD&D 2nd Edition',
     source: 'OSRIC stub',
     description: 'Ingests the local OSRIC placeholder (data/osric-stub.md) into the index.',
+  },
+  {
+    id: 'DCC',
+    label: 'Dungeon Crawl Classics',
+    source: 'DCC stub',
+    description: 'Ingests the local DCC placeholder (data/dcc-stub.md) into the index.',
   },
 ];
 

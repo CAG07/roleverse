@@ -1,0 +1,44 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ *
+ * This is a 'use client' component rendered inside a server layout.
+ * styled-jsx styles in client components are injected at runtime after JS hydration,
+ * causing a Flash of Unstyled Content (FOUC) — components briefly appear
+ * unstyled before styles are applied.
+ *
+ * CSS Modules are statically extracted at build time and injected as a <link> tag
+ * in the <head>, guaranteeing styles are present before the first paint.
+ *
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+.display {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px dashed transparent;
+  padding: 0 0.15em;
+  cursor: text;
+  transition: border-color 0.15s, background 0.15s;
+}
+.display:hover {
+  border-color: var(--gold-dim);
+  background: var(--void-raised);
+}
+
+.input {
+  font: inherit;
+  color: inherit;
+  background: var(--void-raised);
+  border: 1px solid var(--gold);
+  padding: 0 0.15em;
+  width: 3.25em;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.input::-webkit-outer-spin-button,
+.input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 export interface CampaignCharacter {
   id: string;
@@ -73,6 +74,8 @@ export function CampaignDetailPage({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [confirmStop, setConfirmStop] = useState(false);
   const [stoppingSession, setStoppingSession] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handleStopSession = async () => {
     if (!activeSession) return;
@@ -89,12 +92,14 @@ export function CampaignDetailPage({
   const lastSession = recentSessions[0] ?? null;
 
   const handleDelete = async () => {
-    if (!window.confirm(`Delete campaign "${name}"? This cannot be undone.`)) return;
+    setDeleting(true);
     setDeleteError(null);
     const supabase = createClient();
     const { error } = await supabase.from('campaigns').delete().eq('id', id);
     if (error) {
       setDeleteError(error.message);
+      setDeleting(false);
+      setConfirmDelete(false);
     } else {
       router.push('/dashboard');
     }
@@ -102,6 +107,16 @@ export function CampaignDetailPage({
 
   return (
     <div className={styles.campaignDetailRoot}>
+      <ConfirmModal
+        open={confirmDelete}
+        title="Delete Campaign"
+        message={`Delete campaign "${name}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        busy={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
+
       {confirmStop && (
         <div className={styles.confirmOverlay}>
           <div className={styles.confirmDialog}>
@@ -156,7 +171,7 @@ export function CampaignDetailPage({
           <Link href={`/campaigns/${id}/edit`} className={styles.btnEdit}>
             ✎ Edit Campaign
           </Link>
-          <button type="button" className={styles.btnDelete} onClick={handleDelete}>
+          <button type="button" className={styles.btnDelete} onClick={() => setConfirmDelete(true)}>
             ✕ Delete Campaign
           </button>
         </div>

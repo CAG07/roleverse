@@ -195,8 +195,14 @@ export default function SessionPageClient({
           </div>
 
           {/* Character sheet */}
-          {selectedCharacterData ? (
-            <CharacterSheet gameSystem={gameSystem} characterData={selectedCharacterData} />
+          {selectedCharacterData && selectedCharacter ? (
+            <CharacterSheet
+              characterId={selectedCharacter.id}
+              gameSystem={gameSystem}
+              characterData={selectedCharacterData}
+              equipment={selectedCharacter.equipment ?? []}
+              rawGameDataStats={selectedCharacter.game_data_stats ?? {}}
+            />
           ) : (
             <div className={styles.noCharacter}>
               <p className={styles.noCharacterText}>

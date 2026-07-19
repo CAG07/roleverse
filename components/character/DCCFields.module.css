@@ -1,0 +1,81 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ *
+ * This is a 'use client' component rendered inside a server layout.
+ * styled-jsx styles in client components are injected at runtime after JS hydration,
+ * causing a Flash of Unstyled Content (FOUC) — components briefly appear
+ * unstyled before styles are applied.
+ *
+ * CSS Modules are statically extracted at build time and injected as a <link> tag
+ * in the <head>, guaranteeing styles are present before the first paint.
+ *
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+.dccSection {
+  border-top: 1px solid var(--crimson-dim);
+  padding-top: 1.25rem;
+  margin-top: 0.25rem;
+}
+
+.sectionDivider {
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1.25rem;
+}
+
+.formGroup {
+  margin-bottom: 1.25rem;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.formLabel {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+  margin-bottom: 0.4rem;
+}
+
+.formInput,
+.formTextarea {
+  width: 100%;
+  background: var(--void-surface);
+  border: var(--rule-thin);
+  color: var(--ivory);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  padding: 0.625rem 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.formInput::placeholder,
+.formTextarea::placeholder {
+  color: var(--ivory-dim);
+}
+.formInput:focus,
+.formTextarea:focus {
+  border-color: var(--crimson);
+}
+
+.hint {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--ivory-dim);
+  margin: -0.5rem 0 1rem;
+}

@@ -3,22 +3,41 @@
 import ADD2ESheet from './sheets/ADD2ESheet';
 import DND5ESheet from './sheets/DND5ESheet';
 import PF2ESheet from './sheets/PF2ESheet';
+import DCCSheet from './sheets/DCCSheet';
 import GenericSheet from './sheets/GenericSheet';
 
 interface CharacterSheetProps {
+  characterId: string;
   gameSystem: string;
   characterData: Record<string, unknown>;
+  equipment?: unknown[];
+  /** Raw game_data_stats JSONB blob — only consumed by sheets that write back into it (e.g. DCC Luck). */
+  rawGameDataStats?: Record<string, unknown>;
 }
 
-export default function CharacterSheet({ gameSystem, characterData }: CharacterSheetProps) {
+export default function CharacterSheet({
+  characterId,
+  gameSystem,
+  characterData,
+  equipment = [],
+  rawGameDataStats,
+}: CharacterSheetProps) {
   switch (gameSystem) {
     case 'ADD2E':
-      return <ADD2ESheet data={characterData} />;
+      return <ADD2ESheet characterId={characterId} data={characterData} equipment={equipment} />;
     case '5E_2014':
-      return <DND5ESheet data={characterData} />;
+      return <DND5ESheet characterId={characterId} data={characterData} equipment={equipment} />;
     case 'PATHFINDER_2E':
-      return <PF2ESheet data={characterData} />;
+      return <PF2ESheet characterId={characterId} data={characterData} equipment={equipment} />;
+    case 'DCC':
+      return (
+        <DCCSheet
+          characterId={characterId}
+          data={{ ...characterData, equipment }}
+          rawGameDataStats={rawGameDataStats}
+        />
+      );
     default:
-      return <GenericSheet data={characterData} systemName={gameSystem} />;
+      return <GenericSheet data={characterData} systemName={gameSystem} equipment={equipment} />;
   }
 }

@@ -67,5 +67,6 @@ export interface Character {
   max_hp?: number | null;
   game_data_stats?: Record<string, unknown>;
   game_data_combat?: Record<string, unknown>;
+  equipment?: unknown[];
   created_at: string;
 }

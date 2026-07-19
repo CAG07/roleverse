@@ -209,21 +209,31 @@ const dcc: GameSystem = {
   id: 'DCC',
   name: 'Dungeon Crawl Classics',
   description: 'Old-school sword & sorcery RPG with funnel character creation and mighty deeds.',
-  primaryDie: 'd20',
+  primaryDie: 'd3, d4, d5, d6, d7, d8, d10, d12, d14, d16, d20, d24, d30 (the DCC dice chain)',
   abilityScores: ['Strength', 'Agility', 'Stamina', 'Personality', 'Intelligence', 'Luck'],
   characterSchema: {
-    mightyDeeds: 'number',
-    spellcheck: 'number',
+    level: 'number', // 0 (funnel) through 10
+    occupation: 'string',
+    currentLuck: 'number',
+    startingLuck: 'number',
+    luckySign: 'string',
+    deedDie: 'string',
+    disapprovalRange: 'number',
+    corruption: 'string[]',
+    mercurialMagic: 'object[]',
     hitPoints: 'number',
     armorClass: 'number',
   },
   rulesPrompt:
     'You are a rules arbiter for Dungeon Crawl Classics. Use the DCC dice chain, mighty deeds for warriors, patron bond and spellburn for wizards, and disapproval tables for clerics.',
   fgRulesetId: 'DCC',
-  supported: false,
+  supported: true,
   ragSource: {
-    type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    type: 'srd_clone',
+    notes:
+      'DCC RPG core mechanics are covered under the Fifth Edition Foes / DCC SRD-equivalent OGL ' +
+      'release. No clean machine-readable JSON/markdown source was found; falling back to ' +
+      'data/dcc-stub.md placeholder. The Rules Arbiter for DCC relies primarily on Claude training knowledge.',
   },
 };
 

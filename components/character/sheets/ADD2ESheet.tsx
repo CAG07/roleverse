@@ -1,9 +1,14 @@
 'use client';
 
 import styles from './ADD2ESheet.module.css';
+import InlineNumberEditor from '../InlineNumberEditor';
+import EquipmentList from '../EquipmentList';
+import { updateCharacterHp } from '@/lib/characters/character-updates';
 
 interface ADD2ESheetProps {
+  characterId: string;
   data: Record<string, unknown>;
+  equipment?: unknown[];
 }
 
 function getVal<T>(data: Record<string, unknown>, key: string, fallback: T): T {
@@ -14,7 +19,7 @@ function getRecord(data: Record<string, unknown>, key: string): Record<string, u
   return (data[key] as Record<string, unknown>) ?? {};
 }
 
-export default function ADD2ESheet({ data }: ADD2ESheetProps) {
+export default function ADD2ESheet({ characterId, data, equipment = [] }: ADD2ESheetProps) {
   const name = getVal(data, 'name', 'Unknown');
   const race = getVal(data, 'race', '—');
   const characterClass = getVal(data, 'class', '—');
@@ -79,7 +84,14 @@ export default function ADD2ESheet({ data }: ADD2ESheetProps) {
           </div>
           <div className={styles.combatBox}>
             <span className={styles.combatLabel}>HP</span>
-            <span className={`${styles.combatValue} ${styles.hp}`}>{hp}/{maxHp}</span>
+            <span className={`${styles.combatValue} ${styles.hp}`}>
+              <InlineNumberEditor
+                value={hp}
+                onSave={(newHp) => void updateCharacterHp(characterId, newHp)}
+                ariaLabel="Current HP"
+              />
+              /{maxHp}
+            </span>
           </div>
         </div>
       </div>
@@ -122,6 +134,8 @@ export default function ADD2ESheet({ data }: ADD2ESheetProps) {
           </div>
         </div>
       )}
+
+      <EquipmentList items={equipment} />
     </div>
   );
 }

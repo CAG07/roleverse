@@ -11,6 +11,7 @@ on:
           - 5E_2014
           - ADD2E
           - PATHFINDER_2E
+          - DCC
 
 jobs:
   ingest:

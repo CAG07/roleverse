@@ -29,6 +29,7 @@ export default async function NewCharacterRoute({ params }: Props) {
     <NewCharacterForm
       campaignId={id}
       campaignName={campaign.name as string}
+      gameSystem={campaign.game_system as string}
       gameSystemName={system?.name ?? (campaign.game_system as string)}
     />
   );

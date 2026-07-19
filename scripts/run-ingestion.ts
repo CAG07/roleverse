@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { ingestSystem, type IngestableSystem } from '../lib/rag/ingest';
 
-const VALID_SYSTEMS: IngestableSystem[] = ['5E_2014', 'ADD2E', 'PATHFINDER_2E'];
+const VALID_SYSTEMS: IngestableSystem[] = ['5E_2014', 'ADD2E', 'PATHFINDER_2E', 'DCC'];
 
 async function main() {
   const system = process.argv[2] as IngestableSystem;
@@ -29,6 +29,7 @@ async function main() {
   const sourceLabel =
     system === '5E_2014' ? 'open5e' :
     system === 'ADD2E' ? 'osric' :
+    system === 'DCC' ? 'dcc-stub' :
     'pf2e-foundry';
 
   const supabase = createClient(url, serviceKey, {
