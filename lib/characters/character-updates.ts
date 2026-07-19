@@ -18,5 +18,6 @@ export async function updateCharacterGameDataStats(
   gameDataStats: Record<string, unknown>
 ): Promise<void> {
   const supabase = createClient();
-  await supabase.from('characters').update({ game_data_stats: gameDataStats }).eq('id', characterId);
+  const { error } = await supabase.from('characters').update({ game_data_stats: gameDataStats }).eq('id', characterId);
+  if (error) console.error('Failed to update character game_data_stats', error);
 }
