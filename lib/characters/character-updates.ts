@@ -8,7 +8,8 @@ import { createClient } from '@/lib/supabase/client';
 
 export async function updateCharacterHp(characterId: string, hp: number): Promise<void> {
   const supabase = createClient();
-  await supabase.from('characters').update({ hp }).eq('id', characterId);
+  const { error } = await supabase.from('characters').update({ hp }).eq('id', characterId);
+  if (error) console.error('Failed to update character HP', error);
 }
 
 /** Overwrite the full game_data_stats JSONB blob (caller must merge in existing keys). */
