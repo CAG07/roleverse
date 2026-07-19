@@ -3,12 +3,8 @@
 import styles from './DCCSheet.module.css';
 import InlineNumberEditor from '../InlineNumberEditor';
 import EquipmentList from '../EquipmentList';
+import type { DCCMercurialSpell } from '@/lib/types/dcc-character';
 import { updateCharacterHp, updateCharacterGameDataStats } from '@/lib/characters/character-updates';
-
-interface DCCMercurialSpell {
-  spell: string;
-  effect: string;
-}
 
 interface DCCFunnelMember {
   id: string;
