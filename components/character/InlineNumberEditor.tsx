@@ -47,7 +47,7 @@ export default function InlineNumberEditor({
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       const parsed = parseInt(raw, 10);
-      if (!Number.isNaN(parsed)) onSave(parsed);
+      if (!Number.isNaN(parsed) && parsed !== value) onSave(parsed);
     }, SAVE_DEBOUNCE_MS);
   };
 
