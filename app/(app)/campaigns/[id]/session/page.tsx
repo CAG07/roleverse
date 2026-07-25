@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import SessionPageClient from '@/components/session/SessionPageClient';
-import type { PartyMember, Character } from '@/lib/types/session';
+import type { PartyMember, Character, TranscriptEntry } from '@/lib/types/session';
 
 interface SessionPageProps {
   params: Promise<{ id: string }>;
@@ -59,10 +59,11 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
   // Resume active session if one exists, only create a new one if none is found
   let sessionId: string;
+  let initialTranscript: TranscriptEntry[] = [];
 
   const { data: activeSession } = await supabase
     .from('sessions')
-    .select('id')
+    .select('id, transcript')
     .eq('campaign_id', id)
     .eq('user_id', user!.id)
     .is('ended_at', null)
@@ -72,6 +73,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
   if (activeSession) {
     sessionId = activeSession.id as string;
+    initialTranscript = ((activeSession.transcript as TranscriptEntry[] | null) ?? []).slice(-200);
   } else {
     const { data: newSession } = await supabase
       .from('sessions')
@@ -91,6 +93,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
       gameSystem={campaign.game_system}
       partyMembers={partyMembers}
       characters={characters}
+      initialTranscript={initialTranscript}
     />
   );
 }

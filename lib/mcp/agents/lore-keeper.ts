@@ -43,13 +43,14 @@ async function fetchLoreContext(
   // Fetch campaign notes
   const { data: campaign } = await supabase
     .from('campaigns')
-    .select('name, description, notes')
+    .select('name, description, module_description, notes')
     .eq('id', campaignId)
     .single();
 
   const campaignNotes = [
     campaign?.name ? `**Campaign:** ${campaign.name}` : '',
     campaign?.description ? `**Description:** ${campaign.description}` : '',
+    campaign?.module_description ? `**Module / Adventure:** ${campaign.module_description}` : '',
     campaign?.notes ? `**GM Notes:**\n${campaign.notes}` : '',
   ]
     .filter(Boolean)
