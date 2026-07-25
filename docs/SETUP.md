@@ -80,15 +80,13 @@ From a campaign's overview page, click **Start Session** to enter the session vi
 - **Center** — Chat window for AI game narrative and scene display.
 - **Right** — Character sheet panel (changes based on your game system).
 
-Type a message or player action in the chat window and the AI will respond as your Dungeon Master. Five specialized AI agents handle different request types automatically:
+Type a message or player action in the chat window and the AI will respond as your Dungeon Master. Three specialized AI agents handle different request types automatically:
 
 | Agent | Handles |
 |-------|---------|
-| **Narrator** | Player actions, scene descriptions, exploration |
+| **Game Master** | Player actions, scene descriptions, exploration, speaking to and voicing named NPCs, designing and running combat encounters |
 | **Rules Arbiter** | Rules questions and mechanical lookups |
 | **Lore Keeper** | Recall of campaign facts, past sessions, NPC history |
-| **NPC Dialogue** | Speaking to and voicing named NPCs |
-| **Encounter Builder** | Designing and generating combat encounters |
 
 You don't need to choose which agent to use — the router selects the right one based on your message.
 
