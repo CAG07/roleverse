@@ -73,7 +73,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
   if (activeSession) {
     sessionId = activeSession.id as string;
-    initialTranscript = (activeSession.transcript as TranscriptEntry[] | null) ?? [];
+    initialTranscript = ((activeSession.transcript as TranscriptEntry[] | null) ?? []).slice(-200);
   } else {
     const { data: newSession } = await supabase
       .from('sessions')
