@@ -49,8 +49,8 @@ jobs:
 
       - name: Run Migrations (Production)
         run: |
-          supabase db push --dry-run --include-all --debug
-          supabase db push --include-all --debug
+          supabase db push --dry-run --debug --include-all
+          supabase db push --debug --include-all
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           
