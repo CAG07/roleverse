@@ -11,6 +11,7 @@ interface EditCampaignPageProps {
   id: string;
   initialName: string;
   initialDescription: string;
+  initialModuleDescription: string;
   initialGameSystem: string;
 }
 
@@ -18,11 +19,13 @@ export function EditCampaignPage({
   id,
   initialName,
   initialDescription,
+  initialModuleDescription,
   initialGameSystem,
 }: EditCampaignPageProps) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
+  const [moduleDescription, setModuleDescription] = useState(initialModuleDescription);
   const [gameSystem, setGameSystem] = useState(initialGameSystem);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -51,6 +54,7 @@ export function EditCampaignPage({
         .update({
           name: name.trim(),
           description: description.trim() || null,
+          module_description: moduleDescription.trim() || null,
           game_system: gameSystem,
         })
         .eq('id', id);
@@ -98,6 +102,23 @@ export function EditCampaignPage({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="moduleDescription" className={styles.formLabel}>
+              Module &amp; Campaign Info
+            </label>
+            <p className={styles.formHint}>
+              What module or setting are you running? Note any supplements, player kits, or house rules the GM should know about.
+            </p>
+            <textarea
+              id="moduleDescription"
+              className={styles.formTextarea}
+              placeholder="e.g., Palace of the Silver Princess (B3), using Tasha's expanded options, no multiclassing — or describe your homebrew adventure and house rules"
+              value={moduleDescription}
+              onChange={(e) => setModuleDescription(e.target.value)}
+              rows={4}
             />
           </div>
 

@@ -68,6 +68,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       id={id}
       name={campaign.name as string}
       description={campaign.description as string | null}
+      moduleDescription={campaign.module_description as string | null}
       systemName={systemName}
       systemDescription={systemDescription}
       characters={characters ?? []}

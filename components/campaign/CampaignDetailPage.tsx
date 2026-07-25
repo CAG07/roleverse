@@ -28,6 +28,7 @@ interface CampaignDetailPageProps {
   id: string;
   name: string;
   description: string | null;
+  moduleDescription: string | null;
   systemName: string;
   systemDescription: string;
   characters: CampaignCharacter[];
@@ -63,6 +64,7 @@ export function CampaignDetailPage({
   id,
   name,
   description,
+  moduleDescription,
   systemName,
   systemDescription,
   characters,
@@ -76,6 +78,29 @@ export function CampaignDetailPage({
   const [stoppingSession, setStoppingSession] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editingModule, setEditingModule] = useState(false);
+  const [moduleDraft, setModuleDraft] = useState(moduleDescription ?? '');
+  const [savedModuleDescription, setSavedModuleDescription] = useState(moduleDescription);
+  const [savingModule, setSavingModule] = useState(false);
+  const [moduleError, setModuleError] = useState<string | null>(null);
+
+  const handleSaveModuleDescription = async () => {
+    setSavingModule(true);
+    setModuleError(null);
+    const trimmed = moduleDraft.trim() || null;
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('campaigns')
+      .update({ module_description: trimmed })
+      .eq('id', id);
+    if (error) {
+      setModuleError(error.message);
+    } else {
+      setSavedModuleDescription(trimmed);
+      setEditingModule(false);
+    }
+    setSavingModule(false);
+  };
 
   const handleStopSession = async () => {
     if (!activeSession) return;
@@ -237,6 +262,69 @@ export function CampaignDetailPage({
         {/* Party Members */}
         <div className={styles.infoPanel}>
           <h3 className={styles.infoPanelTitle}>Party Members</h3>
+
+          <div className={styles.moduleSection}>
+            <div className={styles.moduleSectionHeader}>
+              <span className={styles.moduleSectionLabel}>Module &amp; Campaign Info</span>
+              {!editingModule && (
+                <button
+                  type="button"
+                  className={styles.btnModuleEdit}
+                  onClick={() => {
+                    setModuleDraft(savedModuleDescription ?? '');
+                    setModuleError(null);
+                    setEditingModule(true);
+                  }}
+                >
+                  {savedModuleDescription ? 'Edit' : '+ Add'}
+                </button>
+              )}
+            </div>
+
+            {editingModule ? (
+              <div className={styles.moduleEditForm}>
+                <p className={styles.moduleHint}>
+                  What module or setting are you running? Note any supplements, player kits, or
+                  house rules the GM should know about.
+                </p>
+                <textarea
+                  className={styles.moduleTextarea}
+                  value={moduleDraft}
+                  onChange={(e) => setModuleDraft(e.target.value)}
+                  placeholder="e.g., Palace of the Silver Princess (B3), using Tasha's expanded options, no multiclassing — or describe your homebrew adventure and house rules"
+                  rows={4}
+                  disabled={savingModule}
+                />
+                {moduleError && <p className={styles.deleteError}>{moduleError}</p>}
+                <div className={styles.moduleEditActions}>
+                  <button
+                    type="button"
+                    className={styles.btnModuleSave}
+                    onClick={() => void handleSaveModuleDescription()}
+                    disabled={savingModule}
+                  >
+                    {savingModule ? 'Saving…' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.btnCancel}
+                    onClick={() => setEditingModule(false)}
+                    disabled={savingModule}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : savedModuleDescription ? (
+              <p className={styles.moduleText}>{savedModuleDescription}</p>
+            ) : (
+              <p className={styles.moduleTextPlaceholder}>
+                No module or campaign info set yet — the GM will ask you to describe your
+                adventure as you play.
+              </p>
+            )}
+          </div>
+
           {characters.length > 0 ? (
             <div className={styles.characterList}>
               {characters.map((char) => (

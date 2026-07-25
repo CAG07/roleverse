@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback, type ChangeEvent, type KeyboardEvent } from 'react';
 import { Send, Mic, Keyboard, Image as ImageIcon } from 'lucide-react';
 import styles from './ChatWindow.module.css';
-import type { ChatMessage, SceneMedia, AgentType } from '@/lib/types/session';
+import type { ChatMessage, SceneMedia, AgentType, TranscriptEntry } from '@/lib/types/session';
 import type { AgentMessage } from '@/lib/mcp/types';
 
 // Agent color/label mapping — matches design spec
@@ -80,17 +80,52 @@ interface ChatWindowProps {
   onSceneMediaUpdate?: (media: SceneMedia) => void;
   sessionId: string;
   campaignId: string;
+  initialTranscript?: TranscriptEntry[];
 }
 
-export default function ChatWindow({ onSceneMediaUpdate: _onSceneMediaUpdate, sessionId, campaignId: _campaignId }: ChatWindowProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
+function transcriptToMessages(entries: TranscriptEntry[]): ChatMessage[] {
+  return entries.map((entry, i) => {
+    const timestamp = entry.timestamp ? new Date(entry.timestamp) : new Date();
+    if (entry.role === 'player') {
+      return {
+        id: `hist-${i}`,
+        role: 'player' as const,
+        playerName: 'You',
+        content: entry.content ?? '',
+        source: 'typed' as const,
+        timestamp,
+      };
+    }
+    return {
+      id: `hist-${i}`,
+      role: 'agent' as const,
+      agentType: entry.agentType as AgentType | undefined,
+      content: entry.content ?? '',
+      timestamp,
+    };
+  });
+}
+
+function buildInitialMessages(initialTranscript: TranscriptEntry[]): ChatMessage[] {
+  const hydrated = transcriptToMessages(initialTranscript);
+  if (hydrated.length > 0) return hydrated;
+  return [
     {
       id: 'msg-init',
       role: 'system',
       content: 'Session started.',
       timestamp: new Date(),
     },
-  ]);
+  ];
+}
+
+export default function ChatWindow({
+  onSceneMediaUpdate: _onSceneMediaUpdate,
+  sessionId,
+  campaignId: _campaignId,
+  initialTranscript = [],
+}: ChatWindowProps) {
+  const [messages, setMessages] = useState<ChatMessage[]>(() => buildInitialMessages(initialTranscript));
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState<StreamingMsg | null>(null);

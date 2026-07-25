@@ -8,12 +8,37 @@ import ChatWindow from '@/components/session/ChatWindow';
 import CharacterSheet from '@/components/character/CharacterSheet';
 import PartyStatus from '@/components/session/PartyStatus';
 import SessionNotes from '@/components/session/SessionNotes';
-import type { SceneMedia, PartyMember, Character } from '@/lib/types/session';
+import type { SceneMedia, PartyMember, Character, TranscriptEntry } from '@/lib/types/session';
 import styles from './SessionPageClient.module.css';
 
 // ── Component ──────────────────────────────────────────────────────────
 
 type MobileTab = 'chat' | 'character' | 'sidebar';
+
+type CharacterStatus = 'active' | 'unconscious' | 'dead';
+
+// Matches PartyStatus.tsx's statusDotColor — kept in sync so the avatar strip
+// and the Party Status panel always agree on what each color means.
+const STATUS_DOT_COLOR: Record<CharacterStatus, string> = {
+  active: '#4a9a5a',
+  unconscious: '#c8873a',
+  dead: '#b02020',
+};
+
+// max_hp <= 0 means HP was never entered on the character sheet (defaults to 0/0 at
+// creation) — not that the character has died. Only read hp/max_hp as a health signal
+// once max_hp has actually been set. hp === 0 is unconscious/dying; hp < 0 is dead.
+function computeCharacterStatus(
+  hp: number | null | undefined,
+  maxHp: number | null | undefined
+): CharacterStatus {
+  const safeHp = hp ?? 0;
+  const safeMaxHp = maxHp ?? 0;
+  if (safeMaxHp <= 0) return 'active';
+  if (safeHp < 0) return 'dead';
+  if (safeHp === 0) return 'unconscious';
+  return 'active';
+}
 
 export default function SessionPageClient({
   sessionId,
@@ -22,6 +47,7 @@ export default function SessionPageClient({
   gameSystem,
   partyMembers,
   characters,
+  initialTranscript = [],
 }: {
   sessionId: string;
   campaignId: string;
@@ -29,6 +55,7 @@ export default function SessionPageClient({
   gameSystem: string;
   partyMembers: PartyMember[];
   characters: Character[];
+  initialTranscript?: TranscriptEntry[];
 }) {
   const router = useRouter();
   const [sceneMedia, setSceneMedia] = useState<SceneMedia | null>(null);
@@ -63,7 +90,7 @@ export default function SessionPageClient({
     characterClass: c.class ?? 'Unknown',
     currentHp: c.hp ?? 0,
     maxHp: c.max_hp ?? 0,
-    status: (c.hp ?? 0) <= 0 ? ('unconscious' as const) : ('active' as const),
+    status: computeCharacterStatus(c.hp, c.max_hp),
   }));
 
   // Build character data record for CharacterSheet
@@ -154,6 +181,7 @@ export default function SessionPageClient({
               onSceneMediaUpdate={setSceneMedia}
               sessionId={sessionId}
               campaignId={campaignId}
+              initialTranscript={initialTranscript}
             />
           </div>
         </div>
@@ -174,8 +202,7 @@ export default function SessionPageClient({
                     .join('')
                     .slice(0, 2);
                   const isSelected = selectedCharacterId === member.id;
-                  const dotColor =
-                    member.status === 'active' ? '#4a9a5a' : '#c8873a';
+                  const dotColor = STATUS_DOT_COLOR[member.status];
                   return (
                     <button
                       key={member.id}

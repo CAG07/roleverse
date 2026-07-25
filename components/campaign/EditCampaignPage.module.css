@@ -79,6 +79,13 @@
   margin-bottom: 0.4rem;
 }
 
+.formHint {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--ivory-dim);
+  margin: 0 0 0.5rem;
+}
+
 .formInput,
 .formTextarea {
   width: 100%;
