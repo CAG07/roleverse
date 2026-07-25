@@ -63,11 +63,16 @@ function formatCharacter(c: PartyCharacterRow): string {
 export async function buildPartyContext(campaignId: string): Promise<string | null> {
   try {
     const supabase = await createClient();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('characters')
       .select('name, race, class, level, hp, max_hp, game_data_stats, game_data_abilities')
       .eq('campaign_id', campaignId)
       .order('name', { ascending: true });
+
+    if (error) {
+      console.warn('[party-context] Failed to load party characters', error);
+      return null;
+    }
 
     const characters = (data as PartyCharacterRow[] | null) ?? [];
     if (characters.length === 0) return null;
