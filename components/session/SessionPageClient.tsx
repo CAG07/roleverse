@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, type CSSProperties } from 'react';
+import { useState, useCallback, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import SessionSidebar from '@/components/session/SessionSidebar';
@@ -68,6 +68,7 @@ export default function SessionPageClient({
   // the automatic collapse/expand behavior stays authoritative across scene
   // transitions; the manual toggle is just a temporary nudge in between.
   const [sceneManualExpanded, setSceneManualExpanded] = useState<boolean | null>(null);
+  const [prevSceneMedia, setPrevSceneMedia] = useState<SceneMedia | null>(null);
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
   const [confirmStop, setConfirmStop] = useState(false);
@@ -78,13 +79,16 @@ export default function SessionPageClient({
     return VALID_CHAT_FONT_SIZES.includes(stored) ? stored : DEFAULT_CHAT_FONT_SIZE_PX;
   });
 
+  // Reset sceneManualExpanded whenever sceneMedia changes (adjust state during render,
+  // as recommended by React docs, to avoid calling setState inside a useEffect body).
+  if (prevSceneMedia !== sceneMedia) {
+    setPrevSceneMedia(sceneMedia);
+    setSceneManualExpanded(null);
+  }
+
   const selectedCharacter = characters.find((c) => c.id === selectedCharacterId) ?? null;
 
   const sceneCollapsed = sceneManualExpanded !== null ? !sceneManualExpanded : !sceneMedia;
-
-  useEffect(() => {
-    setSceneManualExpanded(null);
-  }, [sceneMedia]);
 
   const handleToggleScenePanel = useCallback(() => {
     setSceneManualExpanded(sceneCollapsed);
