@@ -85,7 +85,8 @@ interface ChatWindowProps {
 
 function transcriptToMessages(entries: TranscriptEntry[]): ChatMessage[] {
   return entries.map((entry, i) => {
-    const timestamp = entry.timestamp ? new Date(entry.timestamp) : new Date();
+    const parsedTimestamp = entry.timestamp ? new Date(entry.timestamp) : null;
+    const timestamp = parsedTimestamp && !Number.isNaN(parsedTimestamp.getTime()) ? parsedTimestamp : new Date();
     if (entry.role === 'player') {
       return {
         id: `hist-${i}`,
