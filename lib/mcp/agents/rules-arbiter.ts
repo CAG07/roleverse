@@ -23,7 +23,11 @@ const MODEL = getRequiredModel();
 const MAX_TOKENS = 1024;
 
 /** Build the system prompt for the Rules Arbiter */
-function buildSystemPrompt(context: MCPContext, ragContext: string): string {
+function buildSystemPrompt(
+  context: MCPContext,
+  ragContext: string,
+  partyContext: string | null
+): string {
   const system = getGameSystem(context.gameSystem);
   const systemName = system?.name ?? context.gameSystem;
   const rulesPrompt = system?.rulesPrompt ?? '';
@@ -66,6 +70,10 @@ function buildSystemPrompt(context: MCPContext, ragContext: string): string {
     );
   }
 
+  if (partyContext) {
+    parts.push(partyContext, '');
+  }
+
   parts.push(...getMultiAgentContextSection());
 
   return parts.join('\n');
@@ -104,7 +112,8 @@ async function retrieveRulesContext(
 export async function* streamRulesArbiterAgent(
   message: string,
   context: MCPContext,
-  conversationHistory: AgentMessage[] = []
+  conversationHistory: AgentMessage[] = [],
+  partyContext: string | null = null
 ): AsyncGenerator<string, AgentStreamResult, undefined> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -113,7 +122,7 @@ export async function* streamRulesArbiterAgent(
 
   const client = new Anthropic({ apiKey });
   const { ragContext, matchCount } = await retrieveRulesContext(message, context);
-  const systemPrompt = buildSystemPrompt(context, ragContext);
+  const systemPrompt = buildSystemPrompt(context, ragContext, partyContext);
 
   const messages: Anthropic.Messages.MessageParam[] = [
     ...conversationHistory.map(
@@ -153,7 +162,8 @@ export async function* streamRulesArbiterAgent(
 export async function runRulesArbiterAgent(
   message: string,
   context: MCPContext,
-  conversationHistory: AgentMessage[] = []
+  conversationHistory: AgentMessage[] = [],
+  partyContext: string | null = null
 ): Promise<AgentResponse> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -165,7 +175,7 @@ export async function runRulesArbiterAgent(
   // Retrieve relevant rules context via RAG
   const { ragContext, matchCount } = await retrieveRulesContext(message, context);
 
-  const systemPrompt = buildSystemPrompt(context, ragContext);
+  const systemPrompt = buildSystemPrompt(context, ragContext, partyContext);
 
   const messages: Anthropic.Messages.MessageParam[] = [
     ...conversationHistory.map(
