@@ -155,7 +155,7 @@ export default function ChatWindow({
   const messagesRef = useRef(messages);
   const streamingMsgRef = useRef<StreamingMsg | null>(null);
   const scrollRafRef = useRef<number | null>(null);
-  const isFirstRender = useRef(true);
+  const isInitialRender = useRef(true);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -165,8 +165,8 @@ export default function ChatWindow({
   useEffect(() => {
     const el = feedRef.current;
     if (!el) return;
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
       el.scrollTop = el.scrollHeight;
       setShowScrollButton(false);
       return;
