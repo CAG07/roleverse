@@ -83,7 +83,7 @@
   background: var(--void-raised);
   padding: 0.2rem 0.75rem;
   font-family: var(--font-body);
-  font-size: calc(0.725rem * var(--chat-font-scale, 1));
+  font-size: calc(var(--chat-font-size, 14px) * 0.83);
   font-style: italic;
   color: var(--ivory-dim);
 }
@@ -115,7 +115,7 @@
   border-left: 2px solid var(--crimson-dim);
   padding: 0.625rem 0.75rem;
   font-family: var(--font-body);
-  font-size: calc(0.875rem * var(--chat-font-scale, 1));
+  font-size: var(--chat-font-size, 14px);
   color: var(--ivory);
   line-height: 1.5;
 }
@@ -165,7 +165,7 @@
   background: var(--void-raised);
   padding: 0.625rem 0.75rem;
   font-family: var(--font-body);
-  font-size: calc(0.875rem * var(--chat-font-scale, 1));
+  font-size: var(--chat-font-size, 14px);
   color: var(--ivory);
   line-height: 1.5;
 }

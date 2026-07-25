@@ -13,17 +13,12 @@ interface SessionSidebarProps {
   gameSystem: string;
   isDM?: boolean;
   campaignId: string;
-  fontScale: number;
-  onFontScaleChange: (scale: number) => void;
+  fontSize: number;
+  onFontSizeChange: (size: number) => void;
   // onStopSession removed — sessions are stopped from campaign settings only
 }
 
-const FONT_SIZE_OPTIONS = [
-  { label: 'S', scale: 0.875 },
-  { label: 'M', scale: 1 },
-  { label: 'L', scale: 1.15 },
-  { label: 'XL', scale: 1.3 },
-] as const;
+const FONT_SIZE_OPTIONS = [12, 14, 16, 18] as const;
 
 function CollapsibleSection({
   title,
@@ -51,8 +46,8 @@ export default function SessionSidebar({
   gameSystem,
   isDM = false,
   campaignId,
-  fontScale,
-  onFontScaleChange,
+  fontSize,
+  onFontSizeChange,
 }: SessionSidebarProps) {
   return (
     <aside className={styles.sessionSidebar}>
@@ -76,16 +71,16 @@ export default function SessionSidebar({
         <div className={styles.fontSizeRow}>
           <span className={styles.fontSizeLabel}>Text Size</span>
           <div className={styles.fontSizeOptions}>
-            {FONT_SIZE_OPTIONS.map((opt) => (
+            {FONT_SIZE_OPTIONS.map((px) => (
               <button
-                key={opt.label}
-                className={`${styles.fontSizeBtn}${fontScale === opt.scale ? ` ${styles.active}` : ''}`}
-                onClick={() => onFontScaleChange(opt.scale)}
-                aria-label={`Set chat text size to ${opt.label}`}
-                aria-pressed={fontScale === opt.scale}
+                key={px}
+                className={`${styles.fontSizeBtn}${fontSize === px ? ` ${styles.active}` : ''}`}
+                onClick={() => onFontSizeChange(px)}
+                aria-label={`Set chat text size to ${px} pixels`}
+                aria-pressed={fontSize === px}
                 type="button"
               >
-                {opt.label}
+                {px}px
               </button>
             ))}
           </div>

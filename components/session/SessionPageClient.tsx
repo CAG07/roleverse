@@ -26,8 +26,9 @@ const STATUS_DOT_COLOR: Record<CharacterStatus, string> = {
   dead: '#b02020',
 };
 
-const CHAT_FONT_SCALE_KEY = 'roleverse-chat-font-scale';
-const DEFAULT_CHAT_FONT_SCALE = 1;
+const CHAT_FONT_SIZE_KEY = 'roleverse-chat-font-size-px';
+const DEFAULT_CHAT_FONT_SIZE_PX = 14;
+const VALID_CHAT_FONT_SIZES = [12, 14, 16, 18];
 
 // max_hp <= 0 means HP was never entered on the character sheet (defaults to 0/0 at
 // creation) — not that the character has died. Only read hp/max_hp as a health signal
@@ -73,10 +74,10 @@ export default function SessionPageClient({
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
   const [confirmStop, setConfirmStop] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
-  const [chatFontScale, setChatFontScale] = useState<number>(() => {
-    if (typeof window === 'undefined') return DEFAULT_CHAT_FONT_SCALE;
-    const stored = Number(localStorage.getItem(CHAT_FONT_SCALE_KEY));
-    return Number.isFinite(stored) && stored > 0 ? stored : DEFAULT_CHAT_FONT_SCALE;
+  const [chatFontSize, setChatFontSize] = useState<number>(() => {
+    if (typeof window === 'undefined') return DEFAULT_CHAT_FONT_SIZE_PX;
+    const stored = Number(localStorage.getItem(CHAT_FONT_SIZE_KEY));
+    return VALID_CHAT_FONT_SIZES.includes(stored) ? stored : DEFAULT_CHAT_FONT_SIZE_PX;
   });
 
   const selectedCharacter = characters.find((c) => c.id === selectedCharacterId) ?? null;
@@ -91,9 +92,9 @@ export default function SessionPageClient({
     setSceneManualExpanded(sceneCollapsed);
   }, [sceneCollapsed]);
 
-  const handleFontScaleChange = useCallback((scale: number) => {
-    setChatFontScale(scale);
-    localStorage.setItem(CHAT_FONT_SCALE_KEY, String(scale));
+  const handleFontSizeChange = useCallback((size: number) => {
+    setChatFontSize(size);
+    localStorage.setItem(CHAT_FONT_SIZE_KEY, String(size));
   }, []);
 
   const handleStopSession = useCallback(async () => {
@@ -194,8 +195,8 @@ export default function SessionPageClient({
             gameSystem={gameSystem}
             isDM
             campaignId={campaignId}
-            fontScale={chatFontScale}
-            onFontScaleChange={handleFontScaleChange}
+            fontSize={chatFontSize}
+            onFontSizeChange={handleFontSizeChange}
           />
         </div>
 
@@ -221,7 +222,7 @@ export default function SessionPageClient({
           </div>
           <div
             className={styles.chatPanel}
-            style={{ '--chat-font-scale': chatFontScale } as CSSProperties}
+            style={{ '--chat-font-size': `${chatFontSize}px` } as CSSProperties}
           >
             <ChatWindow
               onSceneMediaUpdate={setSceneMedia}
