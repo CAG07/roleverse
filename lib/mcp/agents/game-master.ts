@@ -285,6 +285,7 @@ function buildSystemPrompt(
       "If you don't recognize it, ask the player for details rather than inventing contradictory content.",
       '',
       moduleDescription
+    );
   }
 
   if (partyCharacters.length > 0) {
