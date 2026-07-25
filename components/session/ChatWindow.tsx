@@ -155,17 +155,29 @@ export default function ChatWindow({
   const messagesRef = useRef(messages);
   const streamingMsgRef = useRef<StreamingMsg | null>(null);
   const scrollRafRef = useRef<number | null>(null);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
-  // Auto-scroll: always on new finalized messages; near-bottom check during streaming
+  // Auto-scroll: always on first render; on subsequent renders, only if near bottom
   useEffect(() => {
     const el = feedRef.current;
     if (!el) return;
-    el.scrollTop = el.scrollHeight;
-    setShowScrollButton(false);
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      el.scrollTop = el.scrollHeight;
+      setShowScrollButton(false);
+      return;
+    }
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_THRESHOLD;
+    if (isNearBottom) {
+      el.scrollTop = el.scrollHeight;
+      setShowScrollButton(false);
+    } else {
+      setShowScrollButton(true);
+    }
   }, [messages]);
 
   const streamingContent = streamingMessage?.content;
