@@ -8,6 +8,7 @@ import { streamGameMasterAgent } from '@/lib/mcp/agents/game-master';
 import { streamLoreKeeperAgent } from '@/lib/mcp/agents/lore-keeper';
 import { streamRulesArbiterAgent } from '@/lib/mcp/agents/rules-arbiter';
 import { routeMessage } from '@/lib/mcp/coordinator';
+import { buildPartyContext } from '@/lib/mcp/context/party-context';
 import { registerRollDiceTool } from '@/lib/mcp/tools/roll-dice';
 import type { AgentMessage, AgentStreamResult, MCPContext } from '@/lib/mcp/types';
 import { formatSSE } from '@/lib/sse';
@@ -78,8 +79,13 @@ export async function POST(
     return NextResponse.json({ error: 'Missing required field: message' }, { status: 400 });
   }
 
-  // --- Route via Haiku coordinator (runs before stream opens) ---
-  const agentRole = await routeMessage(message);
+  // --- Route via Haiku coordinator + resolve party context, once, in parallel ---
+  // (runs before stream opens; party context is passed to whichever agent handles
+  // the message so routing doesn't determine whether the agent can see the party)
+  const [agentRole, partyContext] = await Promise.all([
+    routeMessage(message),
+    buildPartyContext(session.campaign_id as string),
+  ]);
   console.log(`[router] "${message.slice(0, 80)}" -> ${agentRole}`);
 
   // --- Build MCP context ---
@@ -118,13 +124,28 @@ export async function POST(
         let agentGen: AsyncGenerator<string, AgentStreamResult, undefined>;
         switch (agentRole) {
           case 'game_master':
-            agentGen = streamGameMasterAgent(message, mcpContext, conversationHistory ?? []);
+            agentGen = streamGameMasterAgent(
+              message,
+              mcpContext,
+              conversationHistory ?? [],
+              partyContext
+            );
             break;
           case 'rules_arbiter':
-            agentGen = streamRulesArbiterAgent(message, mcpContext, conversationHistory ?? []);
+            agentGen = streamRulesArbiterAgent(
+              message,
+              mcpContext,
+              conversationHistory ?? [],
+              partyContext
+            );
             break;
           case 'lore_keeper':
-            agentGen = streamLoreKeeperAgent(message, mcpContext, conversationHistory ?? []);
+            agentGen = streamLoreKeeperAgent(
+              message,
+              mcpContext,
+              conversationHistory ?? [],
+              partyContext
+            );
             break;
           default:
             emit('error', { error: `Unknown agent role: "${agentRole}"` });

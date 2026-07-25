@@ -105,7 +105,8 @@ async function fetchLoreContext(
 function buildSystemPrompt(
   context: MCPContext,
   campaignNotes: string,
-  sessionSummaries: string
+  sessionSummaries: string,
+  partyContext: string | null
 ): string {
   const system = getGameSystem(context.gameSystem);
   const systemName = system?.name ?? context.gameSystem;
@@ -140,6 +141,10 @@ function buildSystemPrompt(
     );
   }
 
+  if (partyContext) {
+    parts.push(partyContext, '');
+  }
+
   parts.push(
     ...getMultiAgentContextSection({
       includeCampaignLine: false,
@@ -160,7 +165,8 @@ function buildSystemPrompt(
 export async function* streamLoreKeeperAgent(
   message: string,
   context: MCPContext,
-  conversationHistory: AgentMessage[] = []
+  conversationHistory: AgentMessage[] = [],
+  partyContext: string | null = null
 ): AsyncGenerator<string, AgentStreamResult, undefined> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -169,7 +175,7 @@ export async function* streamLoreKeeperAgent(
 
   const client = new Anthropic({ apiKey });
   const { campaignNotes, sessionSummaries } = await fetchLoreContext(context.campaignId);
-  const systemPrompt = buildSystemPrompt(context, campaignNotes, sessionSummaries);
+  const systemPrompt = buildSystemPrompt(context, campaignNotes, sessionSummaries, partyContext);
 
   const messages: Anthropic.Messages.MessageParam[] = [
     ...conversationHistory.map(
@@ -203,7 +209,8 @@ export async function* streamLoreKeeperAgent(
 export async function runLoreKeeperAgent(
   message: string,
   context: MCPContext,
-  conversationHistory: AgentMessage[] = []
+  conversationHistory: AgentMessage[] = [],
+  partyContext: string | null = null
 ): Promise<AgentResponse> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -213,7 +220,7 @@ export async function runLoreKeeperAgent(
   const client = new Anthropic({ apiKey });
 
   const { campaignNotes, sessionSummaries } = await fetchLoreContext(context.campaignId);
-  const systemPrompt = buildSystemPrompt(context, campaignNotes, sessionSummaries);
+  const systemPrompt = buildSystemPrompt(context, campaignNotes, sessionSummaries, partyContext);
 
   const messages: Anthropic.Messages.MessageParam[] = [
     ...conversationHistory.map(

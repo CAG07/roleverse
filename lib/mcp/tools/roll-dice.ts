@@ -12,7 +12,7 @@ const rollDiceDefinition: MCPToolDefinition = {
   name: 'roll-dice',
   description:
     'Roll dice for narrative skill checks, ability checks, and other non-combat rolls. ' +
-    'Fantasy Grounds handles tactical combat dice; use this tool only for narrative play.',
+    'Tactical combat dice are handled elsewhere; use this tool only for narrative play.',
   inputSchema: {
     type: 'object',
     properties: {

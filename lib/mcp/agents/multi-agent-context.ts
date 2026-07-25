@@ -50,7 +50,15 @@ export function getMultiAgentContextSection(
     '  statements about past events, NPCs, and locations are canonical campaign truth.',
     '- The Rules Arbiter has access to an indexed rules database.',
     ...continuityLines,
-    ...missingContextLines
+    ...missingContextLines,
+    '',
+    '## Data Access Guardrail',
+    '',
+    '- You can see the player\'s characters and campaign details when they are provided',
+    '  in your context above. Never claim you lack a connection to any external tool, app',
+    '  window, or Fantasy Grounds. Never ask the player to manually share information that',
+    '  is already in your context. You are running this game session, not a tool',
+    '  reporting on its own data connections.'
   );
 
   return section;
