@@ -2,6 +2,7 @@
 
 import styles from './CharactersPage.module.css';
 import Link from 'next/link';
+import { getGameSystem } from '@/lib/game-systems/registry';
 
 export interface CharacterSummary {
   id: string;
@@ -23,21 +24,29 @@ interface CharactersListPageProps {
   characters: CharacterSummary[];
 }
 
+function pluralize(value: number, unit: string): string {
+  return `${value} ${unit}${value === 1 ? '' : 's'} ago`;
+}
+
 function formatRelativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutes = Math.floor(diffMs / 60000);
   if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return pluralize(minutes, 'minute');
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return pluralize(hours, 'hour');
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return pluralize(days, 'day');
   const months = Math.floor(days / 30);
-  if (months < 12) return `${months}mo ago`;
-  return `${Math.floor(months / 12)}y ago`;
+  if (months < 12) return pluralize(months, 'month');
+  return pluralize(Math.floor(months / 12), 'year');
 }
 
-export function CharactersListPage({ campaignId, campaignName, characters }: CharactersListPageProps) {
+export function CharactersListPage({
+  campaignId,
+  campaignName,
+  characters,
+}: CharactersListPageProps) {
   return (
     <div className={styles.root}>
       <Link href={`/campaigns/${campaignId}`} className={styles.backLink}>
@@ -65,7 +74,9 @@ export function CharactersListPage({ campaignId, campaignName, characters }: Cha
             <div key={char.id} className={styles.characterCard}>
               <div className={styles.cardTop}>
                 <span className={styles.characterName}>{char.name}</span>
-                <span className={styles.systemBadge}>{char.game_system}</span>
+                <span className={styles.systemBadge}>
+                  {getGameSystem(char.game_system)?.name ?? char.game_system}
+                </span>
               </div>
               {([char.race, char.class].some(Boolean) || char.level != null) && (
                 <div className={styles.characterMeta}>

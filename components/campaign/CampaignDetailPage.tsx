@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import type { TranscriptEntry } from '@/lib/types/session';
 
 export interface CampaignCharacter {
   id: string;
@@ -21,7 +22,7 @@ export interface CampaignSession {
   id: string;
   started_at: string;
   ended_at: string | null;
-  transcript: string | null;
+  transcript: TranscriptEntry[] | null;
 }
 
 interface CampaignDetailPageProps {
@@ -37,18 +38,36 @@ interface CampaignDetailPageProps {
   sessionCount: number;
 }
 
+function pluralize(value: number, unit: string): string {
+  return `${value} ${unit}${value === 1 ? '' : 's'} ago`;
+}
+
 function formatRelativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutes = Math.floor(diffMs / 60000);
   if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return pluralize(minutes, 'minute');
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return pluralize(hours, 'hour');
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return pluralize(days, 'day');
   const months = Math.floor(days / 30);
-  if (months < 12) return `${months}mo ago`;
-  return `${Math.floor(months / 12)}y ago`;
+  if (months < 12) return pluralize(months, 'month');
+  return pluralize(Math.floor(months / 12), 'year');
+}
+
+// A session can stay open across many real play days (find-or-create reuses it
+// until explicitly ended), so started_at can be stale — the most recent transcript
+// entry reflects when the player actually last played.
+function getLastPlayedTimestamp(session: CampaignSession): string {
+  const entries = session.transcript;
+  if (Array.isArray(entries)) {
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const timestamp = entries[i]?.timestamp;
+      if (timestamp) return timestamp;
+    }
+  }
+  return session.started_at;
 }
 
 function formatSessionDuration(startedAt: string, endedAt: string | null): string {
@@ -227,7 +246,7 @@ export function CampaignDetailPage({
           <span className={`${styles.statCorner} ${styles.bl}`} />
           <span className={`${styles.statCorner} ${styles.br}`} />
           <span className={styles.statValue}>
-            {lastSession ? formatRelativeTime(lastSession.started_at) : 'Never'}
+            {lastSession ? formatRelativeTime(getLastPlayedTimestamp(lastSession)) : 'Never'}
           </span>
           <span className={styles.statLabel}>Last Played</span>
         </div>
@@ -249,7 +268,9 @@ export function CampaignDetailPage({
         </Link>
         <Link href={`/campaigns/${id}/sessions`} className={styles.actionCard}>
           <h3 className={styles.actionCardTitle}>Session History</h3>
-          <p className={styles.actionCardBody}>Browse all sessions, transcripts, and AI summaries.</p>
+          <p className={styles.actionCardBody}>
+            Browse all sessions, transcripts, and AI summaries.
+          </p>
         </Link>
       </div>
 
@@ -319,8 +340,8 @@ export function CampaignDetailPage({
               <p className={styles.moduleText}>{savedModuleDescription}</p>
             ) : (
               <p className={styles.moduleTextPlaceholder}>
-                No module or campaign info set yet — the GM will ask you to describe your
-                adventure as you play.
+                No module or campaign info set yet — the GM will ask you to describe your adventure
+                as you play.
               </p>
             )}
           </div>
@@ -381,9 +402,7 @@ export function CampaignDetailPage({
                     onClick={() => router.push(href)}
                     role="button"
                     tabIndex={0}
-                    onKeyDown={(e) =>
-                      (e.key === 'Enter' || e.key === ' ') && router.push(href)
-                    }
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && router.push(href)}
                   >
                     <span
                       className={styles.sessionStatusDot}
@@ -393,7 +412,9 @@ export function CampaignDetailPage({
                       {sessionDate} · {sessionTime}
                     </span>
                     <span className={styles.sessionDuration}>
-                      {isActive ? 'Active' : formatSessionDuration(session.started_at, session.ended_at)}
+                      {isActive
+                        ? 'Active'
+                        : formatSessionDuration(session.started_at, session.ended_at)}
                     </span>
                   </div>
                 );
@@ -409,4 +430,3 @@ export function CampaignDetailPage({
     </div>
   );
 }
-

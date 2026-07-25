@@ -37,7 +37,9 @@ export default function PartyStatus({ members }: PartyStatusProps) {
               />
               <span className={styles.memberName}>{m.characterName}</span>
               <span className={styles.memberClass}>{m.characterClass}</span>
-              <span className={styles.memberHp}>{m.currentHp}/{m.maxHp}</span>
+              <span className={styles.memberHp}>
+                {m.maxHp > 0 ? `${m.currentHp}/${m.maxHp}` : '—/—'}
+              </span>
             </div>
           ))
         )}

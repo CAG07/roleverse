@@ -52,6 +52,51 @@
   color: var(--gold);
 }
 
+/* Text size selector */
+.fontSizeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--void-border);
+}
+.fontSizeLabel {
+  font-family: var(--font-heading);
+  font-size: 0.575rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+}
+.fontSizeOptions {
+  display: flex;
+  gap: 0.25rem;
+}
+.fontSizeBtn {
+  min-width: 24px;
+  padding: 0.15rem 0.35rem;
+  background: var(--void-surface);
+  border: 1px solid var(--void-border);
+  font-family: var(--font-heading);
+  font-size: 0.575rem;
+  font-weight: 600;
+  color: var(--ivory-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.fontSizeBtn:hover {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+}
+.fontSizeBtn.active {
+  color: var(--gold);
+  border-color: var(--gold);
+  background: var(--gold-tint);
+}
+
 /* ── CollapsibleSection ────────────────────────────────────────────── */
 
 .collapsible {
@@ -119,10 +164,7 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--gold);
-  background: var(--gold-tint);
-  border: 1px solid var(--gold-dim);
-  padding: 0.15rem 0.4rem;
+  color: var(--ivory);
   display: inline-block;
 }
 
@@ -130,74 +172,6 @@
 .sidebarContent {
   flex: 1;
   overflow-y: auto;
-}
-
-/* Party member rows */
-.partyList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.partyMember {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-family: var(--font-body);
-  font-size: 0.775rem;
-  padding: 0.25rem 0;
-}
-.memberName {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--ivory-muted);
-}
-.roleBadge {
-  font-family: var(--font-heading);
-  font-size: 0.525rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 0.15rem 0.4rem;
-  border: 1px solid;
-}
-.roleBadge.dm {
-  color: var(--gold);
-  border-color: var(--gold-dim);
-  background: var(--gold-tint);
-}
-.roleBadge.player {
-  color: var(--ivory-muted);
-  border-color: var(--void-border);
-  background: transparent;
-}
-.emptyText {
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  color: var(--ivory-dim);
-}
-
-/* Notes button */
-.btnNotes {
-  width: 100%;
-  padding: 0.375rem 0.75rem;
-  background: var(--void-surface);
-  border: var(--rule-thin);
-  font-family: var(--font-heading);
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ivory-muted);
-  cursor: pointer;
-  transition:
-    color 0.15s,
-    border-color 0.15s;
-}
-.btnNotes:hover {
-  color: var(--gold);
-  border-color: var(--gold-dim);
 }
 
 /* Settings link */

@@ -24,6 +24,14 @@
 }
 
 /* Message feed */
+.feedWrapper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 .feed {
   flex: 1;
   overflow-y: auto;
@@ -32,6 +40,38 @@
   flex-direction: column;
   gap: 0.75rem;
   min-height: 0;
+}
+
+/* Scroll-to-bottom button — floats above the feed, positioned within feedWrapper
+   so it never covers the input bar regardless of the feed's scroll position. */
+.scrollToBottomBtn {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--void-raised);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    box-shadow 0.15s;
+}
+.scrollToBottomBtn:hover {
+  border-color: var(--gold);
+  box-shadow: 0 0 10px var(--crimson-glow);
+}
+.scrollToBottomBtn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
 }
 
 /* System message */
@@ -43,7 +83,7 @@
   background: var(--void-raised);
   padding: 0.2rem 0.75rem;
   font-family: var(--font-body);
-  font-size: 0.725rem;
+  font-size: calc(0.725rem * var(--chat-font-scale, 1));
   font-style: italic;
   color: var(--ivory-dim);
 }
@@ -75,7 +115,7 @@
   border-left: 2px solid var(--crimson-dim);
   padding: 0.625rem 0.75rem;
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: calc(0.875rem * var(--chat-font-scale, 1));
   color: var(--ivory);
   line-height: 1.5;
 }
@@ -125,7 +165,7 @@
   background: var(--void-raised);
   padding: 0.625rem 0.75rem;
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: calc(0.875rem * var(--chat-font-scale, 1));
   color: var(--ivory);
   line-height: 1.5;
 }

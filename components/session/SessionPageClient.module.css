@@ -96,12 +96,47 @@
   }
 }
 
-/* Scene panel */
+/* Scene panel — 50/50 with chat when showing media; collapses to a slim
+   strip when there's no scene to display, giving chat the extra room. */
 .scenePanel {
-  height: 42%;
+  height: 50%;
   flex-shrink: 0;
   padding: 0.5rem 0.5rem 0;
   position: relative;
+  transition: height 0.25s ease;
+}
+.scenePanel.collapsed {
+  height: 56px;
+}
+
+/* Manual expand/collapse handle — straddles the scene panel's bottom edge so it's
+   reachable whether the panel is collapsed to a strip or expanded to 50%. */
+.scenePanelToggle {
+  position: absolute;
+  bottom: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 16px;
+  background: var(--void-raised);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+.scenePanelToggle:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.scenePanelToggle:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
 }
 
 /* Chat panel */
@@ -274,7 +309,9 @@
   text-transform: uppercase;
   color: var(--gold);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 .btnConfirmStop:hover:not(:disabled) {
   border-color: var(--gold);
@@ -296,7 +333,9 @@
   text-transform: uppercase;
   color: var(--ivory-muted);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 .btnCancel:hover:not(:disabled) {
   border-color: var(--ivory-muted);

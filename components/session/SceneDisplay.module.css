@@ -91,6 +91,20 @@
   font-style: italic;
 }
 
+/* Compact empty state — slim single row for the collapsed scene panel */
+.sceneEmptyCompact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 100%;
+  background: var(--void);
+  border: var(--rule-thin);
+}
+.sceneEmptyCompact .emptyLabel {
+  font-size: 0.6rem;
+}
+
 /* Media state */
 .scenePanel {
   position: relative;

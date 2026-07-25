@@ -3,25 +3,27 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { getGameSystem } from '@/lib/game-systems/registry';
 import FGConnectionStatus from './FGConnectionStatus';
 import VoiceStatus from './VoiceStatus';
 import styles from './SessionSidebar.module.css';
 
-interface PartyMemberInfo {
-  id: string;
-  name: string;
-  role: 'dm' | 'player';
-}
-
 interface SessionSidebarProps {
   campaignName: string;
   gameSystem: string;
-  partyMembers: PartyMemberInfo[];
   isDM?: boolean;
   campaignId: string;
-  onToggleNotes?: () => void;
+  fontScale: number;
+  onFontScaleChange: (scale: number) => void;
   // onStopSession removed — sessions are stopped from campaign settings only
 }
+
+const FONT_SIZE_OPTIONS = [
+  { label: 'S', scale: 0.875 },
+  { label: 'M', scale: 1 },
+  { label: 'L', scale: 1.15 },
+  { label: 'XL', scale: 1.3 },
+] as const;
 
 function CollapsibleSection({
   title,
@@ -47,17 +49,19 @@ function CollapsibleSection({
 export default function SessionSidebar({
   campaignName,
   gameSystem,
-  partyMembers,
   isDM = false,
   campaignId,
-  onToggleNotes,
+  fontScale,
+  onFontScaleChange,
 }: SessionSidebarProps) {
   return (
     <aside className={styles.sessionSidebar}>
       {/* Campaign header */}
       <div className={styles.sidebarHeader}>
         <h2 className={styles.campaignName}>{campaignName}</h2>
-        <span className={styles.gameSystemBadge}>{gameSystem}</span>
+        <span className={styles.gameSystemBadge}>
+          {getGameSystem(gameSystem)?.name ?? gameSystem}
+        </span>
       </div>
 
       {/* Scrollable sections */}
@@ -68,28 +72,24 @@ export default function SessionSidebar({
         <Link href={`/campaigns/${campaignId}/sessions`} className={styles.historyLink}>
           ◆ Session History
         </Link>
-        <CollapsibleSection title="Party Members">
-          {partyMembers.length === 0 ? (
-            <p className={styles.emptyText}>No members yet.</p>
-          ) : (
-            <ul className={styles.partyList}>
-              {partyMembers.map((m) => (
-                <li key={m.id} className={styles.partyMember}>
-                  <span className={styles.memberName}>{m.name}</span>
-                  <span className={`${styles.roleBadge} ${m.role === 'dm' ? styles.dm : styles.player}`}>
-                    {m.role === 'dm' ? 'DM' : 'Player'}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CollapsibleSection>
 
-        <CollapsibleSection title="Session Notes" defaultOpen={false}>
-          <button className={styles.btnNotes} onClick={onToggleNotes} type="button">
-            Open Notes Panel
-          </button>
-        </CollapsibleSection>
+        <div className={styles.fontSizeRow}>
+          <span className={styles.fontSizeLabel}>Text Size</span>
+          <div className={styles.fontSizeOptions}>
+            {FONT_SIZE_OPTIONS.map((opt) => (
+              <button
+                key={opt.label}
+                className={`${styles.fontSizeBtn}${fontScale === opt.scale ? ` ${styles.active}` : ''}`}
+                onClick={() => onFontScaleChange(opt.scale)}
+                aria-label={`Set chat text size to ${opt.label}`}
+                aria-pressed={fontScale === opt.scale}
+                type="button"
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {isDM && (
           <CollapsibleSection title="Settings" defaultOpen={false}>
