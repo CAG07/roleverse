@@ -9,7 +9,7 @@ import ChatWindow from '@/components/session/ChatWindow';
 import CharacterSheet from '@/components/character/CharacterSheet';
 import PartyStatus from '@/components/session/PartyStatus';
 import SessionNotes from '@/components/session/SessionNotes';
-import type { SceneMedia, PartyMember, Character, TranscriptEntry } from '@/lib/types/session';
+import type { SceneMedia, Character, TranscriptEntry } from '@/lib/types/session';
 import styles from './SessionPageClient.module.css';
 
 // ── Component ──────────────────────────────────────────────────────────
@@ -50,7 +50,6 @@ export default function SessionPageClient({
   campaignId,
   campaignName,
   gameSystem,
-  partyMembers: _partyMembers,
   characters,
   initialTranscript = [],
 }: {
@@ -58,7 +57,6 @@ export default function SessionPageClient({
   campaignId: string;
   campaignName: string;
   gameSystem: string;
-  partyMembers: PartyMember[];
   characters: Character[];
   initialTranscript?: TranscriptEntry[];
 }) {
