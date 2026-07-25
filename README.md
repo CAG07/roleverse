@@ -21,13 +21,11 @@ Real-time sync with Fantasy Grounds Unity — combat tracker, character sheets, 
 
 ## ✨ Features
 
-### AI Dungeon Master (5 Specialized Agents)
+### AI Dungeon Master (3 Specialized Agents)
 
+- **Game Master**: Crafts immersive descriptions and storytelling, roleplays NPCs with consistent personalities, and builds encounters
 - **Rules Arbiter**: Knows RPG rules from uploaded PDFs
 - **Lore Keeper**: Accesses your campaign knowledge via RAG (queries uploaded PDFs)
-- **Encounter Builder**: Creates dynamic encounters and surprises
-- **Narrator**: Crafts immersive descriptions and storytelling
-- **NPC Dialogue**: Roleplays characters with consistent personalities
 
 ### Fantasy Grounds Integration
 
