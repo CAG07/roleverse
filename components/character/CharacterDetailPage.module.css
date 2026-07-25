@@ -106,10 +106,7 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--gold);
-  background: var(--gold-tint);
-  border: 1px solid var(--gold-dim);
-  padding: 0.2rem 0.5rem;
+  color: var(--ivory);
   white-space: nowrap;
   flex-shrink: 0;
   align-self: flex-start;

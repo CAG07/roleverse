@@ -1,16 +1,24 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback, type ChangeEvent, type KeyboardEvent } from 'react';
-import { Send, Mic, Keyboard, Image as ImageIcon } from 'lucide-react';
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  type ChangeEvent,
+  type KeyboardEvent,
+  type UIEvent,
+} from 'react';
+import { Send, Mic, Keyboard, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import styles from './ChatWindow.module.css';
 import type { ChatMessage, SceneMedia, AgentType, TranscriptEntry } from '@/lib/types/session';
 import type { AgentMessage } from '@/lib/mcp/types';
 
 // Agent color/label mapping — matches design spec
 const AGENT_CONFIG: Record<string, { accent: string; label: string }> = {
-  game_master:    { accent: '#b8882a', label: 'Game Master' },
-  rules_arbiter:  { accent: '#7a8a9a', label: 'Rules Arbiter' },
-  lore_keeper:    { accent: '#6a3a8a', label: 'Lore Keeper' },
+  game_master: { accent: '#b8882a', label: 'Game Master' },
+  rules_arbiter: { accent: '#7a8a9a', label: 'Rules Arbiter' },
+  lore_keeper: { accent: '#6a3a8a', label: 'Lore Keeper' },
 };
 const DEFAULT_AGENT = AGENT_CONFIG.game_master;
 
@@ -76,6 +84,9 @@ interface StreamingMsg {
   content: string;
 }
 
+/** How close to the bottom (px) counts as "at bottom" for auto-scroll / button visibility */
+const NEAR_BOTTOM_THRESHOLD = 150;
+
 interface ChatWindowProps {
   onSceneMediaUpdate?: (media: SceneMedia) => void;
   sessionId: string;
@@ -86,7 +97,8 @@ interface ChatWindowProps {
 function transcriptToMessages(entries: TranscriptEntry[]): ChatMessage[] {
   return entries.map((entry, i) => {
     const parsedTimestamp = entry.timestamp ? new Date(entry.timestamp) : null;
-    const timestamp = parsedTimestamp && !Number.isNaN(parsedTimestamp.getTime()) ? parsedTimestamp : new Date();
+    const timestamp =
+      parsedTimestamp && !Number.isNaN(parsedTimestamp.getTime()) ? parsedTimestamp : new Date();
     if (entry.role === 'player') {
       return {
         id: `hist-${i}`,
@@ -131,24 +143,41 @@ export default function ChatWindow({
   campaignId: _campaignId,
   initialTranscript = [],
 }: ChatWindowProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>(() => buildInitialMessages(initialTranscript));
+  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+    buildInitialMessages(initialTranscript)
+  );
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState<StreamingMsg | null>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   const feedRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef(messages);
   const streamingMsgRef = useRef<StreamingMsg | null>(null);
+  const scrollRafRef = useRef<number | null>(null);
+  const isInitialRender = useRef(true);
 
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
-  // Auto-scroll: always on new finalized messages; near-bottom check during streaming
+  // Auto-scroll: always on first render; on subsequent renders, only if near bottom
   useEffect(() => {
     const el = feedRef.current;
     if (!el) return;
-    el.scrollTop = el.scrollHeight;
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      el.scrollTop = el.scrollHeight;
+      setShowScrollButton(false);
+      return;
+    }
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_THRESHOLD;
+    if (isNearBottom) {
+      el.scrollTop = el.scrollHeight;
+      setShowScrollButton(false);
+    } else {
+      setShowScrollButton(true);
+    }
   }, [messages]);
 
   const streamingContent = streamingMessage?.content;
@@ -156,9 +185,39 @@ export default function ChatWindow({
   useEffect(() => {
     const el = feedRef.current;
     if (!el || streamingContent === undefined) return;
-    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
-    if (isNearBottom) el.scrollTop = el.scrollHeight;
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_THRESHOLD;
+    if (isNearBottom) {
+      el.scrollTop = el.scrollHeight;
+      setShowScrollButton(false);
+    } else {
+      // New content arrived below the viewport while the player is scrolled up.
+      setShowScrollButton(true);
+    }
   }, [streamingContent]);
+
+  const handleFeedScroll = useCallback((_e: UIEvent<HTMLDivElement>) => {
+    if (scrollRafRef.current !== null) return;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      const el = feedRef.current;
+      if (!el) return;
+      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_THRESHOLD;
+      setShowScrollButton(!isNearBottom);
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current);
+    };
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    const el = feedRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    setShowScrollButton(false);
+  }, []);
 
   const finalizeStream = useCallback(() => {
     const sm = streamingMsgRef.current;
@@ -252,7 +311,10 @@ export default function ChatWindow({
             case 'token': {
               const chunk = (parsed.data as { text: string }).text;
               if (streamingMsgRef.current) {
-                const updated = { ...streamingMsgRef.current, content: streamingMsgRef.current.content + chunk };
+                const updated = {
+                  ...streamingMsgRef.current,
+                  content: streamingMsgRef.current.content + chunk,
+                };
                 streamingMsgRef.current = updated;
                 setStreamingMessage(updated);
               }
@@ -319,87 +381,104 @@ export default function ChatWindow({
   return (
     <div className={styles.chatWindow}>
       {/* Message feed */}
-      <div ref={feedRef} className={styles.feed}>
-        {messages.map((msg: ChatMessage) => {
-          if (msg.role === 'system') {
-            const isError = msg.content.startsWith('Error:');
-            return (
-              <div key={msg.id} className={styles.msgSystem}>
-                <span className={`${styles.msgSystemInner}${isError ? ` ${styles.error}` : ''}`}>{msg.content}</span>
-              </div>
-            );
-          }
-
-          if (msg.role === 'agent' && msg.agentType) {
-            const agent = getAgentConfig(msg.agentType);
-            return (
-              <div key={msg.id} className={styles.msgAgent}>
-                <span
-                  className={styles.agentLabel}
-                  style={{ color: agent.accent, borderColor: agent.accent + '40' }}
-                >
-                  {agent.label}
-                </span>
-                <div className={styles.agentBubble}>
-                  {renderMarkdown(msg.content)}
-                  {msg.sceneMedia && (
-                    <div className={styles.sceneIndicator}>
-                      <ImageIcon size={10} />
-                      Scene updated
-                    </div>
-                  )}
+      <div className={styles.feedWrapper}>
+        <div ref={feedRef} className={styles.feed} onScroll={handleFeedScroll}>
+          {messages.map((msg: ChatMessage) => {
+            if (msg.role === 'system') {
+              const isError = msg.content.startsWith('Error:');
+              return (
+                <div key={msg.id} className={styles.msgSystem}>
+                  <span className={`${styles.msgSystemInner}${isError ? ` ${styles.error}` : ''}`}>
+                    {msg.content}
+                  </span>
                 </div>
-                <span className={styles.msgTimestamp}>{relativeTime(msg.timestamp)}</span>
+              );
+            }
+
+            if (msg.role === 'agent' && msg.agentType) {
+              const agent = getAgentConfig(msg.agentType);
+              return (
+                <div key={msg.id} className={styles.msgAgent}>
+                  <span
+                    className={styles.agentLabel}
+                    style={{ color: agent.accent, borderColor: agent.accent + '40' }}
+                  >
+                    {agent.label}
+                  </span>
+                  <div className={styles.agentBubble}>
+                    {renderMarkdown(msg.content)}
+                    {msg.sceneMedia && (
+                      <div className={styles.sceneIndicator}>
+                        <ImageIcon size={10} />
+                        Scene updated
+                      </div>
+                    )}
+                  </div>
+                  <span className={styles.msgTimestamp}>{relativeTime(msg.timestamp)}</span>
+                </div>
+              );
+            }
+
+            // Player message
+            return (
+              <div key={msg.id} className={styles.msgPlayer}>
+                <span className={styles.playerName}>{msg.playerName}</span>
+                <div className={styles.playerBubble}>{renderMarkdown(msg.content)}</div>
+                <div className={styles.playerMeta}>
+                  {msg.source === 'discord_voice' ? (
+                    <Mic size={10} color="var(--ivory-dim)" />
+                  ) : (
+                    <Keyboard size={10} color="var(--ivory-dim)" />
+                  )}
+                  <span className={styles.msgTimestamp}>{relativeTime(msg.timestamp)}</span>
+                </div>
               </div>
             );
-          }
+          })}
 
-          // Player message
-          return (
-            <div key={msg.id} className={styles.msgPlayer}>
-              <span className={styles.playerName}>{msg.playerName}</span>
-              <div className={styles.playerBubble}>{renderMarkdown(msg.content)}</div>
-              <div className={styles.playerMeta}>
-                {msg.source === 'discord_voice' ? (
-                  <Mic size={10} color="var(--ivory-dim)" />
-                ) : (
-                  <Keyboard size={10} color="var(--ivory-dim)" />
-                )}
-                <span className={styles.msgTimestamp}>{relativeTime(msg.timestamp)}</span>
+          {/* Streaming message — builds up token by token */}
+          {streamingMessage && (
+            <div className={styles.msgAgent}>
+              <span
+                className={styles.agentLabel}
+                style={{
+                  color: getAgentConfig(streamingMessage.agentType).accent,
+                  borderColor: getAgentConfig(streamingMessage.agentType).accent + '40',
+                }}
+              >
+                {getAgentConfig(streamingMessage.agentType).label}
+              </span>
+              <div
+                className={`${styles.agentBubble}${!streamingMessage.content ? ` ${styles.loading}` : ''}`}
+              >
+                {streamingMessage.content ? renderMarkdown(streamingMessage.content) : '▍'}
               </div>
             </div>
-          );
-        })}
+          )}
 
-        {/* Streaming message — builds up token by token */}
-        {streamingMessage && (
-          <div className={styles.msgAgent}>
-            <span
-              className={styles.agentLabel}
-              style={{
-                color: getAgentConfig(streamingMessage.agentType).accent,
-                borderColor: getAgentConfig(streamingMessage.agentType).accent + '40',
-              }}
-            >
-              {getAgentConfig(streamingMessage.agentType).label}
-            </span>
-            <div className={`${styles.agentBubble}${!streamingMessage.content ? ` ${styles.loading}` : ''}`}>
-              {streamingMessage.content ? renderMarkdown(streamingMessage.content) : '▍'}
+          {/* Loading indicator — shown only before agent_type event arrives */}
+          {isLoading && !streamingMessage && (
+            <div className={styles.msgAgent}>
+              <span
+                className={styles.agentLabel}
+                style={{ color: DEFAULT_AGENT.accent, borderColor: DEFAULT_AGENT.accent + '40' }}
+              >
+                {DEFAULT_AGENT.label}
+              </span>
+              <div className={`${styles.agentBubble} ${styles.loading}`}>▍</div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Loading indicator — shown only before agent_type event arrives */}
-        {isLoading && !streamingMessage && (
-          <div className={styles.msgAgent}>
-            <span
-              className={styles.agentLabel}
-              style={{ color: DEFAULT_AGENT.accent, borderColor: DEFAULT_AGENT.accent + '40' }}
-            >
-              {DEFAULT_AGENT.label}
-            </span>
-            <div className={`${styles.agentBubble} ${styles.loading}`}>▍</div>
-          </div>
+        {showScrollButton && (
+          <button
+            className={styles.scrollToBottomBtn}
+            onClick={scrollToBottom}
+            aria-label="Scroll to latest message"
+            type="button"
+          >
+            <ChevronDown size={18} />
+          </button>
         )}
       </div>
 
@@ -414,7 +493,13 @@ export default function ChatWindow({
           rows={1}
           disabled={isLoading}
         />
-        <button className={styles.sendBtn} onClick={() => void handleSend()} type="button" aria-label="Send" disabled={isLoading}>
+        <button
+          className={styles.sendBtn}
+          onClick={() => void handleSend()}
+          type="button"
+          aria-label="Send"
+          disabled={isLoading}
+        >
           <Send size={16} />
         </button>
       </div>

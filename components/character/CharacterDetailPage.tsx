@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { getGameSystem } from '@/lib/game-systems/registry';
 import CharacterSheet from './CharacterSheet';
 
 export interface CharacterDetail {
@@ -71,10 +72,7 @@ export function CharacterDetailPage({
     setDeleting(true);
     setDeleteError(null);
     const supabase = createClient();
-    const { error } = await supabase
-      .from('characters')
-      .delete()
-      .eq('id', character.id);
+    const { error } = await supabase.from('characters').delete().eq('id', character.id);
     if (error) {
       setDeleteError(error.message);
       setDeleting(false);
@@ -108,12 +106,12 @@ export function CharacterDetailPage({
 
         <div className={styles.headerTop}>
           <h1 className={styles.charName}>{character.name}</h1>
-          <span className={styles.systemBadge}>{character.game_system}</span>
+          <span className={styles.systemBadge}>
+            {getGameSystem(character.game_system)?.name ?? character.game_system}
+          </span>
         </div>
 
-        {metaParts.length > 0 && (
-          <p className={styles.charMeta}>{metaParts.join(' · ')}</p>
-        )}
+        {metaParts.length > 0 && <p className={styles.charMeta}>{metaParts.join(' · ')}</p>}
 
         {character.hp != null && character.max_hp != null && (
           <div className={styles.hpSection}>

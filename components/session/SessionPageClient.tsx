@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import SessionSidebar from '@/components/session/SessionSidebar';
 import SceneDisplay from '@/components/session/SceneDisplay';
 import ChatWindow from '@/components/session/ChatWindow';
 import CharacterSheet from '@/components/character/CharacterSheet';
 import PartyStatus from '@/components/session/PartyStatus';
 import SessionNotes from '@/components/session/SessionNotes';
-import type { SceneMedia, PartyMember, Character, TranscriptEntry } from '@/lib/types/session';
+import type { SceneMedia, Character, TranscriptEntry } from '@/lib/types/session';
 import styles from './SessionPageClient.module.css';
 
 // ── Component ──────────────────────────────────────────────────────────
@@ -24,6 +25,10 @@ const STATUS_DOT_COLOR: Record<CharacterStatus, string> = {
   unconscious: '#c8873a',
   dead: '#b02020',
 };
+
+const CHAT_FONT_SIZE_KEY = 'roleverse-chat-font-size-px';
+const DEFAULT_CHAT_FONT_SIZE_PX = 14;
+const VALID_CHAT_FONT_SIZES = [12, 14, 16, 18];
 
 // max_hp <= 0 means HP was never entered on the character sheet (defaults to 0/0 at
 // creation) — not that the character has died. Only read hp/max_hp as a health signal
@@ -45,7 +50,6 @@ export default function SessionPageClient({
   campaignId,
   campaignName,
   gameSystem,
-  partyMembers,
   characters,
   initialTranscript = [],
 }: {
@@ -53,18 +57,47 @@ export default function SessionPageClient({
   campaignId: string;
   campaignName: string;
   gameSystem: string;
-  partyMembers: PartyMember[];
   characters: Character[];
   initialTranscript?: TranscriptEntry[];
 }) {
   const router = useRouter();
   const [sceneMedia, setSceneMedia] = useState<SceneMedia | null>(null);
+  // Manual override of the scene panel's collapsed/expanded state. null means
+  // "no override yet — defer to the automatic behavior" (collapsed when there's
+  // no scene media, expanded when there is). Reset whenever the scene changes so
+  // the automatic collapse/expand behavior stays authoritative across scene
+  // transitions; the manual toggle is just a temporary nudge in between.
+  const [sceneManualExpanded, setSceneManualExpanded] = useState<boolean | null>(null);
+  const [prevSceneMedia, setPrevSceneMedia] = useState<SceneMedia | null>(null);
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
   const [confirmStop, setConfirmStop] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
+  const [chatFontSize, setChatFontSize] = useState<number>(() => {
+    if (typeof window === 'undefined') return DEFAULT_CHAT_FONT_SIZE_PX;
+    const stored = Number(localStorage.getItem(CHAT_FONT_SIZE_KEY));
+    return VALID_CHAT_FONT_SIZES.includes(stored) ? stored : DEFAULT_CHAT_FONT_SIZE_PX;
+  });
+
+  // Reset sceneManualExpanded whenever sceneMedia changes (adjust state during render,
+  // as recommended by React docs, to avoid calling setState inside a useEffect body).
+  if (prevSceneMedia !== sceneMedia) {
+    setPrevSceneMedia(sceneMedia);
+    setSceneManualExpanded(null);
+  }
 
   const selectedCharacter = characters.find((c) => c.id === selectedCharacterId) ?? null;
+
+  const sceneCollapsed = sceneManualExpanded !== null ? !sceneManualExpanded : !sceneMedia;
+
+  const handleToggleScenePanel = useCallback(() => {
+    setSceneManualExpanded(sceneCollapsed);
+  }, [sceneCollapsed]);
+
+  const handleFontSizeChange = useCallback((size: number) => {
+    setChatFontSize(size);
+    localStorage.setItem(CHAT_FONT_SIZE_KEY, String(size));
+  }, []);
 
   const handleStopSession = useCallback(async () => {
     setIsStopping(true);
@@ -75,13 +108,6 @@ export default function SessionPageClient({
       router.push(`/campaigns/${campaignId}`);
     }
   }, [sessionId, campaignId, router]);
-
-  // Build party nav entries for SessionSidebar
-  const partyNav = partyMembers.map((m) => ({
-    id: m.id,
-    name: m.display_name ?? m.user_id,
-    role: m.role,
-  }));
 
   // Build party status entries for PartyStatus
   const partyStatus = characters.map((c) => ({
@@ -102,8 +128,10 @@ export default function SessionPageClient({
         level: selectedCharacter.level,
         hp: selectedCharacter.hp,
         maxHp: selectedCharacter.max_hp,
-        ...((selectedCharacter.game_data_stats as Record<string, unknown> | null | undefined) ?? {}),
-        ...((selectedCharacter.game_data_combat as Record<string, unknown> | null | undefined) ?? {}),
+        ...((selectedCharacter.game_data_stats as Record<string, unknown> | null | undefined) ??
+          {}),
+        ...((selectedCharacter.game_data_combat as Record<string, unknown> | null | undefined) ??
+          {}),
       }
     : null;
 
@@ -161,22 +189,43 @@ export default function SessionPageClient({
       {/* Three-column layout */}
       <div className={styles.sessionColumns}>
         {/* Left sidebar */}
-        <div className={`${styles.colSidebar}${mobileTab === 'sidebar' ? ` ${styles.mobileActive}` : ''}`}>
+        <div
+          className={`${styles.colSidebar}${mobileTab === 'sidebar' ? ` ${styles.mobileActive}` : ''}`}
+        >
           <SessionSidebar
             campaignName={campaignName}
             gameSystem={gameSystem}
-            partyMembers={partyNav}
             isDM
             campaignId={campaignId}
+            fontSize={chatFontSize}
+            onFontSizeChange={handleFontSizeChange}
           />
         </div>
 
         {/* Center column */}
-        <div className={`${styles.colCenter}${mobileTab === 'chat' ? ` ${styles.mobileActive}` : ''}`}>
-          <div className={styles.scenePanel}>
-            <SceneDisplay media={sceneMedia} onClose={() => setSceneMedia(null)} />
+        <div
+          className={`${styles.colCenter}${mobileTab === 'chat' ? ` ${styles.mobileActive}` : ''}`}
+        >
+          <div className={`${styles.scenePanel}${sceneCollapsed ? ` ${styles.collapsed}` : ''}`}>
+            <SceneDisplay
+              media={sceneMedia}
+              onClose={() => setSceneMedia(null)}
+              compact={sceneCollapsed}
+            />
+            <button
+              className={styles.scenePanelToggle}
+              onClick={handleToggleScenePanel}
+              aria-label={sceneCollapsed ? 'Expand scene panel' : 'Collapse scene panel'}
+              aria-expanded={!sceneCollapsed}
+              type="button"
+            >
+              {sceneCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            </button>
           </div>
-          <div className={styles.chatPanel}>
+          <div
+            className={styles.chatPanel}
+            style={{ '--chat-font-size': `${chatFontSize}px` } as CSSProperties}
+          >
             <ChatWindow
               onSceneMediaUpdate={setSceneMedia}
               sessionId={sessionId}
@@ -187,7 +236,9 @@ export default function SessionPageClient({
         </div>
 
         {/* Right panel */}
-        <div className={`${styles.colRight}${mobileTab === 'character' ? ` ${styles.mobileActive}` : ''}`}>
+        <div
+          className={`${styles.colRight}${mobileTab === 'character' ? ` ${styles.mobileActive}` : ''}`}
+        >
           {/* Party avatar selector */}
           <div>
             <div className={styles.sectionLabel}>Party</div>
@@ -212,7 +263,9 @@ export default function SessionPageClient({
                       type="button"
                     >
                       <div className={styles.avatarCircle}>{initials}</div>
-                      <span className={styles.avatarName}>{member.characterName.split(' ')[0]}</span>
+                      <span className={styles.avatarName}>
+                        {member.characterName.split(' ')[0]}
+                      </span>
                       <span className={styles.hpDot} style={{ backgroundColor: dotColor }} />
                     </button>
                   );
@@ -253,4 +306,3 @@ export default function SessionPageClient({
     </div>
   );
 }
-

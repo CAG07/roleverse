@@ -60,10 +60,7 @@
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--gold);
-  background: var(--gold-tint);
-  border: 1px solid var(--gold-dim);
-  padding: 0.3rem 0.6rem;
+  color: var(--ivory);
   align-self: center;
 }
 
@@ -448,7 +445,9 @@
   text-transform: uppercase;
   color: var(--gold);
   cursor: pointer;
-  transition: border-color 0.15s, background-color 0.15s;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
 }
 .btnModuleSave:hover:not(:disabled) {
   background: var(--gold-dim);
@@ -659,7 +658,9 @@
   text-transform: uppercase;
   color: var(--crimson-bright);
   cursor: pointer;
-  transition: border-color 0.15s, background-color 0.15s;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
 }
 .btnConfirmStop:hover:not(:disabled) {
   background: rgba(176, 32, 32, 0.15);
@@ -681,7 +682,9 @@
   text-transform: uppercase;
   color: var(--ivory-muted);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 .btnCancel:hover:not(:disabled) {
   border-color: var(--ivory-muted);
