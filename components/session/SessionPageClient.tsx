@@ -7,6 +7,7 @@ import SessionSidebar from '@/components/session/SessionSidebar';
 import SceneDisplay from '@/components/session/SceneDisplay';
 import ChatWindow from '@/components/session/ChatWindow';
 import CharacterSheet from '@/components/character/CharacterSheet';
+import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
 import PartyStatus from '@/components/session/PartyStatus';
 import SessionNotes from '@/components/session/SessionNotes';
 import type { SceneMedia, Character, TranscriptEntry } from '@/lib/types/session';
@@ -121,19 +122,32 @@ export default function SessionPageClient({
 
   // Build character data record for CharacterSheet
   const selectedCharacterData: Record<string, unknown> | null = selectedCharacter
-    ? {
-        name: selectedCharacter.name,
-        race: selectedCharacter.race,
-        class: selectedCharacter.class,
-        level: selectedCharacter.level,
-        hp: selectedCharacter.hp,
-        maxHp: selectedCharacter.max_hp,
-        ...((selectedCharacter.game_data_stats as Record<string, unknown> | null | undefined) ??
-          {}),
-        ...((selectedCharacter.game_data_combat as Record<string, unknown> | null | undefined) ??
-          {}),
-      }
+    ? assembleCharacterData(selectedCharacter)
     : null;
+
+  // DCC funnel party: other level-0 characters run by the same player, already in scope
+  // from the campaign-wide `characters` fetch — no extra query needed.
+  const funnelParty =
+    selectedCharacter &&
+    gameSystem === 'DCC' &&
+    (selectedCharacter.level ?? null) === 0
+      ? characters
+          .filter(
+            (c) =>
+              c.level === 0 && c.user_id === selectedCharacter.user_id && c.id !== selectedCharacter.id
+          )
+          .map((c) => {
+            const stats = (c.game_data_stats as Record<string, unknown> | undefined) ?? {};
+            const combat = (c.game_data_combat as Record<string, unknown> | undefined) ?? {};
+            return {
+              id: c.id,
+              name: c.name,
+              occupation: (stats.occupation as string | undefined) || undefined,
+              hp: c.hp != null && c.max_hp != null ? { current: c.hp, max: c.max_hp } : undefined,
+              ac: combat.ac as number | undefined,
+            };
+          })
+      : undefined;
 
   return (
     <div className={styles.sessionRoot}>
@@ -282,6 +296,7 @@ export default function SessionPageClient({
               characterData={selectedCharacterData}
               equipment={selectedCharacter.equipment ?? []}
               rawGameDataStats={selectedCharacter.game_data_stats ?? {}}
+              funnelParty={funnelParty}
             />
           ) : (
             <div className={styles.noCharacter}>

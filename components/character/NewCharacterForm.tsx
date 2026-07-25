@@ -6,47 +6,14 @@ import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import DCCFields, { DCC_FIELDS_DEFAULT } from './DCCFields';
-import type { DCCFieldsValue } from './DCCFields';
+import SystemFields, { createSystemFieldsValue, buildCharacterColumns } from './SystemFields';
+import type { SystemFieldsValue } from './SystemFields';
 
 interface NewCharacterFormProps {
   campaignId: string;
   campaignName: string;
   gameSystem: string;
   gameSystemName: string;
-}
-
-function parseDccGameDataStats(f: DCCFieldsValue): Record<string, unknown> {
-  const corruption = f.corruptionText
-    .split('\n')
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  const mercurialMagic = f.mercurialMagicText
-    .split('\n')
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const idx = line.indexOf(':');
-      if (idx === -1) return { spell: line, effect: '' };
-      return { spell: line.slice(0, idx).trim(), effect: line.slice(idx + 1).trim() };
-    });
-
-  const stats: Record<string, unknown> = {
-    occupation: f.occupation.trim(),
-    luckySign: f.luckySign.trim(),
-    alignment: f.alignment,
-    currentLuck: parseInt(f.currentLuck, 10) || 0,
-    startingLuck: parseInt(f.startingLuck, 10) || 0,
-  };
-  if (f.deedDie.trim()) stats.deedDie = f.deedDie.trim();
-  if (f.disapprovalRange.trim()) {
-    const n = parseInt(f.disapprovalRange, 10);
-    if (!Number.isNaN(n)) stats.disapprovalRange = n;
-  }
-  if (corruption.length > 0) stats.corruption = corruption;
-  if (mercurialMagic.length > 0) stats.mercurialMagic = mercurialMagic;
-  return stats;
 }
 
 export function NewCharacterForm({
@@ -63,11 +30,11 @@ export function NewCharacterForm({
   const [hp, setHp] = useState('0');
   const [maxHp, setMaxHp] = useState('0');
   const [notes, setNotes] = useState('');
-  const [dccFields, setDccFields] = useState<DCCFieldsValue>(DCC_FIELDS_DEFAULT);
+  const [systemFields, setSystemFields] = useState<SystemFieldsValue>(() =>
+    createSystemFieldsValue(gameSystem)
+  );
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const isDcc = gameSystem === 'DCC';
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -108,6 +75,8 @@ export function NewCharacterForm({
         return;
       }
 
+      const columns = buildCharacterColumns(gameSystem, systemFields);
+
       const { data: character, error: insertError } = await supabase
         .from('characters')
         .insert({
@@ -120,7 +89,10 @@ export function NewCharacterForm({
           hp: parsedHp,
           max_hp: parsedMaxHp,
           notes: notes.trim() || null,
-          game_data_stats: isDcc ? parseDccGameDataStats(dccFields) : {},
+          game_data_stats: columns.stats,
+          game_data_combat: columns.combat,
+          game_data_saves: columns.saves,
+          game_data_skills: columns.skills,
         })
         .select('id')
         .single();
@@ -256,7 +228,7 @@ export function NewCharacterForm({
             />
           </div>
 
-          {isDcc && <DCCFields value={dccFields} onChange={setDccFields} />}
+          <SystemFields gameSystem={gameSystem} value={systemFields} onChange={setSystemFields} />
 
           {error && <p className={styles.errorMsg}>{error}</p>}
 

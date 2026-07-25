@@ -21,12 +21,9 @@ export interface AssembledCharacterData {
   hp?: number | null;
   maxHp?: number | null;
 
-  abilityScores: Record<string, number>;
-  savingThrows: Record<string, number | string>;
-  skills: Record<string, unknown>;
-
-  // Combat fields are spread at top level (ac, thac0, etc.)
-  [combatField: string]: unknown;
+  // game_data_stats/_combat/_saves/_skills are spread at top level (abilityScores,
+  // ac, thac0, savingThrows, skills, etc. — whatever keys each system's schema uses).
+  [dataField: string]: unknown;
 
   features: Feature[];
   customFields: CustomField[];

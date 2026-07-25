@@ -22,7 +22,9 @@ export default async function EditCharacterRoute({ params }: Props) {
       .single(),
     supabase
       .from('characters')
-      .select('id, name, class, race, level, hp, max_hp, notes')
+      .select(
+        'id, name, class, race, level, hp, max_hp, notes, game_system, game_data_stats, game_data_combat, game_data_saves, game_data_skills'
+      )
       .eq('id', charId)
       .eq('campaign_id', id)
       .single(),
@@ -36,6 +38,7 @@ export default async function EditCharacterRoute({ params }: Props) {
       campaignId={id}
       campaignName={campaign.name as string}
       characterId={charId}
+      gameSystem={character.game_system as string}
       initialName={character.name as string}
       initialRace={(character.race as string | null) ?? ''}
       initialClass={(character.class as string | null) ?? ''}
@@ -43,6 +46,12 @@ export default async function EditCharacterRoute({ params }: Props) {
       initialHp={(character.hp as number | null) ?? 0}
       initialMaxHp={(character.max_hp as number | null) ?? 0}
       initialNotes={(character.notes as string | null) ?? ''}
+      initialGameData={{
+        game_data_stats: character.game_data_stats as Record<string, unknown> | null,
+        game_data_combat: character.game_data_combat as Record<string, unknown> | null,
+        game_data_saves: character.game_data_saves as Record<string, unknown> | null,
+        game_data_skills: character.game_data_skills as Record<string, unknown> | null,
+      }}
     />
   );
 }

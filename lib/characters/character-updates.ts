@@ -12,12 +12,20 @@ export async function updateCharacterHp(characterId: string, hp: number): Promis
   if (error) console.error('Failed to update character HP', error);
 }
 
-/** Overwrite the full game_data_stats JSONB blob (caller must merge in existing keys). */
-export async function updateCharacterGameDataStats(
+export type GameDataColumn =
+  | 'game_data_stats'
+  | 'game_data_combat'
+  | 'game_data_saves'
+  | 'game_data_skills'
+  | 'game_data_custom';
+
+/** Overwrite one flexible JSONB column (caller must merge in existing keys). */
+export async function updateCharacterGameDataColumn(
   characterId: string,
-  gameDataStats: Record<string, unknown>
+  column: GameDataColumn,
+  value: unknown
 ): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase.from('characters').update({ game_data_stats: gameDataStats }).eq('id', characterId);
-  if (error) console.error('Failed to update character game_data_stats', error);
+  const { error } = await supabase.from('characters').update({ [column]: value }).eq('id', characterId);
+  if (error) console.error(`Failed to update character ${column}`, error);
 }

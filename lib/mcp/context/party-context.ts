@@ -16,10 +16,18 @@ interface PartyCharacterRow {
   game_data_abilities: unknown;
 }
 
-/** Ability scores are stored as freeform JSONB (e.g. {"STR": 16, "DEX": 14}) — defensive parse */
+/** Ability scores live nested under game_data_stats.abilityScores (e.g. {"Strength": 16, ...}) —
+ *  the sheets/creation-form convention — with everything else in game_data_stats stored flat
+ *  alongside it. Defensive parse either way. */
 function formatAbilityScores(stats: unknown): string | null {
   if (!stats || typeof stats !== 'object' || Array.isArray(stats)) return null;
-  const entries = Object.entries(stats as Record<string, unknown>).filter(
+  const record = stats as Record<string, unknown>;
+  const nested = record.abilityScores;
+  const source =
+    nested && typeof nested === 'object' && !Array.isArray(nested)
+      ? (nested as Record<string, unknown>)
+      : record;
+  const entries = Object.entries(source).filter(
     ([, v]) => typeof v === 'number' || typeof v === 'string'
   );
   if (entries.length === 0) return null;
