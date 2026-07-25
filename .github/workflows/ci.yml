@@ -54,6 +54,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      SUPABASE_DISABLE_TELEMETRY: "1"
     steps:
       - uses: actions/checkout@v7
 
