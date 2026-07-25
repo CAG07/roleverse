@@ -18,7 +18,7 @@ interface PartyCharacterRow {
 
 /** Ability scores are stored as freeform JSONB (e.g. {"STR": 16, "DEX": 14}) — defensive parse */
 function formatAbilityScores(stats: unknown): string | null {
-  if (!stats || typeof stats !== 'object') return null;
+  if (!stats || typeof stats !== 'object' || Array.isArray(stats)) return null;
   const entries = Object.entries(stats as Record<string, unknown>).filter(
     ([, v]) => typeof v === 'number' || typeof v === 'string'
   );
