@@ -100,7 +100,12 @@ function transcriptToMessages(entries: TranscriptEntry[]): ChatMessage[] {
     return {
       id: `hist-${i}`,
       role: 'agent' as const,
-      agentType: entry.agentType as AgentType | undefined,
+      agentType:
+        entry.agentType === 'game_master' ||
+        entry.agentType === 'rules_arbiter' ||
+        entry.agentType === 'lore_keeper'
+          ? (entry.agentType as AgentType)
+          : undefined,
       content: entry.content ?? '',
       timestamp,
     };
