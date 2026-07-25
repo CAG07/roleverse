@@ -46,6 +46,8 @@ export function EditCharacterPage({
   initialGameData,
 }: EditCharacterPageProps) {
   const router = useRouter();
+  const isDcc = gameSystem === 'DCC';
+  const minLevel = isDcc ? 0 : 1;
   const [name, setName] = useState(initialName);
   const [race, setRace] = useState(initialRace);
   const [characterClass, setCharacterClass] = useState(initialClass);
@@ -77,8 +79,8 @@ export function EditCharacterPage({
     const parsedHp = parseInt(hp, 10);
     const parsedMaxHp = parseInt(maxHp, 10);
 
-    if (isNaN(parsedLevel) || parsedLevel < 1) {
-      setError('Level must be a positive number.');
+    if (isNaN(parsedLevel) || parsedLevel < minLevel) {
+      setError(`Level must be ${minLevel} or greater.`);
       return;
     }
     if (isNaN(parsedHp) || parsedHp < 0) {
@@ -210,12 +212,15 @@ export function EditCharacterPage({
               <input
                 id="level"
                 type="number"
-                min="1"
+                min={minLevel}
                 max="30"
                 className={styles.formInput}
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
               />
+              {isDcc && (
+                <p className={styles.hint}>Level 0 = funnel character.</p>
+              )}
             </div>
             <div>
               {/* intentionally empty — cosmetic balance */}

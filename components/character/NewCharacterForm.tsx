@@ -23,10 +23,12 @@ export function NewCharacterForm({
   gameSystemName,
 }: NewCharacterFormProps) {
   const router = useRouter();
+  const isDcc = gameSystem === 'DCC';
+  const minLevel = isDcc ? 0 : 1;
   const [name, setName] = useState('');
   const [race, setRace] = useState('');
   const [characterClass, setCharacterClass] = useState('');
-  const [level, setLevel] = useState('1');
+  const [level, setLevel] = useState(isDcc ? '0' : '1');
   const [hp, setHp] = useState('0');
   const [maxHp, setMaxHp] = useState('0');
   const [notes, setNotes] = useState('');
@@ -49,8 +51,8 @@ export function NewCharacterForm({
     const parsedHp = parseInt(hp, 10);
     const parsedMaxHp = parseInt(maxHp, 10);
 
-    if (isNaN(parsedLevel) || parsedLevel < 1) {
-      setError('Level must be a positive number.');
+    if (isNaN(parsedLevel) || parsedLevel < minLevel) {
+      setError(`Level must be ${minLevel} or greater.`);
       return;
     }
     if (isNaN(parsedHp) || parsedHp < 0) {
@@ -173,12 +175,17 @@ export function NewCharacterForm({
               <input
                 id="level"
                 type="number"
-                min="1"
+                min={minLevel}
                 max="30"
                 className={styles.formInput}
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
               />
+              {isDcc && (
+                <p className={styles.hint}>
+                  Level 0 = funnel character. DCC characters traditionally start at level 0.
+                </p>
+              )}
             </div>
             <div>
               {/* intentionally empty — cosmetic balance */}
