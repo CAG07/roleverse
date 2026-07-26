@@ -172,17 +172,18 @@ export async function POST(
         // Appended atomically via RPC (transcript = transcript || entries in a single
         // UPDATE) instead of SELECT-then-UPDATE, so overlapping requests for the same
         // session (double-submit, multiple tabs) can't silently overwrite each other's turn.
-        try {
+        {
           const now = new Date().toISOString();
-          await supabase.rpc('append_session_transcript', {
+          const { error: transcriptErr } = await supabase.rpc('append_session_transcript', {
             p_session_id: sessionId,
             p_entries: [
               { role: 'player', content: message, timestamp: now },
               { role: 'agent', agentType: agentRole, content: fullContent, timestamp: now },
             ],
           });
-        } catch (transcriptErr) {
-          console.warn('[transcript] Failed to save transcript entry:', transcriptErr);
+          if (transcriptErr) {
+            console.warn('[transcript] Failed to save transcript entry:', transcriptErr);
+          }
         }
 
         emit('done', {});
@@ -191,7 +192,7 @@ export async function POST(
         console.error('[agent stream] failed:', err);
 
         if (fullContent) {
-          try {
+          {
             const now = new Date().toISOString();
             await supabase.rpc('append_session_transcript', {
               p_session_id: sessionId,
@@ -205,8 +206,6 @@ export async function POST(
                 },
               ],
             });
-          } catch {
-            // swallow — already in error path
           }
         }
 
