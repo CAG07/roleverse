@@ -1,6 +1,8 @@
 // lib/mcp/types.ts
 // Core MCP type system for tool definitions, agent messages, and context
 
+import type { FlaggedNpc } from '@/lib/types/npc';
+
 /** Tool definition — describes a tool agents can call */
 export interface MCPToolDefinition {
   name: string;
@@ -55,6 +57,7 @@ export interface AgentStreamResult {
   agentRole: AgentRole;
   toolCalls?: MCPToolCall[];
   toolResults?: MCPToolResult[];
+  flaggedNpcs?: FlaggedNpc[];
 }
 
 /** Response from an AI agent */
@@ -63,6 +66,7 @@ export interface AgentResponse {
   agentRole: AgentRole;
   toolCalls?: MCPToolCall[]; // tools the agent invoked
   toolResults?: MCPToolResult[]; // results from those calls
+  flaggedNpcs?: FlaggedNpc[]; // NPCs the game_master flagged for the player to confirm
   sceneMedia?: {
     // if agent wants to display media
     type: 'image' | 'video';

@@ -6,11 +6,21 @@ import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import SystemFields, { buildCharacterColumns, hydrateSystemFieldsValue } from './SystemFields';
+import type { SystemFieldsValue } from './SystemFields';
+
+export interface EditCharacterGameData {
+  game_data_stats: Record<string, unknown> | null;
+  game_data_combat: Record<string, unknown> | null;
+  game_data_saves: Record<string, unknown> | null;
+  game_data_skills: Record<string, unknown> | null;
+}
 
 interface EditCharacterPageProps {
   campaignId: string;
   campaignName: string;
   characterId: string;
+  gameSystem: string;
   initialName: string;
   initialRace: string;
   initialClass: string;
@@ -18,12 +28,14 @@ interface EditCharacterPageProps {
   initialHp: number;
   initialMaxHp: number;
   initialNotes: string;
+  initialGameData: EditCharacterGameData;
 }
 
 export function EditCharacterPage({
   campaignId,
   campaignName,
   characterId,
+  gameSystem,
   initialName,
   initialRace,
   initialClass,
@@ -31,8 +43,11 @@ export function EditCharacterPage({
   initialHp,
   initialMaxHp,
   initialNotes,
+  initialGameData,
 }: EditCharacterPageProps) {
   const router = useRouter();
+  const isDcc = gameSystem === 'DCC';
+  const minLevel = isDcc ? 0 : 1;
   const [name, setName] = useState(initialName);
   const [race, setRace] = useState(initialRace);
   const [characterClass, setCharacterClass] = useState(initialClass);
@@ -40,6 +55,14 @@ export function EditCharacterPage({
   const [hp, setHp] = useState(String(initialHp));
   const [maxHp, setMaxHp] = useState(String(initialMaxHp));
   const [notes, setNotes] = useState(initialNotes);
+  const [systemFields, setSystemFields] = useState<SystemFieldsValue>(() =>
+    hydrateSystemFieldsValue(gameSystem, {
+      stats: initialGameData.game_data_stats ?? {},
+      combat: initialGameData.game_data_combat ?? {},
+      saves: initialGameData.game_data_saves ?? {},
+      skills: initialGameData.game_data_skills ?? {},
+    })
+  );
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -56,8 +79,8 @@ export function EditCharacterPage({
     const parsedHp = parseInt(hp, 10);
     const parsedMaxHp = parseInt(maxHp, 10);
 
-    if (isNaN(parsedLevel) || parsedLevel < 1) {
-      setError('Level must be a positive number.');
+    if (isNaN(parsedLevel) || parsedLevel < minLevel) {
+      setError(`Level must be ${minLevel} or greater.`);
       return;
     }
     if (isNaN(parsedHp) || parsedHp < 0) {
@@ -73,6 +96,23 @@ export function EditCharacterPage({
 
     try {
       const supabase = createClient();
+
+      // Fetch the latest raw columns before merging, so an edit made from a form that
+      // only knows today's schema keys doesn't clobber keys it isn't aware of (e.g. a
+      // future Fantasy Grounds-synced field living in the same JSONB column).
+      const { data: current, error: fetchError } = await supabase
+        .from('characters')
+        .select('game_data_stats, game_data_combat, game_data_saves, game_data_skills')
+        .eq('id', characterId)
+        .single();
+
+      if (fetchError) {
+        setError(fetchError.message);
+        return;
+      }
+
+      const built = buildCharacterColumns(gameSystem, systemFields);
+
       const { error: updateError } = await supabase
         .from('characters')
         .update({
@@ -83,6 +123,16 @@ export function EditCharacterPage({
           hp: parsedHp,
           max_hp: parsedMaxHp,
           notes: notes.trim() || null,
+          game_data_stats: { ...((current?.game_data_stats as Record<string, unknown>) ?? {}), ...built.stats },
+          game_data_combat: {
+            ...((current?.game_data_combat as Record<string, unknown>) ?? {}),
+            ...built.combat,
+          },
+          game_data_saves: { ...((current?.game_data_saves as Record<string, unknown>) ?? {}), ...built.saves },
+          game_data_skills: {
+            ...((current?.game_data_skills as Record<string, unknown>) ?? {}),
+            ...built.skills,
+          },
         })
         .eq('id', characterId);
 
@@ -162,12 +212,15 @@ export function EditCharacterPage({
               <input
                 id="level"
                 type="number"
-                min="1"
+                min={minLevel}
                 max="30"
                 className={styles.formInput}
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
               />
+              {isDcc && (
+                <p className={styles.hint}>Level 0 = funnel character.</p>
+              )}
             </div>
             <div>
               {/* intentionally empty — cosmetic balance */}
@@ -216,6 +269,8 @@ export function EditCharacterPage({
               placeholder="Background, personality traits, or other notes…"
             />
           </div>
+
+          <SystemFields gameSystem={gameSystem} value={systemFields} onChange={setSystemFields} />
 
           {error && <p className={styles.errorMsg}>{error}</p>}
 

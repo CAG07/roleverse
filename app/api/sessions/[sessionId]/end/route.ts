@@ -6,7 +6,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { generateSessionSummary } from '@/lib/sessions/generate-summary';
-import { extractNpcsFromSession } from '@/lib/sessions/extract-npcs';
 import type { TranscriptEntry } from '@/lib/types/session';
 
 export async function POST(
@@ -55,8 +54,8 @@ export async function POST(
     return NextResponse.json({ error: endError.message }, { status: 500 });
   }
 
-  // Step 2: attempt summary generation + NPC extraction in the background —
-  // neither must block the response, and each is independent of the other's failure.
+  // Step 2: attempt summary generation in the background — must not block the response.
+  // NPC rostering happens live during play via the flagNpc tool, not at session end.
   void (async () => {
     const transcript: TranscriptEntry[] = Array.isArray(session.transcript)
       ? (session.transcript as TranscriptEntry[])
@@ -75,20 +74,6 @@ export async function POST(
     } catch (err) {
       // Summary is a nice-to-have. Log and continue — session already ended above.
       console.error('[session-end] Summary generation failed:', err);
-    }
-
-    try {
-      await extractNpcsFromSession(
-        supabase,
-        session.campaign_id,
-        user.id,
-        sessionId,
-        transcript,
-        gameSystemName
-      );
-    } catch (err) {
-      // Extraction is a nice-to-have. Log and continue — session already ended above.
-      console.error('[session-end] NPC extraction failed:', err);
     }
   })();
 

@@ -154,11 +154,12 @@ export function CampaignDetailPage({
       <ConfirmModal
         open={confirmDelete}
         title="Delete Campaign"
-        message={`Delete campaign "${name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        message={`This permanently deletes "${name}" and everything in it — every character, NPC, session, and transcript. This cannot be undone.`}
+        confirmLabel="Delete Campaign"
         busy={deleting}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
+        typeToConfirmText={name}
       />
 
       {confirmStop && (

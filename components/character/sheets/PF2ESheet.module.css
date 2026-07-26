@@ -12,37 +12,9 @@
  * Do NOT convert this file back to styled-jsx or inline styles.
  */
 
-.sheetRoot {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  overflow-y: auto;
-  background: var(--surface-card);
-  border: var(--rule-thin);
-  padding: 0.875rem;
-  font-size: 0.8125rem;
-}
+/* Only the bespoke bits live here now — everything else (header, ability scores,
+ * combat, saves, skills, feats) is BaseSheet's generic schema-driven rendering. */
 
-/* Header */
-.sheetHeader {
-  border-bottom: 1px solid var(--crimson-dim);
-  padding-bottom: 0.625rem;
-}
-.sheetName {
-  font-family: var(--font-heading);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--ivory);
-  margin: 0 0 0.25rem;
-}
-.sheetMeta {
-  font-family: var(--font-body);
-  font-size: 0.775rem;
-  color: var(--ivory-muted);
-  margin: 0;
-}
-
-/* Section label */
 .sectionLabel {
   font-family: var(--font-heading);
   font-size: 0.575rem;
@@ -53,76 +25,24 @@
   margin: 0 0 0.375rem;
 }
 
-/* Ability scores grid */
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 0.25rem;
+/* Action economy */
+.actionsRow {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
 }
-.statBox {
-  position: relative;
+.actionPip {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--crimson-dim);
   background: var(--void-raised);
-  border: var(--rule-thin);
-  padding: 0.375rem 0.25rem;
-  text-align: center;
-}
-.statLabel {
-  font-family: var(--font-heading);
-  font-size: 0.525rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ivory-muted);
-  display: block;
-}
-.statValue {
-  font-family: var(--font-heading);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--ivory);
-  display: block;
-}
-.statMod {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-heading);
   font-size: 0.625rem;
-  color: var(--ivory-dim);
-  display: block;
-}
-
-/* Combat row */
-.combatGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.375rem;
-}
-.combatBox {
-  background: var(--void-raised);
-  border: var(--rule-thin);
-  padding: 0.5rem;
-  text-align: center;
-}
-.combatLabel {
-  font-family: var(--font-heading);
-  font-size: 0.525rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ivory-muted);
-  display: block;
-}
-.combatValue {
-  font-family: var(--font-heading);
-  font-size: 1.125rem;
   font-weight: 700;
-}
-.combatValue.ac {
-  color: var(--gold);
-}
-.combatValue.hp {
-  color: var(--status-healthy);
-}
-.combatValue.perception {
-  color: var(--ivory);
+  color: var(--crimson-bright);
 }
 
 /* Proficiency rank badges */
@@ -176,32 +96,4 @@
   color: var(--crimson-bright);
   border-color: var(--crimson-bright);
   box-shadow: 0 0 6px var(--crimson-glow);
-}
-
-/* Action economy */
-.actionsRow {
-  display: flex;
-  gap: 0.375rem;
-  flex-wrap: wrap;
-}
-.actionPip {
-  width: 24px;
-  height: 24px;
-  border: 1px solid var(--crimson-dim);
-  background: var(--void-raised);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-heading);
-  font-size: 0.625rem;
-  font-weight: 700;
-  color: var(--crimson-bright);
-}
-
-/* Text */
-.profText {
-  font-family: var(--font-body);
-  font-size: 0.775rem;
-  color: var(--ivory-muted);
-  margin: 0;
 }

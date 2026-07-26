@@ -152,10 +152,20 @@ export async function POST(
             return;
         }
 
-        // --- Stream tokens ---
-        for await (const chunk of agentGen) {
-          fullContent += chunk;
-          emit('token', { text: chunk });
+        // --- Stream tokens (manual iteration to capture the generator's return value) ---
+        const iterator = agentGen[Symbol.asyncIterator]();
+        let step = await iterator.next();
+        while (!step.done) {
+          fullContent += step.value;
+          emit('token', { text: step.value });
+          step = await iterator.next();
+        }
+
+        const result = step.value;
+        if (result.flaggedNpcs?.length) {
+          for (const npc of result.flaggedNpcs) {
+            emit('npc_flag', { npc });
+          }
         }
 
         // --- Persist transcript (non-blocking) ---

@@ -131,6 +131,13 @@
   border-color: var(--crimson);
 }
 
+.hint {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--ivory-dim);
+  margin: -0.5rem 0 1rem;
+}
+
 .errorMsg {
   font-family: var(--font-body);
   font-size: 0.875rem;

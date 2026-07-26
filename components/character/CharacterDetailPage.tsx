@@ -7,7 +7,16 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { getGameSystem } from '@/lib/game-systems/registry';
+import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
 import CharacterSheet from './CharacterSheet';
+
+interface DCCFunnelMember {
+  id: string;
+  name: string;
+  occupation?: string;
+  hp?: { current: number; max: number };
+  ac?: number;
+}
 
 export interface CharacterDetail {
   id: string;
@@ -23,6 +32,8 @@ export interface CharacterDetail {
   game_data_combat: Record<string, unknown> | null;
   game_data_saves: Record<string, unknown> | null;
   game_data_skills: Record<string, unknown> | null;
+  game_data_abilities: unknown[] | null;
+  game_data_custom: unknown[] | null;
   equipment: unknown[] | null;
   spells: unknown[] | null;
   updated_at: string;
@@ -32,12 +43,14 @@ interface CharacterDetailPageProps {
   campaignId: string;
   campaignName: string;
   character: CharacterDetail;
+  funnelParty?: DCCFunnelMember[];
 }
 
 export function CharacterDetailPage({
   campaignId,
   campaignName,
   character,
+  funnelParty,
 }: CharacterDetailPageProps) {
   const router = useRouter();
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -55,18 +68,7 @@ export function CharacterDetailPage({
     character.level != null ? `Level ${character.level}` : null,
   ].filter(Boolean);
 
-  const sheetData: Record<string, unknown> = {
-    name: character.name,
-    race: character.race ?? '—',
-    class: character.class ?? '—',
-    level: character.level ?? 0,
-    hp: character.hp ?? 0,
-    maxHp: character.max_hp ?? 0,
-    ...(character.game_data_stats ?? {}),
-    ...(character.game_data_combat ?? {}),
-    ...(character.game_data_saves ?? {}),
-    ...(character.game_data_skills ?? {}),
-  };
+  const sheetData = assembleCharacterData(character);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -158,6 +160,7 @@ export function CharacterDetailPage({
           characterData={sheetData}
           equipment={character.equipment ?? []}
           rawGameDataStats={character.game_data_stats ?? {}}
+          funnelParty={funnelParty}
         />
       </div>
     </div>

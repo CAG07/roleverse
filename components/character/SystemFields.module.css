@@ -12,7 +12,7 @@
  * Do NOT convert this file back to styled-jsx or inline styles.
  */
 
-.dccSection {
+.section {
   border-top: 1px solid var(--crimson-dim);
   padding-top: 1.25rem;
   margin-top: 0.25rem;
@@ -35,6 +35,20 @@
 .formRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.abilityGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.keyedGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
   gap: 1rem;
   margin-bottom: 1.25rem;
 }
@@ -78,4 +92,43 @@
   font-size: 0.75rem;
   color: var(--ivory-dim);
   margin: -0.5rem 0 1rem;
+}
+
+.openRow {
+  display: grid;
+  grid-template-columns: 1fr 6rem auto;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.openRemove {
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  background: transparent;
+  border: none;
+  color: var(--ivory-dim);
+  cursor: pointer;
+  padding: 0 0.4rem;
+}
+.openRemove:hover {
+  color: var(--crimson-bright);
+}
+
+.addBtn {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: transparent;
+  border: var(--rule-thin);
+  color: var(--gold);
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  margin-bottom: 1.25rem;
+}
+.addBtn:hover {
+  border-color: var(--gold-dim);
+  background: var(--gold-tint);
 }

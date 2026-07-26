@@ -6,6 +6,14 @@ import PF2ESheet from './sheets/PF2ESheet';
 import DCCSheet from './sheets/DCCSheet';
 import GenericSheet from './sheets/GenericSheet';
 
+interface DCCFunnelMember {
+  id: string;
+  name: string;
+  occupation?: string;
+  hp?: { current: number; max: number };
+  ac?: number;
+}
+
 interface CharacterSheetProps {
   characterId: string;
   gameSystem: string;
@@ -13,6 +21,8 @@ interface CharacterSheetProps {
   equipment?: unknown[];
   /** Raw game_data_stats JSONB blob — only consumed by sheets that write back into it (e.g. DCC Luck). */
   rawGameDataStats?: Record<string, unknown>;
+  /** DCC-only: other level-0 characters run by the same player in this campaign. */
+  funnelParty?: DCCFunnelMember[];
 }
 
 export default function CharacterSheet({
@@ -21,6 +31,7 @@ export default function CharacterSheet({
   characterData,
   equipment = [],
   rawGameDataStats,
+  funnelParty,
 }: CharacterSheetProps) {
   switch (gameSystem) {
     case 'ADD2E':
@@ -35,6 +46,7 @@ export default function CharacterSheet({
           characterId={characterId}
           data={{ ...characterData, equipment }}
           rawGameDataStats={rawGameDataStats}
+          funnelParty={funnelParty}
         />
       );
     default:

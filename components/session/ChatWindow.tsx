@@ -13,6 +13,7 @@ import { Send, Mic, Keyboard, Image as ImageIcon, ChevronDown } from 'lucide-rea
 import styles from './ChatWindow.module.css';
 import type { ChatMessage, SceneMedia, AgentType, TranscriptEntry } from '@/lib/types/session';
 import type { AgentMessage } from '@/lib/mcp/types';
+import type { FlaggedNpc } from '@/lib/types/npc';
 
 // Agent color/label mapping — matches design spec
 const AGENT_CONFIG: Record<string, { accent: string; label: string }> = {
@@ -82,6 +83,7 @@ interface StreamingMsg {
   id: string;
   agentType: AgentType;
   content: string;
+  flaggedNpcs?: FlaggedNpc[];
 }
 
 /** How close to the bottom (px) counts as "at bottom" for auto-scroll / button visibility */
@@ -140,7 +142,7 @@ function buildInitialMessages(initialTranscript: TranscriptEntry[]): ChatMessage
 export default function ChatWindow({
   onSceneMediaUpdate: _onSceneMediaUpdate,
   sessionId,
-  campaignId: _campaignId,
+  campaignId,
   initialTranscript = [],
 }: ChatWindowProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
@@ -150,6 +152,9 @@ export default function ChatWindow({
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState<StreamingMsg | null>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  /** NPC names already added or dismissed this session — suppresses repeat prompts. */
+  const resolvedNpcNamesRef = useRef<Set<string>>(new Set());
+  const [npcActionState, setNpcActionState] = useState<Record<string, 'adding' | 'resolved' | 'error'>>({});
 
   const feedRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef(messages);
@@ -229,12 +234,48 @@ export default function ChatWindow({
         role: 'agent' as const,
         agentType: sm.agentType,
         content: sm.content,
+        flaggedNpcs: sm.flaggedNpcs,
         timestamp: new Date(),
       },
     ]);
     streamingMsgRef.current = null;
     setStreamingMessage(null);
   }, []);
+
+  const handleNpcAction = useCallback(
+    async (npc: FlaggedNpc, action: 'add' | 'dismiss') => {
+      resolvedNpcNamesRef.current.add(npc.name.toLowerCase());
+
+      if (action === 'dismiss') {
+        setNpcActionState((prev) => ({ ...prev, [npc.name]: 'resolved' }));
+        return;
+      }
+
+      setNpcActionState((prev) => ({ ...prev, [npc.name]: 'adding' }));
+      try {
+        const res = await fetch(`/api/campaigns/${campaignId}/npcs`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: npc.name,
+            race: npc.race,
+            occupation: npc.occupation,
+            description: npc.description,
+            personality: npc.personality,
+            disposition: npc.disposition,
+            current_location: npc.current_location,
+            known_facts: npc.known_fact
+              ? [{ fact: npc.known_fact, learned_in_session: sessionId, learned_at: new Date().toISOString() }]
+              : [],
+          }),
+        });
+        setNpcActionState((prev) => ({ ...prev, [npc.name]: res.ok ? 'resolved' : 'error' }));
+      } catch {
+        setNpcActionState((prev) => ({ ...prev, [npc.name]: 'error' }));
+      }
+    },
+    [campaignId, sessionId]
+  );
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
@@ -314,6 +355,19 @@ export default function ChatWindow({
                 const updated = {
                   ...streamingMsgRef.current,
                   content: streamingMsgRef.current.content + chunk,
+                };
+                streamingMsgRef.current = updated;
+                setStreamingMessage(updated);
+              }
+              break;
+            }
+            case 'npc_flag': {
+              const npc = (parsed.data as { npc: FlaggedNpc }).npc;
+              if (streamingMsgRef.current && !resolvedNpcNamesRef.current.has(npc.name.toLowerCase())) {
+                const prev = streamingMsgRef.current;
+                const updated = {
+                  ...prev,
+                  flaggedNpcs: [...(prev.flaggedNpcs ?? []), npc],
                 };
                 streamingMsgRef.current = updated;
                 setStreamingMessage(updated);
@@ -413,6 +467,44 @@ export default function ChatWindow({
                         Scene updated
                       </div>
                     )}
+                    {msg.flaggedNpcs
+                      ?.filter((npc) => npcActionState[npc.name] !== 'resolved')
+                      .map((npc) => (
+                        <div key={npc.name} className={styles.npcFlagCard}>
+                          <div className={styles.npcFlagHeader}>
+                            <span className={styles.npcFlagName}>{npc.name}</span>
+                            {(npc.race || npc.occupation) && (
+                              <span className={styles.npcFlagMeta}>
+                                {[npc.race, npc.occupation].filter(Boolean).join(' · ')}
+                              </span>
+                            )}
+                          </div>
+                          {npc.description && (
+                            <p className={styles.npcFlagDescription}>{npc.description}</p>
+                          )}
+                          <div className={styles.npcFlagActions}>
+                            <button
+                              type="button"
+                              className={styles.npcFlagAdd}
+                              disabled={npcActionState[npc.name] === 'adding'}
+                              onClick={() => void handleNpcAction(npc, 'add')}
+                            >
+                              {npcActionState[npc.name] === 'adding' ? 'Adding…' : 'Add to Roster'}
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.npcFlagDismiss}
+                              disabled={npcActionState[npc.name] === 'adding'}
+                              onClick={() => void handleNpcAction(npc, 'dismiss')}
+                            >
+                              Dismiss
+                            </button>
+                          </div>
+                          {npcActionState[npc.name] === 'error' && (
+                            <p className={styles.npcFlagError}>Couldn&apos;t add — try again.</p>
+                          )}
+                        </div>
+                      ))}
                   </div>
                   <span className={styles.msgTimestamp}>{relativeTime(msg.timestamp)}</span>
                 </div>

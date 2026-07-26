@@ -6,7 +6,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { createClient } from '@/lib/supabase/server';
-import type { Npc, NpcKnownFact } from '@/lib/types/npc';
+import type { Npc, NpcKnownFact, FlaggedNpc, NpcDisposition } from '@/lib/types/npc';
 import { executeBuildEncounter } from '../tools/build-encounter';
 import type { BuildEncounterInput } from '../tools/build-encounter';
 import { executeTool, getToolDefinitions } from '../server';
@@ -57,6 +57,40 @@ const BUILD_ENCOUNTER_TOOL: Anthropic.Messages.Tool = {
       },
     },
     required: ['desired_difficulty'],
+  },
+};
+
+// ---------------------------------------------------------------------------
+// flagNpc Anthropic tool definition
+// ---------------------------------------------------------------------------
+
+const FLAG_NPC_TOOL: Anthropic.Messages.Tool = {
+  name: 'flagNpc',
+  description:
+    'Call this when a genuinely new, named NPC significant enough to remember is ' +
+    'introduced or meaningfully interacted with — not for throwaway background ' +
+    'characters, and never for an NPC already listed under "Established NPCs in ' +
+    'this scene." The player will be asked whether to add this NPC to their ' +
+    'roster; narrate normally either way.',
+  input_schema: {
+    type: 'object' as const,
+    properties: {
+      name: { type: 'string' },
+      race: { type: 'string' },
+      occupation: { type: 'string' },
+      description: { type: 'string' },
+      personality: { type: 'string' },
+      disposition: {
+        type: 'string',
+        enum: ['friendly', 'helpful', 'neutral', 'wary', 'hostile'],
+      },
+      current_location: { type: 'string' },
+      known_fact: {
+        type: 'string',
+        description: 'One durable fact established this turn, if any',
+      },
+    },
+    required: ['name'],
   },
 };
 
@@ -163,7 +197,7 @@ function toAnthropicTools(
 }
 
 function buildToolList(): Anthropic.Messages.Tool[] {
-  return [...toAnthropicTools(getToolDefinitions()), BUILD_ENCOUNTER_TOOL];
+  return [...toAnthropicTools(getToolDefinitions()), BUILD_ENCOUNTER_TOOL, FLAG_NPC_TOOL];
 }
 
 // ---------------------------------------------------------------------------
@@ -223,6 +257,10 @@ function buildSystemPrompt(
     '- When the scene calls for combat and you need real monster stats, call the',
     '  buildEncounter tool. Use the returned data to narrate creatively — the player',
     '  sees seamless prose, never tool mechanics.',
+    '- When a genuinely new, named NPC significant enough to remember is introduced or',
+    '  meaningfully interacted with, call the flagNpc tool with what you know about them.',
+    '  Do not call it for throwaway background characters, and never for an NPC already',
+    '  listed under "Established NPCs in this scene" below.',
     '- Keep responses concise (2-4 paragraphs max) and end with a clear prompt for player action.',
     '- Maintain consistent tone: gritty and grounded for AD&D, heroic for 5E, etc.',
     '',
@@ -303,7 +341,9 @@ async function executeToolBlock(
   block: Anthropic.Messages.ToolUseBlock,
   context: MCPContext,
   mcpToolCalls: MCPToolCall[],
-  mcpToolResults: MCPToolResult[]
+  mcpToolResults: MCPToolResult[],
+  allNpcs: Npc[],
+  flaggedNpcs: FlaggedNpc[]
 ): Promise<Anthropic.Messages.ToolResultBlockParam> {
   if (block.name === 'buildEncounter') {
     const input = block.input as BuildEncounterInput;
@@ -323,6 +363,57 @@ async function executeToolBlock(
         is_error: true,
       };
     }
+  }
+
+  if (block.name === 'flagNpc') {
+    const input = block.input as {
+      name?: string;
+      race?: string;
+      occupation?: string;
+      description?: string;
+      personality?: string;
+      disposition?: string;
+      current_location?: string;
+      known_fact?: string;
+    };
+    const name = input.name?.trim();
+    if (!name) {
+      return {
+        type: 'tool_result',
+        tool_use_id: block.id,
+        content: 'Error: name is required',
+        is_error: true,
+      };
+    }
+
+    const alreadyTracked = allNpcs.some((npc) => npc.name.toLowerCase() === name.toLowerCase());
+    if (alreadyTracked) {
+      return {
+        type: 'tool_result',
+        tool_use_id: block.id,
+        content: 'Already tracked — no need to flag again.',
+      };
+    }
+
+    const VALID_DISPOSITIONS: NpcDisposition[] = ['friendly', 'helpful', 'neutral', 'wary', 'hostile'];
+    flaggedNpcs.push({
+      name,
+      race: input.race?.trim() || undefined,
+      occupation: input.occupation?.trim() || undefined,
+      description: input.description?.trim() || undefined,
+      personality: input.personality?.trim() || undefined,
+      disposition: VALID_DISPOSITIONS.includes(input.disposition as NpcDisposition)
+        ? (input.disposition as NpcDisposition)
+        : undefined,
+      current_location: input.current_location?.trim() || undefined,
+      known_fact: input.known_fact?.trim() || undefined,
+    });
+
+    return {
+      type: 'tool_result',
+      tool_use_id: block.id,
+      content: 'Flagged — the player will be asked whether to add this NPC to their roster.',
+    };
   }
 
   // MCP tool (roll-dice, etc.)
@@ -388,6 +479,7 @@ export async function* streamGameMasterAgent(
   let fullContent = '';
   const mcpToolCalls: MCPToolCall[] = [];
   const mcpToolResults: MCPToolResult[] = [];
+  const flaggedNpcs: FlaggedNpc[] = [];
 
   while (true) {
     const stream = client.messages.stream({
@@ -415,7 +507,7 @@ export async function* streamGameMasterAgent(
 
     for (const block of toolUseBlocks) {
       toolResultBlocks.push(
-        await executeToolBlock(block, context, mcpToolCalls, mcpToolResults)
+        await executeToolBlock(block, context, mcpToolCalls, mcpToolResults, allNpcs, flaggedNpcs)
       );
     }
 
@@ -428,6 +520,7 @@ export async function* streamGameMasterAgent(
     agentRole: 'game_master',
     toolCalls: mcpToolCalls.length > 0 ? mcpToolCalls : undefined,
     toolResults: mcpToolResults.length > 0 ? mcpToolResults : undefined,
+    flaggedNpcs: flaggedNpcs.length > 0 ? flaggedNpcs : undefined,
   };
 }
 
@@ -477,6 +570,7 @@ export async function runGameMasterAgent(
 
   const mcpToolCalls: MCPToolCall[] = [];
   const mcpToolResults: MCPToolResult[] = [];
+  const flaggedNpcs: FlaggedNpc[] = [];
 
   let response = await client.messages.create({
     model: MODEL,
@@ -494,7 +588,7 @@ export async function runGameMasterAgent(
 
     for (const block of toolUseBlocks) {
       toolResultBlocks.push(
-        await executeToolBlock(block, context, mcpToolCalls, mcpToolResults)
+        await executeToolBlock(block, context, mcpToolCalls, mcpToolResults, allNpcs, flaggedNpcs)
       );
     }
 
@@ -520,5 +614,6 @@ export async function runGameMasterAgent(
     agentRole: 'game_master',
     toolCalls: mcpToolCalls.length > 0 ? mcpToolCalls : undefined,
     toolResults: mcpToolResults.length > 0 ? mcpToolResults : undefined,
+    flaggedNpcs: flaggedNpcs.length > 0 ? flaggedNpcs : undefined,
   };
 }

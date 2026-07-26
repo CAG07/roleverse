@@ -8,10 +8,10 @@ export type NpcDisposition =
   | 'hostile';
 
 /**
- * Provenance of an NPC record — determines whether extraction is allowed to
- * overwrite core fields (see lib/sessions/extract-npcs.ts upsert rules).
- * - manual: created via CRUD, protected from extraction overwrites.
- * - extracted: written by transcript extraction, refreshed on every run.
+ * Provenance of an NPC record.
+ * - manual: created via CRUD, or confirmed from a flagNpc suggestion during play.
+ * - extracted: legacy value from the removed session-end transcript extraction;
+ *   no longer written, but old rows may still carry it.
  * - imported: written by lib/npcs/import-npcs.ts, protected like manual.
  */
 export type NpcSource = 'manual' | 'extracted' | 'imported';
@@ -52,4 +52,20 @@ export interface NpcInput {
   disposition?: NpcDisposition;
   current_location?: string | null;
   known_facts?: NpcKnownFact[];
+}
+
+/**
+ * An NPC the Game Master flagged mid-session via the flagNpc tool, awaiting
+ * the player's choice to add it to the roster or dismiss it. Never written
+ * to the database on its own — only on explicit player confirmation.
+ */
+export interface FlaggedNpc {
+  name: string;
+  race?: string;
+  occupation?: string;
+  description?: string;
+  personality?: string;
+  disposition?: NpcDisposition;
+  current_location?: string;
+  known_fact?: string;
 }
