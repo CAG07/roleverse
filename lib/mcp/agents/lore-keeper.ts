@@ -111,26 +111,39 @@ async function fetchLoreContext(
     .limit(MAX_ENDED_SESSIONS);
 
   for (const session of endedSessions ?? []) {
-    if (endedSessionsCharCount >= MAX_ENDED_SESSIONS_CHARS) break;
+    const separatorCost = parts.length > 0 ? 2 : 0; // accounts for the "\n\n" that join() adds between blocks
+    if (endedSessionsCharCount + separatorCost >= MAX_ENDED_SESSIONS_CHARS) break;
 
     const date = formatDate(session.started_at as string);
     const summary = (session.summary as string | null | undefined) ?? null;
 
     if (summary) {
-      const remaining = MAX_ENDED_SESSIONS_CHARS - endedSessionsCharCount;
+      const header = `${sessionHeader(date, 'summary')}\n`;
+      const remaining = MAX_ENDED_SESSIONS_CHARS - endedSessionsCharCount - separatorCost - header.length;
+      if (remaining <= 0) break;
+
       const truncated = truncateAtBoundary(summary, remaining);
-      parts.push(`${sessionHeader(date, 'summary')}\n${truncated}`);
-      endedSessionsCharCount += truncated.length;
+      const block = `${header}${truncated}`;
+      parts.push(block);
+      endedSessionsCharCount += separatorCost + block.length;
       continue;
     }
 
     const entries = (session.transcript as TranscriptEntry[] | null) ?? [];
     if (entries.length === 0) continue;
-    const remaining = Math.min(FALLBACK_TAIL_CHARS, MAX_ENDED_SESSIONS_CHARS - endedSessionsCharCount);
+
+    const header = `${sessionHeader(date, 'no summary available — most recent portion')}\n`;
+    const remaining = Math.min(
+      FALLBACK_TAIL_CHARS,
+      MAX_ENDED_SESSIONS_CHARS - endedSessionsCharCount - separatorCost - header.length
+    );
+    if (remaining <= 0) break;
+
     const excerpt = tailExcerpt(entries, remaining);
     if (excerpt) {
-      parts.push(`${sessionHeader(date, 'no summary available — most recent portion')}\n${excerpt}`);
-      endedSessionsCharCount += excerpt.length;
+      const block = `${header}${excerpt}`;
+      parts.push(block);
+      endedSessionsCharCount += separatorCost + block.length;
     }
   }
 
