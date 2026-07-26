@@ -7,6 +7,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { createClient } from '@/lib/supabase/server';
+import { tailExcerpt, type TranscriptEntryLike } from '@/lib/sessions/transcript-excerpt';
 import { getMultiAgentContextSection } from './multi-agent-context';
 
 import type { AgentMessage, AgentResponse, AgentStreamResult, MCPContext } from '../types';
@@ -22,17 +23,20 @@ function getRequiredModel(): string {
 const MODEL = getRequiredModel();
 const MAX_TOKENS = 1024;
 
-/** Maximum characters of transcript to include (guards against context overflow) */
-const MAX_TRANSCRIPT_CHARS = 8_000;
+/** How many past ended sessions to pull summaries for */
+const MAX_ENDED_SESSIONS = 5;
+
+/** Per-session fallback budget when an ended session has no summary yet */
+const FALLBACK_TAIL_CHARS = 4_000;
+
+/** Overall character budget for the ended-session section (summaries + fallback excerpts combined) */
+const MAX_ENDED_SESSIONS_CHARS = 12_000;
+
+/** Budget for the currently active (unended, un-summarized) session's tail */
+const ACTIVE_SESSION_TAIL_CHARS = 6_000;
 
 /** Shape of a transcript entry stored in sessions.transcript JSONB */
-interface TranscriptEntry {
-  role?: string;
-  content?: string;
-  agentType?: string;
-  timestamp?: string;
-  [key: string]: unknown;
-}
+type TranscriptEntry = TranscriptEntryLike & { timestamp?: string; [key: string]: unknown };
 
 /** Fetch campaign notes and recent session transcripts for the given campaign */
 async function fetchLoreContext(
@@ -56,49 +60,75 @@ async function fetchLoreContext(
     .filter(Boolean)
     .join('\n\n');
 
-  // Fetch the last 5 sessions' transcripts
-  const { data: sessions } = await supabase
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+  const parts: string[] = [];
+  let endedSessionsCharCount = 0;
+
+  // Past ended sessions: prefer the stored summary (concise, reliable, and — per
+  // generate-summary.ts — always closes with exactly where the party left off).
+  // Only fall back to a raw transcript excerpt when no summary was ever written
+  // (an older session, or a past failure) — and even then, take the END of that
+  // session's transcript, not the beginning, since that's the part that answers
+  // "where did we leave off."
+  // An overall budget (MAX_ENDED_SESSIONS_CHARS) prevents arbitrarily long
+  // summaries from inflating prompt size when many sessions have been played.
+  const { data: endedSessions } = await supabase
+    .from('sessions')
+    .select('started_at, ended_at, summary, transcript')
+    .eq('campaign_id', campaignId)
+    .not('ended_at', 'is', null)
+    .order('ended_at', { ascending: false })
+    .limit(MAX_ENDED_SESSIONS);
+
+  for (const session of endedSessions ?? []) {
+    if (endedSessionsCharCount >= MAX_ENDED_SESSIONS_CHARS) break;
+
+    const date = formatDate(session.started_at as string);
+    const summary = (session.summary as string | null | undefined) ?? null;
+
+    if (summary) {
+      const remaining = MAX_ENDED_SESSIONS_CHARS - endedSessionsCharCount;
+      const truncated = summary.length > remaining ? summary.slice(0, remaining) : summary;
+      parts.push(`### Session — ${date} (summary)\n${truncated}`);
+      endedSessionsCharCount += truncated.length;
+      continue;
+    }
+
+    const entries = (session.transcript as TranscriptEntry[] | null) ?? [];
+    if (entries.length === 0) continue;
+    const remaining = Math.min(FALLBACK_TAIL_CHARS, MAX_ENDED_SESSIONS_CHARS - endedSessionsCharCount);
+    const excerpt = tailExcerpt(entries, remaining);
+    if (excerpt) {
+      parts.push(`### Session — ${date} (no summary available — most recent portion)\n${excerpt}`);
+      endedSessionsCharCount += excerpt.length;
+    }
+  }
+
+  // Currently active session, if any: has no summary by definition, so include
+  // the most recent portion of its raw transcript for "what just happened" questions.
+  const { data: activeSession } = await supabase
     .from('sessions')
     .select('started_at, transcript')
     .eq('campaign_id', campaignId)
+    .is('ended_at', null)
     .order('started_at', { ascending: false })
-    .limit(5);
+    .limit(1)
+    .maybeSingle();
 
-  let sessionText = '';
-  if (sessions && sessions.length > 0) {
-    const parts: string[] = [];
-    let charCount = 0;
-
-    for (const session of sessions) {
-      if (charCount >= MAX_TRANSCRIPT_CHARS) break;
-
-      const entries = (session.transcript as TranscriptEntry[] | null) ?? [];
-      if (entries.length === 0) continue;
-
-      const date = new Date(session.started_at as string).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
-
-      const lines: string[] = [`### Session — ${date}`];
-      for (const entry of entries) {
-        if (charCount >= MAX_TRANSCRIPT_CHARS) break;
-        if (!entry.content) continue;
-
-        const prefix = entry.role === 'player' ? '**Player:**' : `**${entry.agentType ?? 'Agent'}:**`;
-        const line = `${prefix} ${String(entry.content)}`;
-        lines.push(line);
-        charCount += line.length;
+  if (activeSession) {
+    const entries = (activeSession.transcript as TranscriptEntry[] | null) ?? [];
+    if (entries.length > 0) {
+      const excerpt = tailExcerpt(entries, ACTIVE_SESSION_TAIL_CHARS);
+      if (excerpt) {
+        const date = formatDate(activeSession.started_at as string);
+        parts.push(`### Current Session — ${date} (in progress)\n${excerpt}`);
       }
-
-      parts.push(lines.join('\n'));
     }
-
-    sessionText = parts.join('\n\n');
   }
 
-  return { campaignNotes, sessionSummaries: sessionText };
+  return { campaignNotes, sessionSummaries: parts.join('\n\n') };
 }
 
 /** Build the system prompt for the Lore Keeper */
