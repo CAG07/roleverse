@@ -53,7 +53,6 @@ export default function SessionPageClient({
   gameSystem,
   characters,
   initialTranscript = [],
-  previousSessionSummary = null,
 }: {
   sessionId: string;
   campaignId: string;
@@ -61,7 +60,6 @@ export default function SessionPageClient({
   gameSystem: string;
   characters: Character[];
   initialTranscript?: TranscriptEntry[];
-  previousSessionSummary?: string | null;
 }) {
   const router = useRouter();
   const [sceneMedia, setSceneMedia] = useState<SceneMedia | null>(null);
@@ -247,7 +245,6 @@ export default function SessionPageClient({
               sessionId={sessionId}
               campaignId={campaignId}
               initialTranscript={initialTranscript}
-              previousSessionSummary={previousSessionSummary}
             />
           </div>
         </div>
