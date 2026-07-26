@@ -94,6 +94,8 @@ interface ChatWindowProps {
   sessionId: string;
   campaignId: string;
   initialTranscript?: TranscriptEntry[];
+  /** Prior session's recap, shown up front on a brand-new session so the player never has to ask. */
+  previousSessionSummary?: string | null;
 }
 
 function transcriptToMessages(entries: TranscriptEntry[]): ChatMessage[] {
@@ -126,14 +128,19 @@ function transcriptToMessages(entries: TranscriptEntry[]): ChatMessage[] {
   });
 }
 
-function buildInitialMessages(initialTranscript: TranscriptEntry[]): ChatMessage[] {
+function buildInitialMessages(
+  initialTranscript: TranscriptEntry[],
+  previousSessionSummary?: string | null
+): ChatMessage[] {
   const hydrated = transcriptToMessages(initialTranscript);
   if (hydrated.length > 0) return hydrated;
   return [
     {
       id: 'msg-init',
       role: 'system',
-      content: 'Session started.',
+      content: previousSessionSummary
+        ? `**Previously in this campaign:**\n\n${previousSessionSummary}`
+        : 'Session started.',
       timestamp: new Date(),
     },
   ];
@@ -144,9 +151,10 @@ export default function ChatWindow({
   sessionId,
   campaignId,
   initialTranscript = [],
+  previousSessionSummary = null,
 }: ChatWindowProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
-    buildInitialMessages(initialTranscript)
+    buildInitialMessages(initialTranscript, previousSessionSummary)
   );
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
