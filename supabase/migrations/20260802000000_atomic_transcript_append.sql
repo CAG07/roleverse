@@ -24,7 +24,7 @@ LANGUAGE SQL
 SET search_path = ''
 AS $$
   UPDATE public.sessions
-  SET transcript = COALESCE(transcript, '[]'::jsonb) || p_entries
+  SET transcript = COALESCE(transcript, '[]'::jsonb) || COALESCE(p_entries, '[]'::jsonb)
   WHERE id = p_session_id
   RETURNING transcript;
 $$;
