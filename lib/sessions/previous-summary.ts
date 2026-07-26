@@ -20,7 +20,8 @@ export async function fetchPreviousEndedSessionSummary(campaignId: string): Prom
       .limit(1)
       .maybeSingle();
     return (data?.summary as string | null | undefined) ?? null;
-  } catch {
+  } catch (err) {
+    console.error('[previous-summary] Failed to fetch previous session summary:', err);
     return null;
   }
 }

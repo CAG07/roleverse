@@ -47,17 +47,22 @@ type TranscriptEntry = TranscriptEntryLike & { timestamp?: string; [key: string]
 function truncateAtBoundary(text: string, maxChars: number): string {
   if (text.length <= maxChars) return text;
   const cut = text.slice(0, maxChars);
-  // Sentence-end patterns: terminal punctuation followed by whitespace or a closing quote.
-  const sentenceEnds = ['. ', '.\n', '." ', '.\' ', '! ', '!\n', '!" ', '!\' ', '? ', '?\n', '?" ', '?\' '];
+  // Match the last sentence-ending punctuation followed by whitespace or a closing quote/bracket.
+  const sentenceBoundary = /[.!?]['")\s]/g;
   let bestSentence = -1;
-  for (const pattern of sentenceEnds) {
-    const idx = cut.lastIndexOf(pattern);
-    if (idx > bestSentence) bestSentence = idx;
+  let match: RegExpExecArray | null;
+  while ((match = sentenceBoundary.exec(cut)) !== null) {
+    bestSentence = match.index;
   }
   if (bestSentence > 0) return text.slice(0, bestSentence + 1).trimEnd();
   const lastWord = cut.lastIndexOf(' ');
   if (lastWord > 0) return text.slice(0, lastWord).trimEnd();
   return cut.trimEnd();
+}
+
+/** Format a section header for a session entry in the lore context. */
+function sessionHeader(date: string, suffix: string): string {
+  return `### Session — ${date} (${suffix})`;
 }
 
 /** Fetch campaign notes and recent session transcripts for the given campaign */
@@ -113,7 +118,7 @@ async function fetchLoreContext(
     if (summary) {
       const remaining = MAX_ENDED_SESSIONS_CHARS - endedSessionsCharCount;
       const truncated = truncateAtBoundary(summary, remaining);
-      parts.push(`### Session — ${date} (summary)\n${truncated}`);
+      parts.push(`${sessionHeader(date, 'summary')}\n${truncated}`);
       endedSessionsCharCount += truncated.length;
       continue;
     }
@@ -123,7 +128,7 @@ async function fetchLoreContext(
     const remaining = Math.min(FALLBACK_TAIL_CHARS, MAX_ENDED_SESSIONS_CHARS - endedSessionsCharCount);
     const excerpt = tailExcerpt(entries, remaining);
     if (excerpt) {
-      parts.push(`### Session — ${date} (no summary available — most recent portion)\n${excerpt}`);
+      parts.push(`${sessionHeader(date, 'no summary available — most recent portion')}\n${excerpt}`);
       endedSessionsCharCount += excerpt.length;
     }
   }
