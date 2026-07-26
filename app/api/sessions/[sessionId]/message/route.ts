@@ -172,18 +172,28 @@ export async function POST(
         // Appended atomically via RPC (transcript = transcript || entries in a single
         // UPDATE) instead of SELECT-then-UPDATE, so overlapping requests for the same
         // session (double-submit, multiple tabs) can't silently overwrite each other's turn.
-        try {
+        {
           const now = new Date().toISOString();
+<<<<<<< HEAD
           const { error: transcriptError } = await supabase.rpc('append_session_transcript', {
+=======
+          const { error: transcriptErr } = await supabase.rpc('append_session_transcript', {
+>>>>>>> 99437508cd86abffb8ca079aa6515e4f8bae80a7
             p_session_id: sessionId,
             p_entries: [
               { role: 'player', content: message, timestamp: now },
               { role: 'agent', agentType: agentRole, content: fullContent, timestamp: now },
             ],
           });
+<<<<<<< HEAD
           if (transcriptError) throw transcriptError;
         } catch (transcriptErr) {
           console.warn('[transcript] Failed to save transcript entry:', transcriptErr);
+=======
+          if (transcriptErr) {
+            console.warn('[transcript] Failed to save transcript entry:', transcriptErr);
+          }
+>>>>>>> 99437508cd86abffb8ca079aa6515e4f8bae80a7
         }
 
         emit('done', {});
@@ -192,7 +202,7 @@ export async function POST(
         console.error('[agent stream] failed:', err);
 
         if (fullContent) {
-          try {
+          {
             const now = new Date().toISOString();
             const { error: transcriptError } = await supabase.rpc('append_session_transcript', {
               p_session_id: sessionId,
@@ -206,10 +216,13 @@ export async function POST(
                 },
               ],
             });
+<<<<<<< HEAD
             if (transcriptError) throw transcriptError;
           } catch (transcriptErr) {
             // already in error path — log only, don't let this mask the original error
             console.warn('[transcript] Failed to save truncated transcript entry:', transcriptErr);
+=======
+>>>>>>> 99437508cd86abffb8ca079aa6515e4f8bae80a7
           }
         }
 
