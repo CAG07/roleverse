@@ -145,6 +145,84 @@
   color: var(--ivory-dim);
 }
 
+.npcFlagCard {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  background: var(--void-surface);
+  border: 1px solid var(--crimson-dim);
+  border-left: 2px solid var(--crimson);
+}
+.npcFlagHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.npcFlagName {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--gold);
+}
+.npcFlagMeta {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--ivory-dim);
+}
+.npcFlagDescription {
+  margin: 0.3rem 0 0;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--ivory-muted);
+  line-height: 1.4;
+}
+.npcFlagActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.npcFlagAdd,
+.npcFlagDismiss {
+  padding: 0.3rem 0.7rem;
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.npcFlagAdd {
+  background: var(--crimson);
+  border: 1px solid var(--crimson-bright);
+  color: var(--ivory);
+}
+.npcFlagAdd:hover:not(:disabled) {
+  background: var(--crimson-bright);
+}
+.npcFlagAdd:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.npcFlagDismiss {
+  background: transparent;
+  border: 1px solid var(--ivory-dim);
+  color: var(--ivory-muted);
+}
+.npcFlagDismiss:hover:not(:disabled) {
+  border-color: var(--ivory-muted);
+  color: var(--ivory);
+}
+.npcFlagError {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--crimson-bright);
+}
+
 /* Player message */
 .msgPlayer {
   display: flex;

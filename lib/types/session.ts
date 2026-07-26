@@ -1,6 +1,8 @@
 // lib/types/session.ts
 // Shared types for the session UI components
 
+import type { FlaggedNpc } from './npc';
+
 /**
  * Loose shape of a transcript entry as stored in sessions.transcript JSONB.
  * Fields are optional because older rows may be missing some of them.
@@ -40,6 +42,7 @@ export interface ChatMessage {
   content: string;
   source?: MessageSource; // how the message was input
   sceneMedia?: SceneMedia; // attached media if agent sent one
+  flaggedNpcs?: FlaggedNpc[]; // NPCs the Game Master flagged for the player to confirm
   timestamp: Date;
 }
 
