@@ -47,14 +47,15 @@ type TranscriptEntry = TranscriptEntryLike & { timestamp?: string; [key: string]
 function truncateAtBoundary(text: string, maxChars: number): string {
   if (text.length <= maxChars) return text;
   const cut = text.slice(0, maxChars);
-  // Match the last sentence-ending punctuation followed by whitespace or a closing quote/bracket.
-  const sentenceBoundary = /[.!?]['")\s]/g;
-  let bestSentence = -1;
+  // Match the last sentence-ending punctuation optionally followed by a closing quote/bracket,
+  // where the next character is whitespace (or end of string).
+  const sentenceBoundary = /[.!?](?:['")\]]?)(?=\s|$)/g;
+  let bestEnd = -1;
   let match: RegExpExecArray | null;
   while ((match = sentenceBoundary.exec(cut)) !== null) {
-    bestSentence = match.index;
+    bestEnd = match.index + match[0].length;
   }
-  if (bestSentence > 0) return text.slice(0, bestSentence + 1).trimEnd();
+  if (bestEnd > 0) return text.slice(0, bestEnd).trimEnd();
   const lastWord = cut.lastIndexOf(' ');
   if (lastWord > 0) return text.slice(0, lastWord).trimEnd();
   return cut.trimEnd();
