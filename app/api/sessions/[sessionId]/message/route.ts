@@ -168,29 +168,22 @@ export async function POST(
           }
         }
 
-        // --- Persist transcript (non-blocking) ---
-        try {
-          const { data: currentSession } = await supabase
-            .from('sessions')
-            .select('transcript')
-            .eq('id', sessionId)
-            .single();
-
-          const currentTranscript = (currentSession?.transcript as unknown[]) ?? [];
+        // --- Persist transcript ---
+        // Appended atomically via RPC (transcript = transcript || entries in a single
+        // UPDATE) instead of SELECT-then-UPDATE, so overlapping requests for the same
+        // session (double-submit, multiple tabs) can't silently overwrite each other's turn.
+        {
           const now = new Date().toISOString();
-
-          await supabase
-            .from('sessions')
-            .update({
-              transcript: [
-                ...currentTranscript,
-                { role: 'player', content: message, timestamp: now },
-                { role: 'agent', agentType: agentRole, content: fullContent, timestamp: now },
-              ],
-            })
-            .eq('id', sessionId);
-        } catch (transcriptErr) {
-          console.warn('[transcript] Failed to save transcript entry:', transcriptErr);
+          const { error: transcriptError } = await supabase.rpc('append_session_transcript', {
+            p_session_id: sessionId,
+            p_entries: [
+              { role: 'player', content: message, timestamp: now },
+              { role: 'agent', agentType: agentRole, content: fullContent, timestamp: now },
+            ],
+          });
+          if (transcriptError) {
+            console.warn('[transcript] Failed to save transcript entry:', transcriptError);
+          }
         }
 
         emit('done', {});
@@ -199,26 +192,22 @@ export async function POST(
         console.error('[agent stream] failed:', err);
 
         if (fullContent) {
-          try {
-            const { data: currentSession } = await supabase
-              .from('sessions')
-              .select('transcript')
-              .eq('id', sessionId)
-              .single();
-            const currentTranscript = (currentSession?.transcript as unknown[]) ?? [];
-            const now = new Date().toISOString();
-            await supabase
-              .from('sessions')
-              .update({
-                transcript: [
-                  ...currentTranscript,
-                  { role: 'player', content: message, timestamp: now },
-                  { role: 'agent', agentType: agentRole, content: fullContent + ' [truncated]', timestamp: now },
-                ],
-              })
-              .eq('id', sessionId);
-          } catch {
-            // swallow — already in error path
+          const now = new Date().toISOString();
+          const { error: transcriptError } = await supabase.rpc('append_session_transcript', {
+            p_session_id: sessionId,
+            p_entries: [
+              { role: 'player', content: message, timestamp: now },
+              {
+                role: 'agent',
+                agentType: agentRole,
+                content: fullContent + ' [truncated]',
+                timestamp: now,
+              },
+            ],
+          });
+          if (transcriptError) {
+            // already in error path — log only, don't let this mask the original error
+            console.warn('[transcript] Failed to save truncated transcript entry:', transcriptError);
           }
         }
 
