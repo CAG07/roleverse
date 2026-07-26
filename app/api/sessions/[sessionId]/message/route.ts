@@ -174,13 +174,14 @@ export async function POST(
         // session (double-submit, multiple tabs) can't silently overwrite each other's turn.
         try {
           const now = new Date().toISOString();
-          await supabase.rpc('append_session_transcript', {
+          const { error: transcriptError } = await supabase.rpc('append_session_transcript', {
             p_session_id: sessionId,
             p_entries: [
               { role: 'player', content: message, timestamp: now },
               { role: 'agent', agentType: agentRole, content: fullContent, timestamp: now },
             ],
           });
+          if (transcriptError) throw transcriptError;
         } catch (transcriptErr) {
           console.warn('[transcript] Failed to save transcript entry:', transcriptErr);
         }
@@ -193,7 +194,7 @@ export async function POST(
         if (fullContent) {
           try {
             const now = new Date().toISOString();
-            await supabase.rpc('append_session_transcript', {
+            const { error: transcriptError } = await supabase.rpc('append_session_transcript', {
               p_session_id: sessionId,
               p_entries: [
                 { role: 'player', content: message, timestamp: now },
@@ -205,8 +206,10 @@ export async function POST(
                 },
               ],
             });
-          } catch {
-            // swallow — already in error path
+            if (transcriptError) throw transcriptError;
+          } catch (transcriptErr) {
+            // already in error path — log only, don't let this mask the original error
+            console.warn('[transcript] Failed to save truncated transcript entry:', transcriptErr);
           }
         }
 
