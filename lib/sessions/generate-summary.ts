@@ -44,7 +44,7 @@ export async function generateSessionSummary(
     `You are a session scribe for a ${gameSystemName} tabletop RPG campaign.`,
     'Write a 2-3 paragraph "previously on..." recap of the session transcript below,',
     'ending with one final short paragraph titled exactly "Where We Left Off" that',
-    'states the party\'s precise current position: their location, immediate situation,',
+    `states the party's precise current position: their location, immediate situation,`,
     'and any decision or action left unresolved when the session ended. This closing',
     'paragraph is what a game master reads to resume play seamlessly next time — be',
     'concrete and specific, not a vague restatement of the recap.',
