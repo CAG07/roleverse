@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import SessionPageClient from '@/components/session/SessionPageClient';
+import { fetchPreviousEndedSessionSummary } from '@/lib/sessions/previous-summary';
 import type { Character, TranscriptEntry } from '@/lib/types/session';
 
 interface SessionPageProps {
@@ -36,6 +37,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
   // Resume active session if one exists, only create a new one if none is found
   let sessionId: string;
   let initialTranscript: TranscriptEntry[] = [];
+  let previousSessionSummary: string | null = null;
 
   const { data: activeSession } = await supabase
     .from('sessions')
@@ -51,6 +53,10 @@ export default async function SessionPage({ params }: SessionPageProps) {
     sessionId = activeSession.id as string;
     initialTranscript = ((activeSession.transcript as TranscriptEntry[] | null) ?? []).slice(-200);
   } else {
+    // Brand-new session — fetch the prior session's recap so the player sees
+    // where they left off immediately, without having to ask.
+    previousSessionSummary = await fetchPreviousEndedSessionSummary(id);
+
     const { data: newSession } = await supabase
       .from('sessions')
       .insert({ campaign_id: id, user_id: user!.id })
@@ -69,6 +75,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
       gameSystem={campaign.game_system}
       characters={characters}
       initialTranscript={initialTranscript}
+      previousSessionSummary={previousSessionSummary}
     />
   );
 }
