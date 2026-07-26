@@ -80,6 +80,38 @@
   line-height: 1.5;
 }
 
+.typeToConfirm {
+  margin: 0 0 1.5rem;
+}
+
+.typeToConfirmLabel {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--ivory-muted);
+  margin-bottom: 0.4rem;
+}
+.typeToConfirmLabel strong {
+  color: var(--ivory);
+  font-weight: 600;
+}
+
+.typeToConfirmInput {
+  width: 100%;
+  background: var(--void-surface);
+  border: var(--rule-thin);
+  color: var(--ivory);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+.typeToConfirmInput:focus {
+  border-color: var(--crimson);
+}
+
 .actions {
   display: flex;
   gap: 0.75rem;
