@@ -90,7 +90,17 @@ async function fetchLoreContext(
 
     if (summary) {
       const remaining = MAX_ENDED_SESSIONS_CHARS - endedSessionsCharCount;
-      const truncated = summary.length > remaining ? summary.slice(0, remaining) : summary;
+      let truncated = summary;
+      if (summary.length > remaining) {
+        // Truncate at the last sentence boundary within the budget so we don't
+        // split mid-sentence. Fall back to the last word boundary if no sentence
+        // end is found, and finally to a hard slice as a last resort.
+        const cut = summary.slice(0, remaining);
+        const lastSentence = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('.\n'), cut.lastIndexOf('! '), cut.lastIndexOf('? '));
+        const lastWord = cut.lastIndexOf(' ');
+        const breakAt = lastSentence > 0 ? lastSentence + 1 : lastWord > 0 ? lastWord : remaining;
+        truncated = summary.slice(0, breakAt).trimEnd();
+      }
       parts.push(`### Session — ${date} (summary)\n${truncated}`);
       endedSessionsCharCount += truncated.length;
       continue;

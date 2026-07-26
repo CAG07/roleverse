@@ -51,7 +51,7 @@ export async function generateSessionSummary(
     '',
     'Guidelines:',
     '- Past tense, third person, except the "Where We Left Off" paragraph which describes',
-    '  the present moment the party is in.',
+    '  the present moment in which the party finds itself.',
     '- Focus on durable facts: locations visited, NPCs introduced, decisions made, quests accepted, cliffhangers.',
     '- Be concise — 2-3 paragraphs plus the closing paragraph, not a full retelling.',
     '- Do NOT invent content that is not present in the transcript.',
