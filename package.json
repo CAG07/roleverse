@@ -35,7 +35,7 @@
     "@radix-ui/react-separator": "^1.1.11",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.21",
-    "@radix-ui/react-toast": "^1.2.2",
+    "@radix-ui/react-toast": "^1.2.23",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.7",
     "axios": "^1.18.0",
