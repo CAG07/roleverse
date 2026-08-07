@@ -8,6 +8,7 @@ interface PF2ESheetProps {
   characterId: string;
   data: Record<string, unknown>;
   equipment?: unknown[];
+  compact?: boolean;
 }
 
 const FIXED_ACTIONS = 3;
@@ -28,7 +29,7 @@ const RANK_CSS: Record<string, string> = {
   '4': styles.legendary,
 };
 
-export default function PF2ESheet({ characterId, data, equipment = [] }: PF2ESheetProps) {
+export default function PF2ESheet({ characterId, data, equipment = [], compact }: PF2ESheetProps) {
   const race = (data.race as string) ?? '—';
   const characterClass = (data.class as string) ?? '—';
   const level = (data.level as number) ?? 0;
@@ -48,6 +49,7 @@ export default function PF2ESheet({ characterId, data, equipment = [] }: PF2EShe
       showAbilityModifiers
       metaLines={[`${metaParts.join(' · ')} · Level ${level}`]}
       hiddenFieldKeys={['proficiencyRanks']}
+      compact={compact}
       extra={
         <>
           <div>

@@ -10,6 +10,7 @@ import {
   type UIEvent,
 } from 'react';
 import { Send, Mic, Keyboard, Image as ImageIcon, ChevronDown } from 'lucide-react';
+import D20Icon from '@/components/icons/D20Icon';
 import styles from './ChatWindow.module.css';
 import type { ChatMessage, SceneMedia, AgentType, TranscriptEntry } from '@/lib/types/session';
 import type { AgentMessage } from '@/lib/mcp/types';
@@ -27,15 +28,20 @@ function getAgentConfig(agentType: string | undefined): { accent: string; label:
   return (agentType ? AGENT_CONFIG[agentType] : null) ?? DEFAULT_AGENT;
 }
 
-// Simple markdown: **bold** and *italic*
+// Simple markdown: **bold**, *italic*, and the 🎲 dice-roll marker (swapped for the
+// same D20 glyph used in the nav logo — the roll-dice tool's output uses 🎲 as a
+// stable anchor that agents tend to carry into their narration verbatim).
 function renderMarkdown(text: string) {
-  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|🎲)/g);
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
       return <strong key={i}>{part.slice(2, -2)}</strong>;
     }
     if (part.startsWith('*') && part.endsWith('*')) {
       return <em key={i}>{part.slice(1, -1)}</em>;
+    }
+    if (part === '🎲') {
+      return <D20Icon key={i} className={styles.inlineDiceIcon} />;
     }
     return part.split('\n').map((line, j, arr) => (
       <span key={`${i}-${j}`}>
