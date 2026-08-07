@@ -28,9 +28,11 @@ function getAgentConfig(agentType: string | undefined): { accent: string; label:
   return (agentType ? AGENT_CONFIG[agentType] : null) ?? DEFAULT_AGENT;
 }
 
-// Simple markdown: **bold**, *italic*, and the 🎲 dice-roll marker (swapped for the
-// same D20 glyph used in the nav logo — the roll-dice tool's output uses 🎲 as a
-// stable anchor that agents tend to carry into their narration verbatim).
+// Simple markdown: **bold**, *italic*, and the 🎲 dice-roll marker. Used for agent
+// bubbles, streaming messages, and player bubbles alike — the swap only ever fires
+// in practice on agent-authored text (roll-dice tool output uses 🎲 as a stable
+// anchor that agents tend to carry into their narration verbatim), since a player
+// would have to type the literal emoji themselves for it to apply to their bubble.
 function renderMarkdown(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|🎲)/g);
   return parts.map((part, i) => {
@@ -41,7 +43,7 @@ function renderMarkdown(text: string) {
       return <em key={i}>{part.slice(1, -1)}</em>;
     }
     if (part === '🎲') {
-      return <D20Icon key={i} className={styles.inlineDiceIcon} />;
+      return <D20Icon key={i} className={styles.inlineDiceIcon} ariaLabel="Dice roll" />;
     }
     return part.split('\n').map((line, j, arr) => (
       <span key={`${i}-${j}`}>
