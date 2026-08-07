@@ -31,6 +31,9 @@ interface BaseSheetProps {
   /** Schema field keys still needed for the creation/edit form but given bespoke display
    *  instead of the generic renderer (e.g. PF2E's rank-badge-colored proficiency ranks). */
   hiddenFieldKeys?: string[];
+  /** Compact display for the in-session panel: hides Features & Traits and Custom Fields,
+   *  which belong on the full character management page, not the at-a-glance session view. */
+  compact?: boolean;
 }
 
 function abilityModifier(score: number): string {
@@ -126,6 +129,7 @@ export default function BaseSheet({
   showAbilityModifiers = false,
   extra,
   hiddenFieldKeys = [],
+  compact = false,
 }: BaseSheetProps) {
   const name = (data.name as string) ?? 'Unknown';
   const hp = (data.hp as number) ?? 0;
@@ -135,7 +139,11 @@ export default function BaseSheet({
   const abilityScores = (data.abilityScores as Record<string, number> | undefined) ?? {};
 
   const combatScalarFields = schema.fields.filter(isCombatScalar);
-  const consumedKeys = new Set([...combatScalarFields.map((f) => f.key), ...hiddenFieldKeys]);
+  const consumedKeys = new Set([
+    ...combatScalarFields.map((f) => f.key),
+    ...hiddenFieldKeys,
+    ...(compact ? ['features'] : []),
+  ]);
   const remainingFields = schema.fields.filter((f) => !consumedKeys.has(f.key));
 
   const customFields = (data.customFields as CustomField[] | undefined) ?? [];
@@ -205,7 +213,7 @@ export default function BaseSheet({
 
       {extra}
 
-      <CustomFieldsSection characterId={characterId} customFields={customFields} />
+      {!compact && <CustomFieldsSection characterId={characterId} customFields={customFields} />}
 
       <EquipmentList items={equipment} />
     </div>

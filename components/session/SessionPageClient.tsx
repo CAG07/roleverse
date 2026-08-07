@@ -28,8 +28,8 @@ const STATUS_DOT_COLOR: Record<CharacterStatus, string> = {
 };
 
 const CHAT_FONT_SIZE_KEY = 'roleverse-chat-font-size-px';
-const DEFAULT_CHAT_FONT_SIZE_PX = 14;
-const VALID_CHAT_FONT_SIZES = [12, 14, 16, 18];
+const DEFAULT_CHAT_FONT_SIZE_PX = 16;
+const VALID_CHAT_FONT_SIZES = [12, 14, 16, 18, 20, 22, 24];
 
 // max_hp <= 0 means HP was never entered on the character sheet (defaults to 0/0 at
 // creation) — not that the character has died. Only read hp/max_hp as a health signal
@@ -300,6 +300,7 @@ export default function SessionPageClient({
               equipment={selectedCharacter.equipment ?? []}
               rawGameDataStats={selectedCharacter.game_data_stats ?? {}}
               funnelParty={funnelParty}
+              compact
             />
           ) : (
             <div className={styles.noCharacter}>

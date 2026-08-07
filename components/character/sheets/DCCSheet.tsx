@@ -25,9 +25,16 @@ interface DCCSheetProps {
    * player. When provided, rendered as a stacked list above the full sheet.
    */
   funnelParty?: DCCFunnelMember[];
+  compact?: boolean;
 }
 
-export default function DCCSheet({ characterId, data, rawGameDataStats, funnelParty }: DCCSheetProps) {
+export default function DCCSheet({
+  characterId,
+  data,
+  rawGameDataStats,
+  funnelParty,
+  compact,
+}: DCCSheetProps) {
   const level = (data.level as number) ?? 0;
   const isFunnel = level === 0;
   const race = (data.race as string) ?? '—';
@@ -62,6 +69,7 @@ export default function DCCSheet({ characterId, data, rawGameDataStats, funnelPa
         `${race} ${characterClass !== '—' ? characterClass : ''} · Level ${level} · ${alignment}`,
       ]}
       headerBadge={isFunnel ? 'Level 0 · Funnel' : undefined}
+      compact={compact}
       headerExtra={
         <>
           <p className={styles.occupationLine}>

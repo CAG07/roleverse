@@ -7,9 +7,10 @@ interface ADD2ESheetProps {
   characterId: string;
   data: Record<string, unknown>;
   equipment?: unknown[];
+  compact?: boolean;
 }
 
-export default function ADD2ESheet({ characterId, data, equipment = [] }: ADD2ESheetProps) {
+export default function ADD2ESheet({ characterId, data, equipment = [], compact }: ADD2ESheetProps) {
   const race = (data.race as string) ?? '—';
   const characterClass = (data.class as string) ?? '—';
   const level = (data.level as number) ?? 0;
@@ -23,6 +24,7 @@ export default function ADD2ESheet({ characterId, data, equipment = [] }: ADD2ES
       data={data}
       equipment={equipment}
       metaLines={[`${race} ${characterClass} · Level ${level} · ${alignment}`]}
+      compact={compact}
     />
   );
 }

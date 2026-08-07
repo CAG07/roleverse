@@ -7,9 +7,10 @@ interface DND5ESheetProps {
   characterId: string;
   data: Record<string, unknown>;
   equipment?: unknown[];
+  compact?: boolean;
 }
 
-export default function DND5ESheet({ characterId, data, equipment = [] }: DND5ESheetProps) {
+export default function DND5ESheet({ characterId, data, equipment = [], compact }: DND5ESheetProps) {
   const race = (data.race as string) ?? '—';
   const characterClass = (data.class as string) ?? '—';
   const subclass = (data.subclass as string) ?? '';
@@ -29,6 +30,7 @@ export default function DND5ESheet({ characterId, data, equipment = [] }: DND5ES
         `${race} ${characterClass}${subclass ? ` (${subclass})` : ''} · Level ${level}`,
         `${background} · ${alignment}`,
       ]}
+      compact={compact}
     />
   );
 }
