@@ -1,6 +1,8 @@
 // lib/rag/ingest-campaign-pdf.ts
 // Indexes a single player-uploaded module PDF into campaign_embeddings so the
-// Rules Arbiter and Lore Keeper can retrieve it via match_rules_embeddings.
+// Rules Arbiter can retrieve it via match_rules_embeddings. The Lore Keeper does
+// not do RAG search at all — it reads campaigns.notes + session transcripts
+// directly — so this content is Rules-Arbiter-only.
 //
 // Unlike lib/rag/ingest.ts (baseline system rules — service-role client,
 // generation-swap, campaign_id IS NULL), this writes campaign-scoped rows
@@ -90,10 +92,14 @@ export async function deleteIndexedPdfChunks(
   campaignId: string,
   fileName: string
 ): Promise<void> {
-  await supabase
+  const { error } = await supabase
     .from('campaign_embeddings')
     .delete()
     .eq('campaign_id', campaignId)
     .eq('source_type', 'user_pdf')
     .eq('metadata->>title', fileName);
+
+  if (error) {
+    throw new Error(`Failed to delete previously indexed PDF chunks: ${error.message}`);
+  }
 }

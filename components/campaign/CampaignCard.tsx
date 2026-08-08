@@ -10,8 +10,7 @@ export interface CampaignData {
   description: string | null;
   game_system: string;
   created_at: string;
-  /** Square thumbnail shown on the campaign card. Not yet backed by a DB column —
-   *  always undefined until the storage/migration approach is confirmed. */
+  /** Square thumbnail shown on the campaign card (public URL). */
   cover_image_url?: string | null;
 }
 

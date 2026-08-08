@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { listCampaignScenes, type SceneAsset } from '@/lib/campaigns/scene-assets';
+import { listCampaignScenes, toDisplayName, type SceneAsset } from '@/lib/campaigns/scene-assets';
 import styles from './CampaignScenesPanel.module.css';
 
 const IMAGE_MAX_BYTES = 10 * 1024 * 1024; // 10MB
@@ -76,7 +76,12 @@ export default function CampaignScenesPanel({ campaignId }: { campaignId: string
 
       setAssets((prev) => [
         ...prev,
-        { name: storageName, displayName: file.name, type: isVideo ? 'video' : 'image', url: publicUrl },
+        {
+          name: storageName,
+          displayName: toDisplayName(storageName),
+          type: isVideo ? 'video' : 'image',
+          url: publicUrl,
+        },
       ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to upload file.');

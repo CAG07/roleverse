@@ -1,8 +1,9 @@
 // app/api/campaigns/[id]/modules/ingest/route.ts
 // POST — index (or re-index) one uploaded module PDF from the 'campaign-pdfs'
-// Storage bucket into campaign_embeddings, so Rules Arbiter / Lore Keeper can
-// retrieve it. DELETE — remove a file's indexed chunks (called when the PDF
-// itself is deleted from Storage, so RAG content doesn't outlive its source).
+// Storage bucket into campaign_embeddings, so the Rules Arbiter can retrieve it
+// (the Lore Keeper does not do RAG search). DELETE — remove a file's indexed
+// chunks (called when the PDF itself is deleted from Storage, so RAG content
+// doesn't outlive its source).
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -99,6 +100,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  await deleteIndexedPdfChunks(supabase, id, fileName);
-  return NextResponse.json({ ok: true });
+  try {
+    await deleteIndexedPdfChunks(supabase, id, fileName);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to delete indexed chunks';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

@@ -57,9 +57,13 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
 
       const [{ data: listData, error: listError }, { data: indexedRows }] = await Promise.all([
         supabase.storage.from(BUCKET).list(path),
+        // Selects only the title path out of metadata (not the full JSONB blob per
+        // chunk) to keep payload down — still one row per chunk rather than per file,
+        // since PostgREST has no lightweight DISTINCT here. A dedicated index-status
+        // table/RPC would be the real fix if this proves slow with large modules.
         supabase
           .from('campaign_embeddings')
-          .select('metadata')
+          .select('title:metadata->>title')
           .eq('campaign_id', campaignId)
           .eq('source_type', 'user_pdf'),
       ]);
@@ -67,7 +71,7 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
 
       const indexedNames = new Set(
         (indexedRows ?? [])
-          .map((r) => (r.metadata as { title?: string } | null)?.title)
+          .map((r) => (r as { title: string | null }).title)
           .filter((title): title is string => !!title)
       );
 
@@ -147,7 +151,12 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
 
       setFiles((prev) => [
         ...prev,
-        { name: storageName, displayName: file.name, sizeBytes: file.size, indexStatus: 'indexing' },
+        {
+          name: storageName,
+          displayName: toDisplayName(storageName),
+          sizeBytes: file.size,
+          indexStatus: 'indexing',
+        },
       ]);
       setUploading(false);
       // Fire-and-continue: indexing runs in the background from the player's point
