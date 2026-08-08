@@ -1,8 +1,11 @@
 // lib/rag/ingest-campaign-pdf.ts
-// Indexes a single player-uploaded module PDF into campaign_embeddings so the
-// Rules Arbiter can retrieve it via match_rules_embeddings. The Lore Keeper does
-// not do RAG search at all — it reads campaigns.notes + session transcripts
-// directly — so this content is Rules-Arbiter-only.
+// Indexes a single player-uploaded file (PDF, plain text, or Markdown) into
+// campaign_embeddings so the Rules Arbiter can retrieve it via
+// match_campaign_priority_embeddings (guaranteed, non-competing against
+// baseline SRD) and, on the general baseline+campaign pool, via
+// match_rules_embeddings too. The Lore Keeper does not do RAG search at all —
+// it reads campaigns.notes + session transcripts directly — so this content
+// is Rules-Arbiter- and Game-Master-only.
 //
 // Unlike lib/rag/ingest.ts (baseline system rules — service-role client,
 // generation-swap, campaign_id IS NULL), this writes campaign-scoped rows
@@ -30,7 +33,7 @@ export interface IngestCampaignPdfOptions {
   gameSystem: string;
   /** Display filename — stored in metadata.title so the UI can show per-file indexed status. */
   fileName: string;
-  pdfBuffer: Buffer;
+  fileBuffer: Buffer;
 }
 
 export interface IngestCampaignPdfResult {
@@ -38,19 +41,34 @@ export interface IngestCampaignPdfResult {
   pages: number;
 }
 
+/** Plain text and Markdown need no parsing — only .pdf goes through pdfParse. */
+function isPlainTextFile(fileName: string): boolean {
+  const lower = fileName.toLowerCase();
+  return lower.endsWith('.txt') || lower.endsWith('.md');
+}
+
 export async function ingestCampaignPdf(
   options: IngestCampaignPdfOptions
 ): Promise<IngestCampaignPdfResult> {
-  const { supabase, campaignId, userId, gameSystem, fileName, pdfBuffer } = options;
+  const { supabase, campaignId, userId, gameSystem, fileName, fileBuffer } = options;
 
-  const parsed = await pdfParse(pdfBuffer);
-  const text = parsed.text.trim();
+  let text: string;
+  let pages = 1;
+  if (isPlainTextFile(fileName)) {
+    text = fileBuffer.toString('utf-8').trim();
+  } else {
+    const parsed = await pdfParse(fileBuffer);
+    text = parsed.text.trim();
+    pages = parsed.numpages;
+  }
   if (!text) {
-    throw new Error('No extractable text found in this PDF (it may be a scanned image without OCR).');
+    throw new Error(
+      'No extractable text found in this file (a PDF may be a scanned image without OCR).'
+    );
   }
 
   // Replace any prior chunks from this same file before writing new ones, so
-  // re-indexing after a PDF edit doesn't leave stale duplicate content behind.
+  // re-indexing after an edit doesn't leave stale duplicate content behind.
   await deleteIndexedPdfChunks(supabase, campaignId, fileName);
 
   const chunks = chunkText(text);
@@ -83,7 +101,7 @@ export async function ingestCampaignPdf(
     chunksIndexed += rows.length;
   }
 
-  return { chunksIndexed, pages: parsed.numpages };
+  return { chunksIndexed, pages };
 }
 
 /** Remove previously indexed chunks for a given source file (used before re-indexing and on delete). */

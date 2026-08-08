@@ -75,12 +75,8 @@ export default function SceneDisplay({
         <span className={`${styles.corner} ${styles.br}`} />
 
         <div className={styles.mediaContainer}>
-          {media.type === 'image' ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={media.url} alt={media.caption ?? 'Scene image'} className={styles.sceneImg} />
-          ) : (
-            <video src={media.url} controls className={styles.sceneVideo} />
-          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={media.url} alt={media.caption ?? 'Scene image'} className={styles.sceneImg} />
           <span className={styles.sourceLabel}>
             {media.source === 'ai_generated' ? 'AI Generated' : 'Campaign Asset'}
           </span>
@@ -140,16 +136,12 @@ export default function SceneDisplay({
             >
               <X size={14} />
             </button>
-            {media.type === 'image' ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={media.url}
-                alt={media.caption ?? 'Scene image'}
-                className={styles.lightboxImg}
-              />
-            ) : (
-              <video src={media.url} controls autoPlay className={styles.lightboxVideo} />
-            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={media.url}
+              alt={media.caption ?? 'Scene image'}
+              className={styles.lightboxImg}
+            />
             {media.caption && <p className={styles.lightboxCaption}>{media.caption}</p>}
           </div>
         </div>

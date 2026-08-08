@@ -18,7 +18,7 @@ export type SceneMediaSource = 'campaign_asset' | 'ai_generated';
 
 export interface SceneMedia {
   id: string;
-  type: 'image' | 'video';
+  type: 'image';
   url: string;
   caption?: string;
   source: SceneMediaSource;

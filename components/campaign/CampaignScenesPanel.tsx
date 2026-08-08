@@ -3,10 +3,11 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { listCampaignScenes, toDisplayName, type SceneAsset } from '@/lib/campaigns/scene-assets';
+import { assertWithinQuota } from '@/lib/storage/check-quota';
 import styles from './CampaignScenesPanel.module.css';
 
-const IMAGE_MAX_BYTES = 10 * 1024 * 1024; // 10MB
-const VIDEO_MAX_BYTES = 100 * 1024 * 1024; // 100MB
+const IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5MB per file
+const CAMPAIGN_QUOTA_BYTES = 25 * 1024 * 1024; // 25MB per campaign (half of the 50MB combined ceiling)
 const BUCKET = 'campaign-scenes';
 
 function toStorageName(originalName: string): string {
@@ -48,21 +49,27 @@ export default function CampaignScenesPanel({ campaignId }: { campaignId: string
     if (!file || !folderPath) return;
 
     setError('');
-    const isImage = file.type.startsWith('image/');
-    const isVideo = file.type.startsWith('video/');
-    if (!isImage && !isVideo) {
-      setError('Only image or video files are supported.');
+    if (!file.type.startsWith('image/')) {
+      setError('Only image files are supported.');
       return;
     }
-    const maxBytes = isVideo ? VIDEO_MAX_BYTES : IMAGE_MAX_BYTES;
-    if (file.size > maxBytes) {
-      setError(`File must be ${maxBytes / (1024 * 1024)}MB or smaller.`);
+    if (file.size > IMAGE_MAX_BYTES) {
+      setError(`Image must be ${IMAGE_MAX_BYTES / (1024 * 1024)}MB or smaller.`);
       return;
     }
 
     setUploading(true);
     try {
       const supabase = createClient();
+      await assertWithinQuota(
+        supabase,
+        BUCKET,
+        folderPath,
+        file.size,
+        CAMPAIGN_QUOTA_BYTES,
+        'scene library'
+      );
+
       const storageName = toStorageName(file.name);
       const path = `${folderPath}/${storageName}`;
       const { error: uploadError } = await supabase.storage
@@ -79,7 +86,7 @@ export default function CampaignScenesPanel({ campaignId }: { campaignId: string
         {
           name: storageName,
           displayName: toDisplayName(storageName),
-          type: isVideo ? 'video' : 'image',
+          type: 'image',
           url: publicUrl,
         },
       ]);
@@ -111,12 +118,8 @@ export default function CampaignScenesPanel({ campaignId }: { campaignId: string
         <div className={styles.assetGrid}>
           {assets.map((a) => (
             <div key={a.name} className={styles.assetTile}>
-              {a.type === 'image' ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={a.url} alt={a.displayName} className={styles.assetThumb} />
-              ) : (
-                <video src={a.url} className={styles.assetThumb} muted />
-              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={a.url} alt={a.displayName} className={styles.assetThumb} />
               <button
                 type="button"
                 className={styles.btnDelete}
@@ -130,7 +133,7 @@ export default function CampaignScenesPanel({ campaignId }: { campaignId: string
         </div>
       ) : (
         <p className={styles.placeholder}>
-          No scene photos or videos uploaded yet. Attach one during play from the session view once
+          No scene photos uploaded yet. Attach one during play from the session view once
           it&apos;s here.
         </p>
       )}
@@ -138,16 +141,18 @@ export default function CampaignScenesPanel({ campaignId }: { campaignId: string
       <div className={styles.uploadRow}>
         <input
           type="file"
-          accept="image/*,video/*"
+          accept="image/*"
           id="campaignSceneUpload"
           className={styles.fileInput}
           onChange={(e) => void handleUpload(e)}
           disabled={uploading}
         />
         <label htmlFor="campaignSceneUpload" className={styles.btnUpload} aria-disabled={uploading}>
-          {uploading ? 'Uploading…' : '+ Upload Photo or Video'}
+          {uploading ? 'Uploading…' : '+ Upload Photo'}
         </label>
-        <p className={styles.formHint}>Images up to 10MB, videos up to 100MB.</p>
+        <p className={styles.formHint}>
+          Images up to 5MB, 25MB total per campaign.
+        </p>
       </div>
 
       {error && <p className={styles.errorMsg}>{error}</p>}

@@ -164,8 +164,7 @@
   background: #000;
 }
 
-.sceneImg,
-.sceneVideo {
+.sceneImg {
   height: 100%;
   width: 100%;
   object-fit: contain;
@@ -272,8 +271,7 @@
   background: var(--crimson);
   border-color: var(--crimson-bright);
 }
-.lightboxImg,
-.lightboxVideo {
+.lightboxImg {
   max-height: 85vh;
   max-width: 85vw;
   object-fit: contain;

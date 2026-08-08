@@ -2,10 +2,14 @@
 
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { assertWithinQuota } from '@/lib/storage/check-quota';
 import styles from './CampaignFilesPanel.module.css';
 
-const PDF_MAX_BYTES = 50 * 1024 * 1024; // 50MB
+const FILE_MAX_BYTES = 20 * 1024 * 1024; // 20MB per file
+const CAMPAIGN_QUOTA_BYTES = 25 * 1024 * 1024; // 25MB per campaign (half of the 50MB combined ceiling)
 const BUCKET = 'campaign-pdfs';
+const ACCEPTED_EXTENSIONS = ['.pdf', '.txt', '.md'];
+const ACCEPTED_MIME_TYPES = ['application/pdf', 'text/plain', 'text/markdown'];
 
 type IndexStatus = 'indexing' | 'indexed' | 'error';
 
@@ -131,22 +135,37 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
     if (!file || !folderPath) return;
 
     setError('');
-    if (file.type !== 'application/pdf') {
-      setError('Only PDF files are supported.');
+    const lowerName = file.name.toLowerCase();
+    // Browser MIME sniffing for .md is unreliable (often reports empty or
+    // text/plain depending on OS), so accept on either a known MIME type OR a
+    // recognized extension.
+    const hasAcceptedExtension = ACCEPTED_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
+    const hasAcceptedMime = ACCEPTED_MIME_TYPES.includes(file.type);
+    if (!hasAcceptedExtension && !hasAcceptedMime) {
+      setError('Only PDF, plain text, or Markdown files are supported.');
       return;
     }
-    if (file.size > PDF_MAX_BYTES) {
-      setError('File must be 50MB or smaller.');
+    if (file.size > FILE_MAX_BYTES) {
+      setError(`File must be ${FILE_MAX_BYTES / (1024 * 1024)}MB or smaller.`);
       return;
     }
 
     setUploading(true);
     try {
       const supabase = createClient();
+      await assertWithinQuota(
+        supabase,
+        BUCKET,
+        folderPath,
+        file.size,
+        CAMPAIGN_QUOTA_BYTES,
+        'modules & files'
+      );
+
       const storageName = toStorageName(file.name);
       const { error: uploadError } = await supabase.storage
         .from(BUCKET)
-        .upload(`${folderPath}/${storageName}`, file, { contentType: 'application/pdf' });
+        .upload(`${folderPath}/${storageName}`, file, { contentType: file.type || 'application/octet-stream' });
       if (uploadError) throw uploadError;
 
       setFiles((prev) => [
@@ -204,9 +223,10 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
     <div className={styles.infoPanel}>
       <h3 className={styles.infoPanelTitle}>Modules &amp; Files</h3>
       <p className={styles.explainer}>
-        PDFs are indexed automatically after upload so the Rules Arbiter can search their contents
-        during play. This only helps with rules questions — the file needs an actual text layer
-        (not a scanned image), and 50MB max.
+        PDF, plain text, or Markdown files are indexed automatically after upload so the Rules
+        Arbiter can search their contents during play — this only helps with rules questions.
+        A PDF needs an actual text layer (not a scanned image). Up to 20MB per file, 25MB total
+        per campaign.
       </p>
 
       {loading ? (
@@ -259,14 +279,14 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
       <div className={styles.uploadRow}>
         <input
           type="file"
-          accept="application/pdf"
+          accept="application/pdf,text/plain,text/markdown,.pdf,.txt,.md"
           id="campaignFileUpload"
           className={styles.fileInput}
           onChange={(e) => void handleUpload(e)}
           disabled={uploading}
         />
         <label htmlFor="campaignFileUpload" className={styles.btnUpload} aria-disabled={uploading}>
-          {uploading ? 'Uploading…' : '+ Upload PDF'}
+          {uploading ? 'Uploading…' : '+ Upload File'}
         </label>
       </div>
 
