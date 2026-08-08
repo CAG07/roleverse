@@ -466,9 +466,19 @@
 }
 
 .characterCard {
+  display: block;
   background: var(--void-surface);
   border: var(--rule-thin);
   padding: 0.75rem 1rem;
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.characterCard:hover,
+.characterCard:focus-visible {
+  border-color: var(--gold-dim);
+  background: var(--gold-subtle);
 }
 
 .characterName {
