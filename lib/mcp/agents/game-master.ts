@@ -268,9 +268,10 @@ async function extractSceneMediaFromModuleMatches(
     const supabase = await createClient();
     const folderPath = `${context.userId}/${context.campaignId}`;
     const { data: files } = await supabase.storage.from('campaign-scenes').list(folderPath);
-    const storageName =
-      files?.find((file) => file.id !== null && toSceneDisplayName(file.name) === imageRef)?.name ??
-      imageRef;
+    const storageName = files?.find(
+      (file) => file.id !== null && toSceneDisplayName(file.name) === imageRef
+    )?.name;
+    if (!storageName) return undefined;
     const path = `${folderPath}/${storageName}`;
     const { data } = supabase.storage.from('campaign-scenes').getPublicUrl(path);
     return { type: 'image', url: data.publicUrl, source: 'module_reference' };
