@@ -87,17 +87,32 @@ Supabase Storage (S3-backed under the hood — a Storage "bucket" is the same pr
 
 | Bucket | Access | Path convention | Used by |
 |--------|--------|------------------|---------|
-| `campaign-pdfs` | Private — RLS restricts both read and write to the owning user's folder | `{user_id}/{campaign_id}/{timestamp}-{filename}` | `CampaignFilesPanel` — upload/list/delete, plus an "Index for AI" action that parses and embeds the PDF into `campaign_embeddings` (see RAG below) |
-| `campaign-scenes` | Public read, RLS-restricted write | `{user_id}/{campaign_id}/{timestamp}-{filename}` | `CampaignScenesPanel` (photo/video library, 10MB/100MB caps) + `ScenePickerModal` (attach one as the active in-session scene) |
+| `campaign-pdfs` | Private — RLS restricts both read and write to the owning user's folder | `{user_id}/{campaign_id}/{timestamp}-{filename}` | `CampaignFilesPanel` — upload (PDF, `.txt`, or `.md`, 20MB/file) / list / delete, auto-indexed into `campaign_embeddings` immediately on upload (see RAG below). 25MB per campaign. |
+| `campaign-scenes` | Public read, RLS-restricted write | `{user_id}/{campaign_id}/{timestamp}-{filename}` | `CampaignScenesPanel` (photo library — **images only**, video was considered and deliberately dropped: a single large video would disproportionately eat the per-campaign/Free-tier budget for one asset) + `ScenePickerModal` (attach one as the active in-session scene). 5MB/file, 25MB per campaign. |
 | `campaign-covers` | Public read, RLS-restricted write | `{user_id}/{campaign_id}/cover.jpg` | Campaign card thumbnails (`EditCampaignPage`, `CampaignsListPage`) — client-side resized to a 1024×1024 JPEG before upload, 5MB source-file cap |
 | `character-avatars` | Public read, RLS-restricted write | `{user_id}/...` | Provisioned in the initial schema; not yet wired to any UI |
 
 Public buckets mean anyone with the direct file URL can view it without authentication (same model as most apps' avatar/thumbnail URLs) — appropriate since these images aren't sensitive. Writes stay RLS-gated to the owning user's folder regardless of a bucket's public/private read setting.
 
+**Per-campaign storage caps** (`lib/storage/check-quota.ts`'s `assertWithinQuota`, used by both `CampaignFilesPanel` and `CampaignScenesPanel`): enforced **client-side only**, matching the existing per-file caps' enforcement level — there's no server-side upload route for any bucket today (all uploads go browser→Storage directly via the client SDK), so server-side-only aggregate enforcement while per-file caps stay client-side would be an inconsistent asymmetry, not a real security improvement. Same known gap as the per-file caps: bypassable by a modified client. A bucket-level size/MIME-type limit in the Supabase dashboard, or a real upload-proxy route, would close this as defense-in-depth if it ever matters.
+
+Numbers were set against the **Free plan's 1GB total, project-wide** storage ceiling (verified against Supabase's own pricing page, not a secondary source) — a 50MB combined ceiling per campaign (25MB modules + 25MB scenes) means roughly 20 campaigns' worth of fully-maxed usage before the whole project needs a Pro upgrade, without making the features too cramped to actually use (a typical module PDF is 5-20MB; a handful of 5MB-or-under photos covers most scene libraries). This isn't a hard mathematical guarantee against every campaign maxing out simultaneously — that would require caps small enough to make the features nearly useless — it's realistic-case headroom with a bounded worst case, the same "worst-case ceiling vs. realistic average" framing used for the cost table below.
+
 **Known gaps, not yet built:**
-- No per-user or per-campaign storage quota — only a per-file size cap enforced in application code (client-side check before upload, bypassable by a modified client). A bucket-level size/MIME-type limit in the Supabase dashboard would close that gap as defense-in-depth.
-- Deleting a campaign does not cascade-delete its Storage files — Postgres row deletes don't automatically remove Storage objects, so orphaned files accumulate today.
-- Both are natural fits for the Tier 2.1 rate-limiting work on the roadmap when prioritized, not blocking for current usage.
+- Deleting a campaign does not cascade-delete its Storage files — Postgres row deletes don't automatically remove Storage objects, so orphaned files accumulate today. A natural fit for the Tier 2.1 rate-limiting work on the roadmap when prioritized, not blocking for current usage.
+
+**Storage cost, Free vs. Pro** (verified directly against Supabase's pricing page — an earlier $0.125/GB figure from a secondary source was wrong):
+- **Free (current plan): 1GB file storage, hard cap, project-wide** — not per-campaign, not per-bucket. No paid overage on Free; Supabase emails a warning approaching the limit, then blocks new uploads once hit (not silent billing). This is the actual near-term constraint, well ahead of any per-campaign cap above.
+- **Pro: $25/month, 100GB file storage included, $0.0213/GB/month overage.**
+
+| Campaigns | Worst-case (both caps maxed, 50MB/campaign) | Cost | Realistic (~5MB/campaign avg, this project's own estimate) | Cost |
+|---|---|---|---|---|
+| 50 | 2.5GB | $25 (within 100GB) | 250MB | $25 |
+| 200 | 10GB | $25 | 1GB | $25 |
+| 1,000 | 50GB | $25 | 5GB | $25 |
+| 5,000 | 250GB | ~$28.20 | 25GB | $25 |
+
+At these cap sizes, cost stays flat at the $25 Pro base through thousands of campaigns even in the worst case — the caps function purely as a per-campaign abuse guard, not a real cost lever at any scale worth planning around yet.
 
 ## Ingestion
 
@@ -107,7 +122,16 @@ An in-app `/admin` page + `POST /api/admin/ingest` existed as a second trigger p
 
 **When an admin page would earn its place again:** nothing in the current architecture needs one. The natural trigger point is Tier 2 monetization (credits/subscriptions) — looking up a user's credit balance or subscription state for a support request, manually adjusting a balance, or seeing who hasn't accepted an updated ToS are genuine admin tasks that don't fit any existing player-facing UI. Until then, Supabase's own dashboard covers the rare cases where direct data access is needed. If one is built, keep it scoped to that actual need rather than growing back into a general ingestion/ops console — and gate it fail-closed (deny by default, allow only on an explicit match) rather than repeating this bug's shape.
 
-**Campaign PDF RAG:** a player-uploaded module PDF can be indexed on demand ("Index for AI" in `CampaignFilesPanel`) via `POST /api/campaigns/[id]/modules/ingest` (`lib/rag/ingest-campaign-pdf.ts`). This reuses the baseline pipeline's building blocks (`chunkText`, `embedBatch`) but is a separate, simpler orchestrator — no generation-swap, writes go through the request-scoped RLS-protected client rather than the service-role client, since `campaign_embeddings`' insert policy already permits `campaign_id IS NOT NULL AND auth.uid() = user_id` (added in `20260301000000_rag_phase_6a.sql`, which also added the `user_pdf` `source_type` — this feature was schema-ready well before it was built). `match_rules_embeddings` already unions baseline (`campaign_id IS NULL`) and campaign-scoped rows in one query and the Rules Arbiter already passes `campaignId` on every search, so retrieval needed no changes. Text extraction uses `pdf-parse-fork` (a dependency that predates this feature, previously unused). Because this pipes arbitrary user-uploaded text into a context block the Rules Arbiter treats as authoritative, `buildSystemPrompt` in `rules-arbiter.ts` carries explicit prompt-injection framing on that block, matching the pattern the Game Master already uses for `module_description`.
+**Campaign content ingestion:** a player-uploaded PDF/`.txt`/`.md` file is indexed automatically immediately after upload (`CampaignFilesPanel`, no separate "index" step) via `POST /api/campaigns/[id]/modules/ingest` (`lib/rag/ingest-campaign-pdf.ts`). This reuses the baseline pipeline's building blocks (`chunkText`, `embedBatch`) but is a separate, simpler orchestrator — no generation-swap, writes go through the request-scoped RLS-protected client rather than the service-role client, since `campaign_embeddings`' insert policy already permits `campaign_id IS NOT NULL AND auth.uid() = user_id` (added in `20260301000000_rag_phase_6a.sql`, which also added the `user_pdf` `source_type` — this feature was schema-ready well before it was built). Text extraction branches on file type: `.pdf` goes through `pdf-parse-fork` (a dependency that predates this feature, previously unused); `.txt`/`.md` is read directly as UTF-8, no parsing needed.
+
+**Campaign-specific content is treated as authoritative, not just "reference material"** — a deliberate two-axis framing applied everywhere this content is injected: (1) it can never redirect the AI's behavior/instructions (standard injection defense), and (2) it *is* the canonical answer within its domain, superseding baseline SRD text or the model's generic training knowledge when they conflict — the same posture this project's own CLAUDE.md takes ("these instructions OVERRIDE default behavior"). This requires guaranteed retrieval, not just prompt wording: `match_rules_embeddings` unions baseline (`campaign_id IS NULL`) and campaign-scoped rows into *one* ranked pool, so a campaign-specific chunk can lose its slot to an unrelated but higher-scoring baseline chunk — wording alone can't fix that, since the content might not even be retrieved. `match_campaign_priority_embeddings` (`20260808000000_match_campaign_priority_embeddings.sql`) is a separate function scoped to a single campaign's own rows only (parameterized by `source_types TEXT[]`, no baseline union, no `game_system` filter needed), so this content only ever competes against other rows from the *same* campaign:
+
+- **Game Master** (`lib/mcp/agents/game-master.ts`) calls it with `['user_pdf']` on every turn (the player's message is the query), formatted as a new "## Uploaded Module Reference" system-prompt block — grounds narration (rooms, NPCs, plot) in the actual uploaded text instead of just the model's general memory of the module.
+- **Rules Arbiter** (`lib/mcp/agents/rules-arbiter.ts`) calls it the same way, as a new "## This Campaign's Rules Overrides" block positioned *before* its existing baseline-mixed "## Retrieved Rules Context" block, with explicit instruction that this section wins on conflict.
+- **Lore Keeper does not need this mechanism** — verified by reading `lore-keeper.ts` directly: it already reads `campaigns.notes` + `sessions.transcript` exclusively (no `campaign_embeddings`/baseline content mixed in at all), and its system prompt already says campaign notes/transcripts are the *only* canonical source for past-session questions. Nothing for player-introduced lore to lose priority to.
+- A **house-rules editor UI was considered and dropped**: since any upload already gets this same guaranteed-retrieval/priority treatment, a player can upload a house-rules `.txt`/`.md`/`.pdf` the same way they'd upload a module — no dedicated editor needed. `source_type = 'house_rule'` remains an allowed-but-unused value in the `campaign_embeddings` CHECK constraint, not a feature to build toward.
+
+Because this pipes arbitrary user-uploaded text into context blocks agents treat as authoritative, both the Rules Arbiter's existing "## Retrieved Rules Context" block and the new blocks above carry explicit prompt-injection framing, matching the pattern the Game Master already uses for `module_description`.
 
 ## Streaming
 
@@ -130,9 +154,9 @@ Desktop sync from Fantasy Grounds into RoleVerse is complete — FG backup-file 
 
 ## Deferred / planned (not yet built)
 
-- TTS / voice output for NPCs (optional, off-by-default)
-- Voice input transcription (speech-to-text) — the mic-permission indicator (`VoiceStatus`) is built and captures nothing beyond browser mic access; the actual transcription approach is undecided (Whisper is explicitly not the planned path)
-- Uploaded-PDF indexing feeds the Rules Arbiter only — the Lore Keeper doesn't do RAG search at all (it reads `campaigns.notes` + transcripts directly). A house rules editor (structured, not just an indexed PDF) is still unbuilt.
-- On-demand AI scene generation — the scene asset library (upload/attach photos & videos) is built; generating new images on demand is deliberately deferred pending real usage-cost gating (image generation has real per-call cost, unlike text tokens)
+- TTS / voice output for NPCs (optional, off-by-default) — still open, needs a real decision (voice selection, autoplay, cost/UX) before building
+- ~~Voice input transcription~~ — **done, not deferred.** RoleVerse was never going to build its own STT pipeline; players use their browser/OS's native voice-to-text to dictate into the chat input, entirely outside the app. `VoiceStatus` (a real `getUserMedia` permission toggle, captures/sends nothing) is the only piece RoleVerse owns here, and it's shipped.
+- Uploaded content feeds the Game Master and Rules Arbiter (see "Campaign content ingestion" above) — the Lore Keeper still doesn't do RAG search at all (it reads `campaigns.notes` + transcripts directly, and doesn't need to — see above). A dedicated house-rules editor was considered and dropped, not deferred — uploads already get the same priority treatment.
+- ~~On-demand AI scene generation~~ — **removed, not deferred.** Not a planned feature. The scene asset library (upload/attach photos, images only — video was considered and dropped, see Storage) is the whole feature; there's no plan to generate new images on demand.
 - Kanka integration for external lore management
 - PF2E proper data sourcing
