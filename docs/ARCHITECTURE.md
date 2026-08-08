@@ -71,9 +71,39 @@ Core Postgres tables: `campaigns`, `characters`, `sessions`, `npcs`, `campaign_e
 - **NPC roster:** `npcs` per campaign with a 5-value disposition enum and structured `known_facts` JSONB.
 - **Sessions:** find-or-create logic (one active session per campaign), transcript persisted per exchange, AI-generated summary on end, summary injected into the Game Master at the next session's start.
 
+## Character sheets
+
+Fully schema-driven and modular per game system — adding or changing a field never requires touching the generic display, form, or persistence code, only the one file for that system.
+
+- **Storage:** `characters` has four flexible JSONB columns (`game_data_stats`, `game_data_combat`, `game_data_saves`, `game_data_skills`) plus `game_data_custom` for player-added custom fields. No schema migration is needed to add new character-sheet fields — they're just new keys in these JSONB blobs.
+- **Schema files** (`lib/character/sheet-schema/{add2e,dnd5e,pf2e,dcc}.ts`): one `SystemSheetSchema` per supported system (`ADD2E`, `5E_2014`, `PATHFINDER_2E`, `DCC`), each a flat list of `SheetField`s. Each field declares a `kind` (`number` | `string` | `string-list` | `record-fixed` | `record-open` | `spell-slots`) and which of the four JSONB columns it belongs to. Field selection mirrors each system's actual mechanical content (ability-derived saves/skills, THAC0, Class DC, thief skills, corruption, etc.) — not any publisher's page layout or artwork, which stays RoleVerse's own visual design throughout.
+- **Generic engine, not per-system code:** `BaseSheet.tsx` (display), `SystemFields.tsx` (create/edit form), and `buildGameDataColumns`/`hydrateSystemFieldsValue` (JSONB bucketing) all read the `SheetField[]` array and render/persist generically by `kind` — none of them contain a single per-system conditional. The only per-system exception is two `gameSystem === 'DCC'` branches in `SystemFields.tsx`, for DCC's bespoke Luck/occupation/mercurial-magic inputs that don't fit the generic field kinds — everything else for DCC (saves, thief skills, corruption, patron taint, known spells) is ordinary schema fields.
+- **Per-system sheet components** (`components/character/sheets/{ADD2ESheet,DND5ESheet,PF2ESheet,DCCSheet}.tsx`): thin wrappers around `BaseSheet` supplying system-specific header text (race/class/level line) and, where needed, bespoke `extra` sections for content that doesn't fit a generic field kind (PF2E's rank-badge-colored proficiency ranks, DCC's live Luck editor and funnel-party roster). `CharacterSheet.tsx` is the single dispatch point, switching on `gameSystem` to the right component; systems without a structured schema (the SETUP.md "training knowledge only, in development" list — AD&D 1E, 3.5E, 4E, 5E 2024, PF1E, The One Ring 1E & 2E, Cyberpunk 2020) fall through to `GenericSheet.tsx`, a flat dump of whatever's in the JSONB columns.
+- **Compact vs. full display:** a `keyStat?: boolean` marker on `number`/`string` fields controls the in-session compact panel (ability scores + HP + `keyStat` fields only — AC everywhere, THAC0 for AD&D 2E, Perception + Hero Points for PF2E). The full sheet (everything) is reachable via a maximize button (`CharacterSheetModal`) from the session view, or directly on the campaign's character detail page.
+
+## Storage
+
+Supabase Storage (S3-backed under the hood — a Storage "bucket" is the same primitive as an S3 bucket, not a lighter abstraction on top of it). Buckets are shared across all users; per-user isolation comes from RLS on `storage.objects` keyed to a `{user_id}/...` folder prefix, not from provisioning a bucket per user or per tenant — that's the standard multi-tenant pattern, and splitting into more buckets would not reduce cost or improve scaling (Supabase bills total GB + egress across the whole project regardless of bucket count).
+
+| Bucket | Access | Path convention | Used by |
+|--------|--------|------------------|---------|
+| `campaign-pdfs` | Private — RLS restricts both read and write to the owning user's folder | `{user_id}/{campaign_id}/{timestamp}-{filename}` | `CampaignFilesPanel` — upload/list/delete, plus an "Index for AI" action that parses and embeds the PDF into `campaign_embeddings` (see RAG below) |
+| `campaign-scenes` | Public read, RLS-restricted write | `{user_id}/{campaign_id}/{timestamp}-{filename}` | `CampaignScenesPanel` (photo/video library, 10MB/100MB caps) + `ScenePickerModal` (attach one as the active in-session scene) |
+| `campaign-covers` | Public read, RLS-restricted write | `{user_id}/{campaign_id}/cover.jpg` | Campaign card thumbnails (`EditCampaignPage`, `CampaignsListPage`) — client-side resized to a 1024×1024 JPEG before upload, 5MB source-file cap |
+| `character-avatars` | Public read, RLS-restricted write | `{user_id}/...` | Provisioned in the initial schema; not yet wired to any UI |
+
+Public buckets mean anyone with the direct file URL can view it without authentication (same model as most apps' avatar/thumbnail URLs) — appropriate since these images aren't sensitive. Writes stay RLS-gated to the owning user's folder regardless of a bucket's public/private read setting.
+
+**Known gaps, not yet built:**
+- No per-user or per-campaign storage quota — only a per-file size cap enforced in application code (client-side check before upload, bypassable by a modified client). A bucket-level size/MIME-type limit in the Supabase dashboard would close that gap as defense-in-depth.
+- Deleting a campaign does not cascade-delete its Storage files — Postgres row deletes don't automatically remove Storage objects, so orphaned files accumulate today.
+- Both are natural fits for the Tier 2.1 rate-limiting work on the roadmap when prioritized, not blocking for current usage.
+
 ## Ingestion
 
 Baseline rules content is ingested via a GitHub Actions workflow (`workflow_dispatch`). The pipeline fetches from source (Open5e for 5E SRD, with `document__slug=wotc-srd` filter), chunks, embeds via Voyage, and writes under a new generation, promoting atomically on success. 5E_2014 has ~2335 chunks. ADD2E and PATHFINDER_2E are stubs (training-knowledge fallback / data deferred).
+
+**Campaign PDF RAG:** a player-uploaded module PDF can be indexed on demand ("Index for AI" in `CampaignFilesPanel`) via `POST /api/campaigns/[id]/modules/ingest` (`lib/rag/ingest-campaign-pdf.ts`). This reuses the baseline pipeline's building blocks (`chunkText`, `embedBatch`) but is a separate, simpler orchestrator — no generation-swap, writes go through the request-scoped RLS-protected client rather than the service-role client, since `campaign_embeddings`' insert policy already permits `campaign_id IS NOT NULL AND auth.uid() = user_id` (added in `20260301000000_rag_phase_6a.sql`, which also added the `user_pdf` `source_type` — this feature was schema-ready well before it was built). `match_rules_embeddings` already unions baseline (`campaign_id IS NULL`) and campaign-scoped rows in one query and the Rules Arbiter already passes `campaignId` on every search, so retrieval needed no changes. Text extraction uses `pdf-parse-fork` (a dependency that predates this feature, previously unused). Because this pipes arbitrary user-uploaded text into a context block the Rules Arbiter treats as authoritative, `buildSystemPrompt` in `rules-arbiter.ts` carries explicit prompt-injection framing on that block, matching the pattern the Game Master already uses for `module_description`.
 
 ## Streaming
 
@@ -97,7 +127,8 @@ Desktop sync from Fantasy Grounds into RoleVerse is complete — FG backup-file 
 ## Deferred / planned (not yet built)
 
 - TTS / voice output for NPCs (optional, off-by-default)
-- Voice input via browser microphone → Whisper
-- PDF ingestion + house rules editor + Lore Keeper semantic search
+- Voice input transcription (speech-to-text) — the mic-permission indicator (`VoiceStatus`) is built and captures nothing beyond browser mic access; the actual transcription approach is undecided (Whisper is explicitly not the planned path)
+- Uploaded-PDF indexing feeds the Rules Arbiter only — the Lore Keeper doesn't do RAG search at all (it reads `campaigns.notes` + transcripts directly). A house rules editor (structured, not just an indexed PDF) is still unbuilt.
+- On-demand AI scene generation — the scene asset library (upload/attach photos & videos) is built; generating new images on demand is deliberately deferred pending real usage-cost gating (image generation has real per-call cost, unlike text tokens)
 - Kanka integration for external lore management
 - PF2E proper data sourcing
