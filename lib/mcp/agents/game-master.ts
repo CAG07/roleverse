@@ -240,6 +240,10 @@ function partitionModuleMatches(matches: CampaignPriorityMatch[]): {
   return { mapLayout, prose };
 }
 
+function toSceneDisplayName(storageName: string): string {
+  return storageName.replace(/^\d+-/, '');
+}
+
 /**
  * If the top-matching module chunk for this turn carries a YouTube link or a
  * Scene Library image filename the player wrote into their own uploaded
@@ -262,7 +266,12 @@ async function extractSceneMediaFromModuleMatches(
   const imageRef = topMetadata?.imageRef;
   if (typeof imageRef === 'string' && imageRef) {
     const supabase = await createClient();
-    const path = `${context.userId}/${context.campaignId}/${imageRef}`;
+    const folderPath = `${context.userId}/${context.campaignId}`;
+    const { data: files } = await supabase.storage.from('campaign-scenes').list(folderPath);
+    const storageName =
+      files?.find((file) => file.id !== null && toSceneDisplayName(file.name) === imageRef)?.name ??
+      imageRef;
+    const path = `${folderPath}/${storageName}`;
     const { data } = supabase.storage.from('campaign-scenes').getPublicUrl(path);
     return { type: 'image', url: data.publicUrl, source: 'module_reference' };
   }
