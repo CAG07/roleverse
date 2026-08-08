@@ -1,6 +1,10 @@
 // lib/mcp/tools/roll-dice.ts
-// Narrative dice-rolling tool for skill checks, ability checks, etc.
-// Fantasy Grounds handles tactical combat rolls; this covers everything else.
+// Dice-rolling tool for the GM's OWN hidden/procedural rolls — never for a player
+// character's action. Skill checks, ability checks, saves, and attacks belong to the
+// player: they roll (Fantasy Grounds, physical dice, a digital roller, an oracle, or
+// any method they choose — Fantasy Grounds is never required) and report the result
+// back for the GM to narrate. Fantasy Grounds also independently handles tactical
+// combat rolls when a player has it connected.
 
 import { getGameSystem } from '@/lib/game-systems/registry';
 import type { DiceNotation } from '@/lib/game-systems/types';
@@ -11,8 +15,11 @@ import type { MCPContext, MCPToolDefinition, MCPToolResult } from '../types';
 const rollDiceDefinition: MCPToolDefinition = {
   name: 'roll-dice',
   description:
-    'Roll dice for narrative skill checks, ability checks, and other non-combat rolls. ' +
-    'Tactical combat dice are handled elsewhere; use this tool only for narrative play.',
+    "Roll dice for the GM's own hidden, behind-the-scenes results — wandering monster " +
+    'checks, NPC reaction rolls, morale, weather, treasure generation, and similar GM-side ' +
+    "procedural generation. NEVER use this for a player character's skill check, ability " +
+    'check, saving throw, or attack roll — those belong to the player. Ask the player to ' +
+    'roll and report the result instead; do not roll on their behalf.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -23,7 +30,8 @@ const rollDiceDefinition: MCPToolDefinition = {
       reason: {
         type: 'string',
         description:
-          'Why the roll is being made, e.g. "Perception check to notice the hidden door"',
+          'Why the roll is being made, e.g. "wandering monster check for this watch" — ' +
+          'never a player-character check, which the player rolls themselves',
       },
     },
     required: ['notation'],
