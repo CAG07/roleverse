@@ -19,7 +19,6 @@ function getRequiredVisionModel(): string {
   return model;
 }
 
-const VISION_MODEL = getRequiredVisionModel();
 const MAX_TOKENS = 1024;
 
 const CLASSIFY_AND_TRANSCRIBE_PROMPT = `This image is one page from a tabletop RPG module PDF. Determine whether it is a dungeon/area/floorplan map, and if so, transcribe its structure.
@@ -75,9 +74,10 @@ export async function classifyAndTranscribeMapPage(
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY environment variable is not set');
 
   try {
+    const visionModel = getRequiredVisionModel();
     const client = new Anthropic({ apiKey });
     const response = await client.messages.create({
-      model: VISION_MODEL,
+      model: visionModel,
       max_tokens: MAX_TOKENS,
       messages: [
         {
