@@ -10,6 +10,9 @@ export interface CampaignData {
   description: string | null;
   game_system: string;
   created_at: string;
+  /** Square thumbnail shown on the campaign card. Not yet backed by a DB column —
+   *  always undefined until the storage/migration approach is confirmed. */
+  cover_image_url?: string | null;
 }
 
 function formatSystemBadge(gameSystem: string): string {
