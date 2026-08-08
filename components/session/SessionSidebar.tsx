@@ -18,7 +18,7 @@ interface SessionSidebarProps {
   // onStopSession removed — sessions are stopped from campaign settings only
 }
 
-const FONT_SIZE_OPTIONS = [12, 14, 16, 18] as const;
+const FONT_SIZE_OPTIONS = [12, 14, 16, 18, 20, 22, 24] as const;
 
 function CollapsibleSection({
   title,
