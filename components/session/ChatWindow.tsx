@@ -94,8 +94,6 @@ interface ChatWindowProps {
   sessionId: string;
   campaignId: string;
   initialTranscript?: TranscriptEntry[];
-  /** Prior session's recap, shown up front on a brand-new session so the player never has to ask. */
-  previousSessionSummary?: string | null;
 }
 
 function transcriptToMessages(entries: TranscriptEntry[]): ChatMessage[] {
@@ -128,33 +126,14 @@ function transcriptToMessages(entries: TranscriptEntry[]): ChatMessage[] {
   });
 }
 
-function buildInitialMessages(
-  initialTranscript: TranscriptEntry[],
-  previousSessionSummary?: string | null
-): ChatMessage[] {
-  const hydrated = transcriptToMessages(initialTranscript);
-  if (hydrated.length > 0) return hydrated;
-  return [
-    {
-      id: 'msg-init',
-      role: 'system',
-      content: previousSessionSummary
-        ? `**Previously in this campaign:**\n\n${previousSessionSummary}`
-        : 'Session started.',
-      timestamp: new Date(),
-    },
-  ];
-}
-
 export default function ChatWindow({
   onSceneMediaUpdate: _onSceneMediaUpdate,
   sessionId,
   campaignId,
   initialTranscript = [],
-  previousSessionSummary = null,
 }: ChatWindowProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
-    buildInitialMessages(initialTranscript, previousSessionSummary)
+    transcriptToMessages(initialTranscript)
   );
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -285,8 +264,8 @@ export default function ChatWindow({
     [campaignId, sessionId]
   );
 
-  const handleSend = useCallback(async () => {
-    const text = input.trim();
+  const handleSend = useCallback(async (overrideText?: string) => {
+    const text = (overrideText ?? input).trim();
     if (!text || isLoading) return;
 
     const playerMsg: ChatMessage = {
@@ -432,6 +411,20 @@ export default function ChatWindow({
       }
     }
   }, [input, isLoading, sessionId, finalizeStream]);
+
+  // Brand-new session (no transcript yet) — auto-trigger one GM turn instead of
+  // leaving the player staring at an empty feed. The GM already has the previous
+  // session's summary and campaign context in its system prompt (see
+  // buildSystemPrompt in lib/mcp/agents/game-master.ts), so this naturally becomes
+  // a fresh opening scene for a first session or a narrated recap-into-scene for a
+  // continuing one. Sent as an ordinary player message — no transcript format change.
+  const autoIntroFired = useRef(false);
+  useEffect(() => {
+    if (initialTranscript.length > 0 || autoIntroFired.current) return;
+    autoIntroFired.current = true;
+    void handleSend("I'm ready to begin.");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
