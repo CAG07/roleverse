@@ -3,7 +3,7 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { listCampaignScenes, toDisplayName, type SceneAsset } from '@/lib/campaigns/scene-assets';
-import { assertWithinQuota } from '@/lib/storage/check-quota';
+import { assertWithinQuota, getUsedBytes } from '@/lib/storage/check-quota';
 import styles from './CampaignScenesPanel.module.css';
 
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5MB per file
@@ -14,12 +14,21 @@ function toStorageName(originalName: string): string {
   return `${Date.now()}-${originalName.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
 }
 
+function formatSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default function CampaignScenesPanel({ campaignId }: { campaignId: string }) {
   const [assets, setAssets] = useState<SceneAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [folderPath, setFolderPath] = useState<string | null>(null);
+  /** Total bytes already used in this campaign's folder — shown as a live
+   * quota indicator so a player can see how much room is left before picking
+   * a file, rather than only finding out when an upload is rejected. */
+  const [usedBytes, setUsedBytes] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,6 +43,13 @@ export default function CampaignScenesPanel({ campaignId }: { campaignId: string
       } else {
         setAssets(result.assets);
       }
+
+      if (result.folderPath) {
+        const supabase = createClient();
+        const used = await getUsedBytes(supabase, BUCKET, result.folderPath);
+        if (!cancelled) setUsedBytes(used);
+      }
+
       setLoading(false);
     }
 
@@ -90,6 +106,7 @@ export default function CampaignScenesPanel({ campaignId }: { campaignId: string
           url: publicUrl,
         },
       ]);
+      setUsedBytes((prev) => (prev ?? 0) + file.size);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to upload file.');
     } finally {
@@ -106,11 +123,29 @@ export default function CampaignScenesPanel({ campaignId }: { campaignId: string
       return;
     }
     setAssets((prev) => prev.filter((a) => a.name !== name));
+    // SceneAsset doesn't carry file size, so re-fetch the aggregate rather
+    // than trying to subtract a delta we don't have.
+    const used = await getUsedBytes(supabase, BUCKET, folderPath);
+    setUsedBytes(used);
   };
 
   return (
     <div className={styles.infoPanel}>
       <h3 className={styles.infoPanelTitle}>Scene Library</h3>
+
+      {usedBytes !== null && (
+        <div className={styles.quotaWrap}>
+          <div className={styles.quotaTrack} role="progressbar" aria-label="Storage used">
+            <div
+              className={`${styles.quotaFill} ${usedBytes / CAMPAIGN_QUOTA_BYTES >= 0.9 ? styles.quotaFillWarning : ''}`}
+              style={{ width: `${Math.min(100, (usedBytes / CAMPAIGN_QUOTA_BYTES) * 100)}%` }}
+            />
+          </div>
+          <span className={styles.quotaLabel}>
+            {formatSize(usedBytes)} of {formatSize(CAMPAIGN_QUOTA_BYTES)} used
+          </span>
+        </div>
+      )}
 
       {loading ? (
         <p className={styles.placeholder}>Loading…</p>
