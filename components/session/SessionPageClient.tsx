@@ -2,11 +2,12 @@
 
 import { useState, useCallback, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Maximize2 } from 'lucide-react';
 import SessionSidebar from '@/components/session/SessionSidebar';
 import SceneDisplay from '@/components/session/SceneDisplay';
 import ChatWindow from '@/components/session/ChatWindow';
 import CharacterSheet from '@/components/character/CharacterSheet';
+import CharacterSheetModal from '@/components/character/CharacterSheetModal';
 import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
 import PartyStatus from '@/components/session/PartyStatus';
 import SessionNotes from '@/components/session/SessionNotes';
@@ -53,7 +54,6 @@ export default function SessionPageClient({
   gameSystem,
   characters,
   initialTranscript = [],
-  previousSessionSummary = null,
 }: {
   sessionId: string;
   campaignId: string;
@@ -61,7 +61,6 @@ export default function SessionPageClient({
   gameSystem: string;
   characters: Character[];
   initialTranscript?: TranscriptEntry[];
-  previousSessionSummary?: string | null;
 }) {
   const router = useRouter();
   const [sceneMedia, setSceneMedia] = useState<SceneMedia | null>(null);
@@ -74,6 +73,7 @@ export default function SessionPageClient({
   const [prevSceneMedia, setPrevSceneMedia] = useState<SceneMedia | null>(null);
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
+  const [sheetMaximized, setSheetMaximized] = useState(false);
   const [confirmStop, setConfirmStop] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
   const [chatFontSize, setChatFontSize] = useState<number>(() => {
@@ -226,6 +226,8 @@ export default function SessionPageClient({
             <SceneDisplay
               media={sceneMedia}
               onClose={() => setSceneMedia(null)}
+              onAttach={setSceneMedia}
+              campaignId={campaignId}
               compact={sceneCollapsed}
             />
             <button
@@ -247,7 +249,6 @@ export default function SessionPageClient({
               sessionId={sessionId}
               campaignId={campaignId}
               initialTranscript={initialTranscript}
-              previousSessionSummary={previousSessionSummary}
             />
           </div>
         </div>
@@ -293,14 +294,39 @@ export default function SessionPageClient({
 
           {/* Character sheet */}
           {selectedCharacterData && selectedCharacter ? (
-            <CharacterSheet
-              characterId={selectedCharacter.id}
-              gameSystem={gameSystem}
-              characterData={selectedCharacterData}
-              equipment={selectedCharacter.equipment ?? []}
-              rawGameDataStats={selectedCharacter.game_data_stats ?? {}}
-              funnelParty={funnelParty}
-            />
+            <>
+              <div className={styles.sheetHeaderRow}>
+                <span className={styles.sectionLabel}>Character</span>
+                <button
+                  type="button"
+                  className={styles.maximizeBtn}
+                  onClick={() => setSheetMaximized(true)}
+                  aria-label="Maximize character sheet"
+                  title="Maximize character sheet"
+                >
+                  <Maximize2 size={12} />
+                </button>
+              </div>
+              <CharacterSheet
+                characterId={selectedCharacter.id}
+                gameSystem={gameSystem}
+                characterData={selectedCharacterData}
+                equipment={selectedCharacter.equipment ?? []}
+                rawGameDataStats={selectedCharacter.game_data_stats ?? {}}
+                funnelParty={funnelParty}
+                compact
+              />
+              <CharacterSheetModal
+                open={sheetMaximized}
+                onClose={() => setSheetMaximized(false)}
+                characterId={selectedCharacter.id}
+                gameSystem={gameSystem}
+                characterData={selectedCharacterData}
+                equipment={selectedCharacter.equipment ?? []}
+                rawGameDataStats={selectedCharacter.game_data_stats ?? {}}
+                funnelParty={funnelParty}
+              />
+            </>
           ) : (
             <div className={styles.noCharacter}>
               <p className={styles.noCharacterText}>

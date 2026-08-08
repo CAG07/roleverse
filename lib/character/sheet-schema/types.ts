@@ -14,10 +14,15 @@ interface FieldBase {
 
 export interface NumberField extends FieldBase {
   kind: 'number';
+  /** Shown in the compact in-session panel, not just the full sheet — reserve for
+   *  stats a player needs at a glance mid-combat (AC, THAC0, Perception, ...). */
+  keyStat?: boolean;
 }
 
 export interface StringField extends FieldBase {
   kind: 'string';
+  /** See NumberField.keyStat. */
+  keyStat?: boolean;
 }
 
 /** Newline-separated list — proficiencies, features, feats, corruption. */

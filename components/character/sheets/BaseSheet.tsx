@@ -31,6 +31,11 @@ interface BaseSheetProps {
   /** Schema field keys still needed for the creation/edit form but given bespoke display
    *  instead of the generic renderer (e.g. PF2E's rank-badge-colored proficiency ranks). */
   hiddenFieldKeys?: string[];
+  /** Compact display for the in-session panel: only the header, ability scores, HP, and
+   *  fields marked `keyStat` in the schema (e.g. AC, THAC0, Perception) — everything else
+   *  (saves, skills, features, spells, class-specific extras, custom fields, equipment)
+   *  is reserved for the full/maximized sheet. */
+  compact?: boolean;
 }
 
 function abilityModifier(score: number): string {
@@ -126,6 +131,7 @@ export default function BaseSheet({
   showAbilityModifiers = false,
   extra,
   hiddenFieldKeys = [],
+  compact = false,
 }: BaseSheetProps) {
   const name = (data.name as string) ?? 'Unknown';
   const hp = (data.hp as number) ?? 0;
@@ -135,6 +141,9 @@ export default function BaseSheet({
   const abilityScores = (data.abilityScores as Record<string, number> | undefined) ?? {};
 
   const combatScalarFields = schema.fields.filter(isCombatScalar);
+  const visibleCombatScalarFields = compact
+    ? combatScalarFields.filter((f) => f.keyStat)
+    : combatScalarFields;
   const consumedKeys = new Set([...combatScalarFields.map((f) => f.key), ...hiddenFieldKeys]);
   const remainingFields = schema.fields.filter((f) => !consumedKeys.has(f.key));
 
@@ -142,7 +151,7 @@ export default function BaseSheet({
 
   return (
     <div className={styles.sheetRoot}>
-      {beforeContent}
+      {!compact && beforeContent}
       <div className={styles.sheetHeader}>
         <div className={styles.headerTop}>
           <h3 className={styles.sheetName}>{name}</h3>
@@ -190,7 +199,7 @@ export default function BaseSheet({
               /{maxHp}
             </span>
           </div>
-          {combatScalarFields.map((field) => (
+          {visibleCombatScalarFields.map((field) => (
             <div key={field.key} className={styles.combatBox}>
               <span className={styles.combatLabel}>{field.label}</span>
               <span className={`${styles.combatValue} ${styles.dynamic}`}>
@@ -201,13 +210,17 @@ export default function BaseSheet({
         </div>
       </div>
 
-      {remainingFields.map((field) => renderSchemaField(field, data))}
+      {!compact && (
+        <>
+          {remainingFields.map((field) => renderSchemaField(field, data))}
 
-      {extra}
+          {extra}
 
-      <CustomFieldsSection characterId={characterId} customFields={customFields} />
+          <CustomFieldsSection characterId={characterId} customFields={customFields} />
 
-      <EquipmentList items={equipment} />
+          <EquipmentList items={equipment} />
+        </>
+      )}
     </div>
   );
 }

@@ -23,6 +23,8 @@ interface CharacterSheetProps {
   rawGameDataStats?: Record<string, unknown>;
   /** DCC-only: other level-0 characters run by the same player in this campaign. */
   funnelParty?: DCCFunnelMember[];
+  /** Compact display for the in-session panel — see BaseSheet's `compact` doc. */
+  compact?: boolean;
 }
 
 export default function CharacterSheet({
@@ -32,14 +34,21 @@ export default function CharacterSheet({
   equipment = [],
   rawGameDataStats,
   funnelParty,
+  compact,
 }: CharacterSheetProps) {
   switch (gameSystem) {
     case 'ADD2E':
-      return <ADD2ESheet characterId={characterId} data={characterData} equipment={equipment} />;
+      return (
+        <ADD2ESheet characterId={characterId} data={characterData} equipment={equipment} compact={compact} />
+      );
     case '5E_2014':
-      return <DND5ESheet characterId={characterId} data={characterData} equipment={equipment} />;
+      return (
+        <DND5ESheet characterId={characterId} data={characterData} equipment={equipment} compact={compact} />
+      );
     case 'PATHFINDER_2E':
-      return <PF2ESheet characterId={characterId} data={characterData} equipment={equipment} />;
+      return (
+        <PF2ESheet characterId={characterId} data={characterData} equipment={equipment} compact={compact} />
+      );
     case 'DCC':
       return (
         <DCCSheet
@@ -47,6 +56,7 @@ export default function CharacterSheet({
           data={{ ...characterData, equipment }}
           rawGameDataStats={rawGameDataStats}
           funnelParty={funnelParty}
+          compact={compact}
         />
       );
     default:
