@@ -14,6 +14,11 @@ type RouteParams = { params: Promise<{ id: string }> };
 
 const BUCKET = 'campaign-pdfs';
 
+// Map-page vision transcription (lib/rag/ingest-campaign-pdf.ts) adds several
+// sequential-ish Claude vision calls on top of the existing parse/chunk/embed
+// work, which can exceed the default serverless timeout.
+export const maxDuration = 60;
+
 async function authAndCampaign(campaignId: string) {
   const supabase = await createClient();
   const {
@@ -65,18 +70,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }
 
   try {
-    const pdfBuffer = Buffer.from(await fileBlob.arrayBuffer());
+    const fileBuffer = Buffer.from(await fileBlob.arrayBuffer());
     const result = await ingestCampaignPdf({
       supabase,
       campaignId: id,
       userId: user.id,
       gameSystem,
       fileName,
-      pdfBuffer,
+      fileBuffer,
     });
     return NextResponse.json(result);
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Failed to index PDF';
+    const message = err instanceof Error ? err.message : 'Failed to index file';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

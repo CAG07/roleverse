@@ -6,6 +6,13 @@ import type { SceneMedia } from '@/lib/types/session';
 import ScenePickerModal from './ScenePickerModal';
 import styles from './SceneDisplay.module.css';
 
+const YOUTUBE_VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
+
+function getYoutubeEmbedUrl(videoId?: string): string | null {
+  if (!videoId || !YOUTUBE_VIDEO_ID_PATTERN.test(videoId)) return null;
+  return `https://www.youtube.com/embed/${videoId}`;
+}
+
 interface SceneDisplayProps {
   media: SceneMedia | null;
   onClose?: () => void;
@@ -26,6 +33,7 @@ export default function SceneDisplay({
 }: SceneDisplayProps) {
   const [expanded, setExpanded] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const youtubeEmbedUrl = media?.type === 'youtube' ? getYoutubeEmbedUrl(media.videoId) : null;
 
   if (!media) {
     if (compact) {
@@ -75,14 +83,24 @@ export default function SceneDisplay({
         <span className={`${styles.corner} ${styles.br}`} />
 
         <div className={styles.mediaContainer}>
-          {media.type === 'image' ? (
+          {youtubeEmbedUrl ? (
+            <iframe
+              src={youtubeEmbedUrl}
+              title={media.caption ?? 'Scene video'}
+              className={styles.sceneFrame}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : media.type === 'image' && media.url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={media.url} alt={media.caption ?? 'Scene image'} className={styles.sceneImg} />
-          ) : (
-            <video src={media.url} controls className={styles.sceneVideo} />
-          )}
+          ) : null}
           <span className={styles.sourceLabel}>
-            {media.source === 'ai_generated' ? 'AI Generated' : 'Campaign Asset'}
+            {media.source === 'ai_generated'
+              ? 'AI Generated'
+              : media.source === 'module_reference'
+                ? 'From Module'
+                : 'Campaign Asset'}
           </span>
           <div className={styles.controls}>
             {onAttach && campaignId && (
@@ -140,16 +158,22 @@ export default function SceneDisplay({
             >
               <X size={14} />
             </button>
-            {media.type === 'image' ? (
+            {youtubeEmbedUrl ? (
+              <iframe
+                src={youtubeEmbedUrl}
+                title={media.caption ?? 'Scene video'}
+                className={styles.lightboxFrame}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : media.type === 'image' && media.url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={media.url}
                 alt={media.caption ?? 'Scene image'}
                 className={styles.lightboxImg}
               />
-            ) : (
-              <video src={media.url} controls autoPlay className={styles.lightboxVideo} />
-            )}
+            ) : null}
             {media.caption && <p className={styles.lightboxCaption}>{media.caption}</p>}
           </div>
         </div>

@@ -2,10 +2,14 @@
 
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { assertWithinQuota, getUsedBytes } from '@/lib/storage/check-quota';
 import styles from './CampaignFilesPanel.module.css';
 
-const PDF_MAX_BYTES = 50 * 1024 * 1024; // 50MB
+const FILE_MAX_BYTES = 20 * 1024 * 1024; // 20MB per file
+const CAMPAIGN_QUOTA_BYTES = 25 * 1024 * 1024; // 25MB per campaign (half of the 50MB combined ceiling)
 const BUCKET = 'campaign-pdfs';
+const ACCEPTED_EXTENSIONS = ['.pdf', '.txt', '.md'];
+const ACCEPTED_MIME_TYPES = ['application/pdf', 'text/plain', 'text/markdown'];
 
 type IndexStatus = 'indexing' | 'indexed' | 'error';
 
@@ -41,6 +45,10 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [folderPath, setFolderPath] = useState<string | null>(null);
+  /** Total bytes already used in this campaign's folder — shown as a live
+   * quota indicator so a player can see how much room is left before picking
+   * a file, rather than only finding out when an upload is rejected. */
+  const [usedBytes, setUsedBytes] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,7 +63,7 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
       const path = `${user.id}/${campaignId}`;
       if (!cancelled) setFolderPath(path);
 
-      const [{ data: listData, error: listError }, { data: indexedRows }] = await Promise.all([
+      const [{ data: listData, error: listError }, { data: indexedRows }, used] = await Promise.all([
         supabase.storage.from(BUCKET).list(path),
         // Selects only the title path out of metadata (not the full JSONB blob per
         // chunk) to keep payload down — still one row per chunk rather than per file,
@@ -66,8 +74,10 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
           .select('title:metadata->>title')
           .eq('campaign_id', campaignId)
           .eq('source_type', 'user_pdf'),
+        getUsedBytes(supabase, BUCKET, path),
       ]);
       if (cancelled) return;
+      setUsedBytes(used);
 
       const indexedNames = new Set(
         (indexedRows ?? [])
@@ -131,22 +141,37 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
     if (!file || !folderPath) return;
 
     setError('');
-    if (file.type !== 'application/pdf') {
-      setError('Only PDF files are supported.');
+    const lowerName = file.name.toLowerCase();
+    // Browser MIME sniffing for .md is unreliable (often reports empty or
+    // text/plain depending on OS), so accept on either a known MIME type OR a
+    // recognized extension.
+    const hasAcceptedExtension = ACCEPTED_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
+    const hasAcceptedMime = ACCEPTED_MIME_TYPES.includes(file.type);
+    if (!hasAcceptedExtension && !hasAcceptedMime) {
+      setError('Only PDF, plain text, or Markdown files are supported.');
       return;
     }
-    if (file.size > PDF_MAX_BYTES) {
-      setError('File must be 50MB or smaller.');
+    if (file.size > FILE_MAX_BYTES) {
+      setError(`File must be ${FILE_MAX_BYTES / (1024 * 1024)}MB or smaller.`);
       return;
     }
 
     setUploading(true);
     try {
       const supabase = createClient();
+      await assertWithinQuota(
+        supabase,
+        BUCKET,
+        folderPath,
+        file.size,
+        CAMPAIGN_QUOTA_BYTES,
+        'modules & files'
+      );
+
       const storageName = toStorageName(file.name);
       const { error: uploadError } = await supabase.storage
         .from(BUCKET)
-        .upload(`${folderPath}/${storageName}`, file, { contentType: 'application/pdf' });
+        .upload(`${folderPath}/${storageName}`, file, { contentType: file.type || 'application/octet-stream' });
       if (uploadError) throw uploadError;
 
       setFiles((prev) => [
@@ -158,6 +183,7 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
           indexStatus: 'indexing',
         },
       ]);
+      setUsedBytes((prev) => (prev ?? 0) + file.size);
       setUploading(false);
       // Fire-and-continue: indexing runs in the background from the player's point
       // of view — the row shows its own progress bar rather than blocking upload.
@@ -189,7 +215,11 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
       setError(deleteError.message);
       return;
     }
+    const deleted = files.find((f) => f.name === name);
     setFiles((prev) => prev.filter((f) => f.name !== name));
+    if (deleted) {
+      setUsedBytes((prev) => (prev !== null ? Math.max(0, prev - deleted.sizeBytes) : prev));
+    }
 
     // Best-effort — an indexed file that failed this cleanup just leaves a
     // harmless orphaned embedding row rather than blocking the delete.
@@ -203,10 +233,26 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
   return (
     <div className={styles.infoPanel}>
       <h3 className={styles.infoPanelTitle}>Modules &amp; Files</h3>
+
+      {usedBytes !== null && (
+        <div className={styles.quotaWrap}>
+          <div className={styles.quotaTrack} role="progressbar" aria-label="Storage used">
+            <div
+              className={`${styles.quotaFill} ${usedBytes / CAMPAIGN_QUOTA_BYTES >= 0.9 ? styles.quotaFillWarning : ''}`}
+              style={{ width: `${Math.min(100, (usedBytes / CAMPAIGN_QUOTA_BYTES) * 100)}%` }}
+            />
+          </div>
+          <span className={styles.quotaLabel}>
+            {formatSize(usedBytes)} of {formatSize(CAMPAIGN_QUOTA_BYTES)} used
+          </span>
+        </div>
+      )}
+
       <p className={styles.explainer}>
-        PDFs are indexed automatically after upload so the Rules Arbiter can search their contents
-        during play. This only helps with rules questions — the file needs an actual text layer
-        (not a scanned image), and 50MB max.
+        PDF, plain text, or Markdown files are indexed automatically after upload so the Rules
+        Arbiter can search their contents during play — this only helps with rules questions.
+        A PDF needs an actual text layer (not a scanned image). Up to 20MB per file, 25MB total
+        per campaign.
       </p>
 
       {loading ? (
@@ -259,14 +305,14 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
       <div className={styles.uploadRow}>
         <input
           type="file"
-          accept="application/pdf"
+          accept="application/pdf,text/plain,text/markdown,.pdf,.txt,.md"
           id="campaignFileUpload"
           className={styles.fileInput}
           onChange={(e) => void handleUpload(e)}
           disabled={uploading}
         />
         <label htmlFor="campaignFileUpload" className={styles.btnUpload} aria-disabled={uploading}>
-          {uploading ? 'Uploading…' : '+ Upload PDF'}
+          {uploading ? 'Uploading…' : '+ Upload File'}
         </label>
       </div>
 

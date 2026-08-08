@@ -51,6 +51,15 @@ export interface AgentMessage {
   content: string;
 }
 
+/** Media the game_master wants to auto-attach to the scene, if any */
+export interface AgentSceneMedia {
+  type: 'image' | 'youtube';
+  url?: string; // used when type === 'image'
+  videoId?: string; // YouTube video ID, used when type === 'youtube'
+  caption?: string;
+  source: 'campaign_asset' | 'ai_generated' | 'module_reference';
+}
+
 /** Streaming result returned from an async generator agent */
 export interface AgentStreamResult {
   content: string;
@@ -58,6 +67,7 @@ export interface AgentStreamResult {
   toolCalls?: MCPToolCall[];
   toolResults?: MCPToolResult[];
   flaggedNpcs?: FlaggedNpc[];
+  sceneMedia?: AgentSceneMedia;
 }
 
 /** Response from an AI agent */
@@ -67,11 +77,5 @@ export interface AgentResponse {
   toolCalls?: MCPToolCall[]; // tools the agent invoked
   toolResults?: MCPToolResult[]; // results from those calls
   flaggedNpcs?: FlaggedNpc[]; // NPCs the game_master flagged for the player to confirm
-  sceneMedia?: {
-    // if agent wants to display media
-    type: 'image' | 'video';
-    url: string;
-    caption?: string;
-    source: 'campaign_asset' | 'ai_generated';
-  };
+  sceneMedia?: AgentSceneMedia; // if agent wants to auto-attach media
 }

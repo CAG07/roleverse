@@ -14,12 +14,13 @@ export interface TranscriptEntry {
   timestamp?: string;
 }
 
-export type SceneMediaSource = 'campaign_asset' | 'ai_generated';
+export type SceneMediaSource = 'campaign_asset' | 'ai_generated' | 'module_reference';
 
 export interface SceneMedia {
   id: string;
-  type: 'image' | 'video';
-  url: string;
+  type: 'image' | 'youtube';
+  url?: string; // used when type === 'image'
+  videoId?: string; // YouTube video ID, used when type === 'youtube'
   caption?: string;
   source: SceneMediaSource;
   generatedBy?: string; // agent slug if AI-generated

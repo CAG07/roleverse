@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 export interface SceneAsset {
   name: string;
   displayName: string;
-  type: 'image' | 'video';
+  type: 'image';
   url: string;
 }
 
@@ -40,9 +40,7 @@ export async function listCampaignScenes(campaignId: string): Promise<{
       return {
         name: f.name,
         displayName: toDisplayName(f.name),
-        type: (f.metadata?.mimetype as string | undefined)?.startsWith('video/')
-          ? ('video' as const)
-          : ('image' as const),
+        type: 'image' as const,
         url: publicUrl,
       };
     });

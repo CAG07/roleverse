@@ -91,18 +91,14 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
                 onClick={() => handlePick(a)}
                 title={a.displayName}
               >
-                {a.type === 'image' ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={a.url} alt={a.displayName} className={styles.assetThumb} />
-                ) : (
-                  <video src={a.url} className={styles.assetThumb} muted />
-                )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={a.url} alt={a.displayName} className={styles.assetThumb} />
               </button>
             ))}
           </div>
         ) : (
           <p className={styles.placeholder}>
-            No scene photos or videos yet — upload some from the campaign&apos;s Scene Library first.
+            No scene photos yet — upload some from the campaign&apos;s Scene Library first.
           </p>
         )}
       </div>

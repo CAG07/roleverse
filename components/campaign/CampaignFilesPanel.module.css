@@ -46,6 +46,37 @@
   margin: 0 0 0.875rem;
 }
 
+/* Live per-campaign storage quota indicator */
+.quotaWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0 0 0.75rem;
+}
+.quotaTrack {
+  position: relative;
+  flex: 1;
+  height: 5px;
+  background: var(--void);
+  border: 1px solid var(--gold-dim);
+  overflow: hidden;
+}
+.quotaFill {
+  height: 100%;
+  background: var(--gold);
+  transition: width 0.2s ease-out;
+}
+.quotaFillWarning {
+  background: var(--crimson-bright);
+}
+.quotaLabel {
+  flex-shrink: 0;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--ivory-dim);
+  white-space: nowrap;
+}
+
 .fileList {
   display: flex;
   flex-direction: column;

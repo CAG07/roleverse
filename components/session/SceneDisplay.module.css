@@ -164,11 +164,16 @@
   background: #000;
 }
 
-.sceneImg,
-.sceneVideo {
+.sceneImg {
   height: 100%;
   width: 100%;
   object-fit: contain;
+}
+
+.sceneFrame {
+  height: 100%;
+  width: 100%;
+  border: 0;
 }
 
 .sourceLabel {
@@ -272,11 +277,17 @@
   background: var(--crimson);
   border-color: var(--crimson-bright);
 }
-.lightboxImg,
-.lightboxVideo {
+.lightboxImg {
   max-height: 85vh;
   max-width: 85vw;
   object-fit: contain;
+  border: var(--rule-thin);
+}
+
+.lightboxFrame {
+  width: min(85vw, 960px);
+  aspect-ratio: 16 / 9;
+  max-height: 85vh;
   border: var(--rule-thin);
 }
 .lightboxCaption {
