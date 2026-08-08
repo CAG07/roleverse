@@ -1,0 +1,95 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ *
+ * This is a 'use client' component rendered inside a server layout.
+ * styled-jsx styles in client components are injected at runtime after JS hydration,
+ * causing a Flash of Unstyled Content (FOUC) — components briefly appear
+ * unstyled before styles are applied.
+ *
+ * CSS Modules are statically extracted at build time and injected as a <link> tag
+ * in the <head>, guaranteeing styles are present before the first paint.
+ *
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1.5rem;
+}
+
+.dialog {
+  position: relative;
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 36rem;
+  max-height: calc(100vh - 3rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.corner {
+  position: absolute;
+  width: 0.625rem;
+  height: 0.625rem;
+  border: 1px solid var(--gold-dim);
+}
+.tl {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+.tr {
+  top: -1px;
+  right: -1px;
+  border-left: none;
+  border-bottom: none;
+}
+.bl {
+  bottom: -1px;
+  left: -1px;
+  border-right: none;
+  border-top: none;
+}
+.br {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: var(--void-surface);
+  border: var(--rule-thin);
+  color: var(--ivory-muted);
+  cursor: pointer;
+  z-index: 1;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.closeBtn:hover {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+}
+
+.scrollArea {
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}

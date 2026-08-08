@@ -14,11 +14,18 @@
 
 .voiceStatus {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  width: 100%;
   background: var(--void-raised);
   border: var(--rule-thin);
   padding: 0.375rem 0.625rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.voiceStatus:hover:not(:disabled) {
+  border-color: var(--gold-dim);
+}
+.voiceStatus:disabled {
+  cursor: default;
 }
 .statusRow {
   display: flex;
@@ -36,11 +43,7 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
-.userList {
-  padding-left: 1rem;
-}
-.userItem {
-  font-family: var(--font-body);
-  font-size: 0.7rem;
+.icon {
+  margin-left: auto;
   color: var(--ivory-dim);
 }

@@ -10,6 +10,8 @@ export interface CampaignData {
   description: string | null;
   game_system: string;
   created_at: string;
+  /** Square thumbnail shown on the campaign card (public URL). */
+  cover_image_url?: string | null;
 }
 
 function formatSystemBadge(gameSystem: string): string {

@@ -1,0 +1,112 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ *
+ * This is a 'use client' component rendered inside a server layout.
+ * styled-jsx styles in client components are injected at runtime after JS hydration,
+ * causing a Flash of Unstyled Content (FOUC) — components briefly appear
+ * unstyled before styles are applied.
+ *
+ * CSS Modules are statically extracted at build time and injected as a <link> tag
+ * in the <head>, guaranteeing styles are present before the first paint.
+ *
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1.5rem;
+}
+
+.dialog {
+  position: relative;
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 28rem;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0;
+}
+
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: var(--void-surface);
+  border: var(--rule-thin);
+  color: var(--ivory-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.closeBtn:hover {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+}
+
+.placeholder {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory-dim);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.errorMsg {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--crimson-bright);
+  margin: 0;
+}
+
+.assetGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.assetTile {
+  aspect-ratio: 1 / 1;
+  background: var(--void-surface);
+  border: var(--rule-thin);
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.assetTile:hover {
+  border-color: var(--gold-dim);
+}
+
+.assetThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}

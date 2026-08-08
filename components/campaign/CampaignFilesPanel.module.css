@@ -1,0 +1,225 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ *
+ * This is a 'use client' component rendered inside a server layout.
+ * styled-jsx styles in client components are injected at runtime after JS hydration,
+ * causing a Flash of Unstyled Content (FOUC) — components briefly appear
+ * unstyled before styles are applied.
+ *
+ * CSS Modules are statically extracted at build time and injected as a <link> tag
+ * in the <head>, guaranteeing styles are present before the first paint.
+ *
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+.infoPanel {
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  padding: 1.25rem;
+}
+
+.infoPanelTitle {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 0.875rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--crimson-dim);
+}
+
+.placeholder {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory-dim);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.explainer {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--ivory-dim);
+  line-height: 1.5;
+  margin: 0 0 0.875rem;
+}
+
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.fileRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  background: var(--void-surface);
+  border: var(--rule-thin);
+  padding: 0.5rem 0.75rem;
+}
+
+.fileMain {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fileName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--ivory);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.15s;
+}
+.fileName:hover {
+  text-decoration-color: var(--gold-dim);
+}
+
+.fileSize {
+  flex-shrink: 0;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--ivory-dim);
+}
+
+/* Indexing progress */
+.progressTrack {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  background: var(--void);
+  overflow: hidden;
+}
+.progressBar {
+  position: absolute;
+  top: 0;
+  left: -30%;
+  width: 30%;
+  height: 100%;
+  background: var(--gold);
+  animation: indexingSweep 1.2s ease-in-out infinite;
+}
+@keyframes indexingSweep {
+  0% {
+    left: -30%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.statusIndexed {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4a9a5a;
+}
+
+.statusErrorRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.statusError {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--crimson-bright);
+}
+.btnRetry {
+  flex-shrink: 0;
+  padding: 0.15rem 0.4rem;
+  background: transparent;
+  border: 1px solid var(--crimson-dim);
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--crimson-bright);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btnRetry:hover {
+  border-color: var(--crimson-bright);
+}
+
+.btnDelete {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: none;
+  border: none;
+  color: var(--ivory-dim);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.btnDelete:hover {
+  color: var(--crimson-bright);
+}
+
+.uploadRow {
+  margin-top: 0.5rem;
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.btnUpload {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+.btnUpload:hover {
+  background: var(--gold-tint);
+  border-color: var(--gold);
+}
+.btnUpload[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.errorMsg {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--crimson-bright);
+  margin: 0.5rem 0 0;
+}

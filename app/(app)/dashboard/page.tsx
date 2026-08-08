@@ -9,7 +9,7 @@ export default async function DashboardRoute() {
 
   const { data: campaigns } = await supabase
     .from('campaigns')
-    .select('id, name, description, game_system, created_at, updated_at')
+    .select('id, name, description, game_system, created_at, updated_at, cover_image_url')
     .eq('owner_id', user!.id)
     .order('updated_at', { ascending: false });
 

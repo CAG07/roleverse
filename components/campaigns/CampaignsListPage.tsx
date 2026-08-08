@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Image as ImageIcon } from 'lucide-react';
 import { getGameSystem } from '@/lib/game-systems/registry';
 import type { CampaignData } from '@/components/campaign/CampaignCard';
 import styles from './CampaignsListPage.module.css';
@@ -70,18 +71,31 @@ export function CampaignsListPage({ campaigns }: CampaignsListPageProps) {
               <span className={`${styles.corner} ${styles.tr}`} />
               <span className={`${styles.corner} ${styles.bl}`} />
               <span className={`${styles.corner} ${styles.br}`} />
-              <div className={styles.cardHeader}>
-                <span className={styles.cardSystemBadge}>{formatSystemBadge(campaign.game_system)}</span>
+              <div className={styles.cardThumb}>
+                {campaign.cover_image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={campaign.cover_image_url}
+                    alt=""
+                    className={styles.cardThumbImg}
+                  />
+                ) : (
+                  <ImageIcon className={styles.cardThumbPlaceholder} />
+                )}
               </div>
-              <h2 className={styles.cardName}>{campaign.name}</h2>
-              <p className={styles.cardDescription}>{campaign.description || 'No description yet.'}</p>
-              <span className={styles.cardDate}>
-                {new Date(campaign.created_at).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </span>
+              <div className={styles.cardBody}>
+                <div className={styles.cardHeader}>
+                  <span className={styles.cardSystemBadge}>{formatSystemBadge(campaign.game_system)}</span>
+                </div>
+                <h2 className={styles.cardName}>{campaign.name}</h2>
+                <span className={styles.cardDate}>
+                  {new Date(campaign.created_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </span>
+              </div>
             </div>
           ))}
         </div>

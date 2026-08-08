@@ -16,7 +16,7 @@ export default async function EditCampaignRoute({ params }: EditCampaignRoutePro
 
   const { data: campaign } = await supabase
     .from('campaigns')
-    .select('id, name, description, module_description, game_system, owner_id')
+    .select('id, name, description, module_description, game_system, owner_id, cover_image_url')
     .eq('id', id)
     .single();
 
@@ -31,6 +31,7 @@ export default async function EditCampaignRoute({ params }: EditCampaignRoutePro
       initialDescription={(campaign.description as string | null) ?? ''}
       initialModuleDescription={(campaign.module_description as string | null) ?? ''}
       initialGameSystem={campaign.game_system as string}
+      initialCoverImageUrl={(campaign.cover_image_url as string | null) ?? null}
     />
   );
 }

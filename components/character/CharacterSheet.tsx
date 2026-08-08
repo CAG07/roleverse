@@ -23,7 +23,7 @@ interface CharacterSheetProps {
   rawGameDataStats?: Record<string, unknown>;
   /** DCC-only: other level-0 characters run by the same player in this campaign. */
   funnelParty?: DCCFunnelMember[];
-  /** Compact display for the in-session panel: hides Features & Traits and Custom Fields. */
+  /** Compact display for the in-session panel — see BaseSheet's `compact` doc. */
   compact?: boolean;
 }
 
