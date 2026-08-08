@@ -75,10 +75,24 @@ export default function SceneDisplay({
         <span className={`${styles.corner} ${styles.br}`} />
 
         <div className={styles.mediaContainer}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={media.url} alt={media.caption ?? 'Scene image'} className={styles.sceneImg} />
+          {media.type === 'youtube' && media.videoId ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${media.videoId}`}
+              title={media.caption ?? 'Scene video'}
+              className={styles.sceneFrame}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={media.url} alt={media.caption ?? 'Scene image'} className={styles.sceneImg} />
+          )}
           <span className={styles.sourceLabel}>
-            {media.source === 'ai_generated' ? 'AI Generated' : 'Campaign Asset'}
+            {media.source === 'ai_generated'
+              ? 'AI Generated'
+              : media.source === 'module_reference'
+                ? 'From Module'
+                : 'Campaign Asset'}
           </span>
           <div className={styles.controls}>
             {onAttach && campaignId && (
@@ -136,12 +150,22 @@ export default function SceneDisplay({
             >
               <X size={14} />
             </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={media.url}
-              alt={media.caption ?? 'Scene image'}
-              className={styles.lightboxImg}
-            />
+            {media.type === 'youtube' && media.videoId ? (
+              <iframe
+                src={`https://www.youtube.com/embed/${media.videoId}`}
+                title={media.caption ?? 'Scene video'}
+                className={styles.lightboxFrame}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={media.url}
+                alt={media.caption ?? 'Scene image'}
+                className={styles.lightboxImg}
+              />
+            )}
             {media.caption && <p className={styles.lightboxCaption}>{media.caption}</p>}
           </div>
         </div>

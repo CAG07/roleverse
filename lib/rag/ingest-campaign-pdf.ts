@@ -22,6 +22,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import pdfParse from 'pdf-parse-fork';
 import { chunkText } from './chunk';
 import { embedBatch } from './embed';
+import { extractYoutubeVideoId } from '@/lib/scenes/youtube';
 import type { ChunkMetadata } from './types';
 
 const UPSERT_BATCH_SIZE = 50;
@@ -78,22 +79,30 @@ export async function ingestCampaignPdf(
     const batch = chunks.slice(i, i + UPSERT_BATCH_SIZE);
     const embeddings = await embedBatch(batch);
 
-    const metadata: ChunkMetadata = {
-      gameSystem,
-      source: 'user_pdf',
-      category: 'module',
-      title: fileName,
-    };
+    const rows = batch.map((content, j) => {
+      // A player can write a YouTube link directly into their own uploaded
+      // document (e.g. "when the party reaches the chapel: youtu.be/xyz") —
+      // tag whichever chunk contains it so the Game Master can auto-attach it
+      // as scene media when narration matches that same chunk.
+      const youtubeVideoId = extractYoutubeVideoId(content);
+      const metadata: ChunkMetadata = {
+        gameSystem,
+        source: 'user_pdf',
+        category: 'module',
+        title: fileName,
+        ...(youtubeVideoId ? { youtubeVideoId } : {}),
+      };
 
-    const rows = batch.map((content, j) => ({
-      campaign_id: campaignId,
-      user_id: userId,
-      game_system: gameSystem,
-      content,
-      embedding: embeddings[j],
-      metadata,
-      source_type: 'user_pdf' as const,
-    }));
+      return {
+        campaign_id: campaignId,
+        user_id: userId,
+        game_system: gameSystem,
+        content,
+        embedding: embeddings[j],
+        metadata,
+        source_type: 'user_pdf' as const,
+      };
+    });
 
     const { error } = await supabase.from('campaign_embeddings').insert(rows);
     if (error) throw new Error(`Failed to index chunk batch: ${error.message}`);

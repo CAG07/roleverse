@@ -167,6 +167,9 @@ export async function POST(
             emit('npc_flag', { npc });
           }
         }
+        if (result.sceneMedia) {
+          emit('scene_media', { media: result.sceneMedia });
+        }
 
         // --- Persist transcript ---
         // Appended atomically via RPC (transcript = transcript || entries in a single

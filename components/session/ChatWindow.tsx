@@ -13,7 +13,7 @@ import { Send, Mic, Keyboard, Image as ImageIcon, ChevronDown } from 'lucide-rea
 import D20Icon from '@/components/icons/D20Icon';
 import styles from './ChatWindow.module.css';
 import type { ChatMessage, SceneMedia, AgentType, TranscriptEntry } from '@/lib/types/session';
-import type { AgentMessage } from '@/lib/mcp/types';
+import type { AgentMessage, AgentSceneMedia } from '@/lib/mcp/types';
 import type { FlaggedNpc } from '@/lib/types/npc';
 
 // Agent color/label mapping — matches design spec
@@ -135,7 +135,7 @@ function transcriptToMessages(entries: TranscriptEntry[]): ChatMessage[] {
 }
 
 export default function ChatWindow({
-  onSceneMediaUpdate: _onSceneMediaUpdate,
+  onSceneMediaUpdate,
   sessionId,
   campaignId,
   initialTranscript = [],
@@ -369,6 +369,19 @@ export default function ChatWindow({
               }
               break;
             }
+            case 'scene_media': {
+              const media = (parsed.data as { media: AgentSceneMedia }).media;
+              onSceneMediaUpdate?.({
+                id: `scene-${Date.now()}`,
+                type: media.type,
+                url: media.url,
+                videoId: media.videoId,
+                caption: media.caption,
+                source: media.source,
+                timestamp: new Date(),
+              });
+              break;
+            }
             case 'error': {
               const errorText = (parsed.data as { error: string }).error;
               if (streamingMsgRef.current) {
@@ -418,7 +431,7 @@ export default function ChatWindow({
         finalizeStream();
       }
     }
-  }, [input, isLoading, sessionId, finalizeStream]);
+  }, [input, isLoading, sessionId, finalizeStream, onSceneMediaUpdate]);
 
   // Brand-new session (no transcript yet) — auto-trigger one GM turn instead of
   // leaving the player staring at an empty feed. The GM already has the previous

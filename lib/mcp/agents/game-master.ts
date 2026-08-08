@@ -16,6 +16,7 @@ import { getMultiAgentContextSection } from './multi-agent-context';
 import type {
   AgentMessage,
   AgentResponse,
+  AgentSceneMedia,
   AgentStreamResult,
   MCPContext,
   MCPToolCall,
@@ -188,6 +189,21 @@ function buildToolList(): Anthropic.Messages.Tool[] {
 function formatModuleReference(matches: { content: string }[]): string {
   if (matches.length === 0) return '';
   return matches.map((m) => m.content).join('\n\n---\n\n');
+}
+
+/**
+ * If the top-matching module chunk for this turn carries a YouTube link the
+ * player wrote into their own uploaded document, surface it as scene media —
+ * the same guaranteed-priority match that grounds narration also drives what
+ * auto-attaches to the Scene Display. Matches are pre-sorted by similarity
+ * (see searchCampaignPriorityContent), so [0] is the strongest match.
+ */
+function extractSceneMediaFromModuleMatches(
+  matches: { metadata: Record<string, unknown> }[]
+): AgentSceneMedia | undefined {
+  const videoId = matches[0]?.metadata?.youtubeVideoId;
+  if (typeof videoId !== 'string' || !videoId) return undefined;
+  return { type: 'youtube', videoId, source: 'module_reference' };
 }
 
 function buildSystemPrompt(
@@ -544,6 +560,7 @@ export async function* streamGameMasterAgent(
     toolCalls: mcpToolCalls.length > 0 ? mcpToolCalls : undefined,
     toolResults: mcpToolResults.length > 0 ? mcpToolResults : undefined,
     flaggedNpcs: flaggedNpcs.length > 0 ? flaggedNpcs : undefined,
+    sceneMedia: extractSceneMediaFromModuleMatches(moduleMatches),
   };
 }
 
@@ -643,5 +660,6 @@ export async function runGameMasterAgent(
     toolCalls: mcpToolCalls.length > 0 ? mcpToolCalls : undefined,
     toolResults: mcpToolResults.length > 0 ? mcpToolResults : undefined,
     flaggedNpcs: flaggedNpcs.length > 0 ? flaggedNpcs : undefined,
+    sceneMedia: extractSceneMediaFromModuleMatches(moduleMatches),
   };
 }
