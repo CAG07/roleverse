@@ -3,18 +3,29 @@
 import { useState, type MouseEvent } from 'react';
 import { X, Maximize2, Image as ImageIcon } from 'lucide-react';
 import type { SceneMedia } from '@/lib/types/session';
+import ScenePickerModal from './ScenePickerModal';
 import styles from './SceneDisplay.module.css';
 
 interface SceneDisplayProps {
   media: SceneMedia | null;
   onClose?: () => void;
+  /** Called when the player picks an asset from the scene library to attach. */
+  onAttach?: (media: SceneMedia) => void;
+  campaignId?: string;
   /** Render a slim single-row placeholder instead of the full empty state (used
    * when the scene panel has collapsed because there's no media to show). */
   compact?: boolean;
 }
 
-export default function SceneDisplay({ media, onClose, compact = false }: SceneDisplayProps) {
+export default function SceneDisplay({
+  media,
+  onClose,
+  onAttach,
+  campaignId,
+  compact = false,
+}: SceneDisplayProps) {
   const [expanded, setExpanded] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   if (!media) {
     if (compact) {
@@ -33,9 +44,24 @@ export default function SceneDisplay({ media, onClose, compact = false }: SceneD
         <span className={`${styles.corner} ${styles.br}`} />
         <ImageIcon size={32} className={styles.emptyIcon} />
         <span className={styles.emptyLabel}>Scene Display</span>
-        <span className={styles.emptySub}>
-          AI-generated scenes and campaign art will appear here
-        </span>
+        <span className={styles.emptySub}>Campaign art and photos will appear here</span>
+        {onAttach && campaignId && (
+          <>
+            <button
+              type="button"
+              className={styles.attachBtn}
+              onClick={() => setPickerOpen(true)}
+            >
+              + Attach Scene
+            </button>
+            <ScenePickerModal
+              open={pickerOpen}
+              campaignId={campaignId}
+              onClose={() => setPickerOpen(false)}
+              onSelect={onAttach}
+            />
+          </>
+        )}
       </div>
     );
   }
@@ -59,6 +85,16 @@ export default function SceneDisplay({ media, onClose, compact = false }: SceneD
             {media.source === 'ai_generated' ? 'AI Generated' : 'Campaign Asset'}
           </span>
           <div className={styles.controls}>
+            {onAttach && campaignId && (
+              <button
+                className={styles.ctrlBtn}
+                onClick={() => setPickerOpen(true)}
+                aria-label="Change scene"
+                type="button"
+              >
+                <ImageIcon size={14} />
+              </button>
+            )}
             <button
               className={styles.ctrlBtn}
               onClick={() => setExpanded(true)}
@@ -117,6 +153,15 @@ export default function SceneDisplay({ media, onClose, compact = false }: SceneD
             {media.caption && <p className={styles.lightboxCaption}>{media.caption}</p>}
           </div>
         </div>
+      )}
+
+      {onAttach && campaignId && (
+        <ScenePickerModal
+          open={pickerOpen}
+          campaignId={campaignId}
+          onClose={() => setPickerOpen(false)}
+          onSelect={onAttach}
+        />
       )}
     </>
   );

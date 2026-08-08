@@ -91,6 +91,26 @@
   font-style: italic;
 }
 
+.attachBtn {
+  padding: 0.4rem 0.875rem;
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+.attachBtn:hover {
+  background: var(--gold-tint);
+  border-color: var(--gold);
+}
+
 /* Compact empty state — slim single row for the collapsed scene panel */
 .sceneEmptyCompact {
   display: flex;
