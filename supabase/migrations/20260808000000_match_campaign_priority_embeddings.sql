@@ -33,17 +33,26 @@ LANGUAGE plpgsql STABLE
 AS $$
 BEGIN
   RETURN QUERY
+  WITH scored AS (
+    SELECT
+      ce.id,
+      ce.content,
+      ce.metadata,
+      ce.source_type,
+      (ce.embedding operator(extensions.<=>) query_embedding) AS distance
+    FROM public.campaign_embeddings ce
+    WHERE ce.campaign_id = query_campaign_id
+      AND ce.source_type = ANY(source_types)
+  )
   SELECT
-    ce.id,
-    ce.content,
-    ce.metadata,
-    ce.source_type,
-    (1 - (ce.embedding operator(extensions.<=>) query_embedding))::FLOAT AS similarity
-  FROM public.campaign_embeddings ce
-  WHERE ce.campaign_id = query_campaign_id
-    AND ce.source_type = ANY(source_types)
-    AND (1 - (ce.embedding operator(extensions.<=>) query_embedding)) > match_threshold
-  ORDER BY ce.embedding operator(extensions.<=>) query_embedding
+    id,
+    content,
+    metadata,
+    source_type,
+    (1 - distance)::FLOAT AS similarity
+  FROM scored
+  WHERE (1 - distance) > match_threshold
+  ORDER BY distance
   LIMIT match_count;
 END;
 $$;
