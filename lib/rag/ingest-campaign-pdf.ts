@@ -21,11 +21,16 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import pdfParse from 'pdf-parse-fork';
 import { chunkText } from './chunk';
-import { embedBatch } from './embed';
+import { embedBatch, embedText } from './embed';
 import { extractYoutubeVideoId } from '@/lib/scenes/youtube';
+import { listCampaignSceneFilenames, extractImageRef } from '@/lib/scenes/image-ref';
+import { detectMapCandidatePages } from './pdf-pages';
+import { classifyAndTranscribeMapPage, formatMapTranscriptionMarkdown } from './map-vision';
 import type { ChunkMetadata } from './types';
 
 const UPSERT_BATCH_SIZE = 50;
+/** How many candidate map pages get vision-classified concurrently. */
+const MAP_VISION_CONCURRENCY = 4;
 
 export interface IngestCampaignPdfOptions {
   supabase: SupabaseClient;
@@ -40,6 +45,7 @@ export interface IngestCampaignPdfOptions {
 export interface IngestCampaignPdfResult {
   chunksIndexed: number;
   pages: number;
+  mapPagesFound: number;
 }
 
 /** Plain text and Markdown need no parsing — only .pdf goes through pdfParse. */
@@ -52,15 +58,16 @@ export async function ingestCampaignPdf(
   options: IngestCampaignPdfOptions
 ): Promise<IngestCampaignPdfResult> {
   const { supabase, campaignId, userId, gameSystem, fileName, fileBuffer } = options;
+  const isPdf = !isPlainTextFile(fileName);
 
   let text: string;
   let pages = 1;
-  if (isPlainTextFile(fileName)) {
-    text = fileBuffer.toString('utf-8').trim();
-  } else {
+  if (isPdf) {
     const parsed = await pdfParse(fileBuffer);
     text = parsed.text.trim();
     pages = parsed.numpages;
+  } else {
+    text = fileBuffer.toString('utf-8').trim();
   }
   if (!text) {
     throw new Error(
@@ -71,6 +78,11 @@ export async function ingestCampaignPdf(
   // Replace any prior chunks from this same file before writing new ones, so
   // re-indexing after an edit doesn't leave stale duplicate content behind.
   await deleteIndexedPdfChunks(supabase, campaignId, fileName);
+
+  // A player can reference their own already-uploaded Scene Library image by
+  // filename inside this document's text — fetched once, checked per chunk
+  // below, same idea as the youtubeVideoId detection.
+  const sceneFilenames = await listCampaignSceneFilenames(supabase, userId, campaignId);
 
   const chunks = chunkText(text);
   let chunksIndexed = 0;
@@ -83,14 +95,17 @@ export async function ingestCampaignPdf(
       // A player can write a YouTube link directly into their own uploaded
       // document (e.g. "when the party reaches the chapel: youtu.be/xyz") —
       // tag whichever chunk contains it so the Game Master can auto-attach it
-      // as scene media when narration matches that same chunk.
+      // as scene media when narration matches that same chunk. Same idea for
+      // a Scene Library image referenced by filename.
       const youtubeVideoId = extractYoutubeVideoId(content);
+      const imageRef = extractImageRef(content, sceneFilenames);
       const metadata: ChunkMetadata = {
         gameSystem,
         source: 'user_pdf',
         category: 'module',
         title: fileName,
         ...(youtubeVideoId ? { youtubeVideoId } : {}),
+        ...(imageRef ? { imageRef } : {}),
       };
 
       return {
@@ -110,7 +125,74 @@ export async function ingestCampaignPdf(
     chunksIndexed += rows.length;
   }
 
-  return { chunksIndexed, pages };
+  // Old TSR-module dungeon layouts are frequently encoded only as a hand-drawn
+  // map image, never as prose — text extraction above can't recover that. For
+  // PDFs only, find likely map pages and have Claude vision transcribe them
+  // once at upload time into structured, retrievable ground truth (see
+  // lib/rag/pdf-pages.ts and lib/rag/map-vision.ts). Best-effort: a failure
+  // here never invalidates the prose indexing that already succeeded above.
+  let mapPagesFound = 0;
+  if (isPdf) {
+    try {
+      mapPagesFound = await indexMapPages(supabase, fileBuffer, {
+        campaignId,
+        userId,
+        gameSystem,
+        fileName,
+      });
+    } catch (err) {
+      console.warn('[ingest] Map page detection/transcription failed:', err);
+    }
+  }
+
+  return { chunksIndexed, pages, mapPagesFound };
+}
+
+async function indexMapPages(
+  supabase: SupabaseClient,
+  fileBuffer: Buffer,
+  ctx: { campaignId: string; userId: string; gameSystem: string; fileName: string }
+): Promise<number> {
+  const candidates = await detectMapCandidatePages(fileBuffer);
+  let mapPagesFound = 0;
+
+  for (let i = 0; i < candidates.length; i += MAP_VISION_CONCURRENCY) {
+    const batch = candidates.slice(i, i + MAP_VISION_CONCURRENCY);
+    const transcriptions = await Promise.all(
+      batch.map((c) => classifyAndTranscribeMapPage(c.pngBase64, c.pageNumber))
+    );
+
+    for (const t of transcriptions) {
+      if (!t) continue;
+      mapPagesFound++;
+
+      const content = formatMapTranscriptionMarkdown(t);
+      const embedding = await embedText(content);
+      const metadata: ChunkMetadata = {
+        gameSystem: ctx.gameSystem,
+        source: 'user_pdf',
+        category: 'map_layout',
+        title: ctx.fileName,
+        pageNumber: t.pageNumber,
+        mapLabel: t.mapLabel,
+      };
+
+      const { error } = await supabase.from('campaign_embeddings').insert({
+        campaign_id: ctx.campaignId,
+        user_id: ctx.userId,
+        game_system: ctx.gameSystem,
+        content,
+        embedding,
+        metadata,
+        source_type: 'user_pdf' as const,
+      });
+      if (error) {
+        console.warn(`[ingest] Failed to index map page ${t.pageNumber}:`, error.message);
+      }
+    }
+  }
+
+  return mapPagesFound;
 }
 
 /** Remove previously indexed chunks for a given source file (used before re-indexing and on delete). */

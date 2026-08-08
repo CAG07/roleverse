@@ -14,6 +14,11 @@ type RouteParams = { params: Promise<{ id: string }> };
 
 const BUCKET = 'campaign-pdfs';
 
+// Map-page vision transcription (lib/rag/ingest-campaign-pdf.ts) adds several
+// sequential-ish Claude vision calls on top of the existing parse/chunk/embed
+// work, which can exceed the default serverless timeout.
+export const maxDuration = 60;
+
 async function authAndCampaign(campaignId: string) {
   const supabase = await createClient();
   const {
