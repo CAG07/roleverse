@@ -45,14 +45,14 @@ BEGIN
       AND ce.source_type = ANY(source_types)
   )
   SELECT
-    id,
-    content,
-    metadata,
-    source_type,
-    (1 - distance)::FLOAT AS similarity
+    scored.id,
+    scored.content,
+    scored.metadata,
+    scored.source_type,
+    (1 - scored.distance)::FLOAT AS similarity
   FROM scored
-  WHERE (1 - distance) > match_threshold
-  ORDER BY distance
+  WHERE (1 - scored.distance) > match_threshold
+  ORDER BY scored.distance
   LIMIT match_count;
 END;
 $$;

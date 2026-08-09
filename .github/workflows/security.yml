@@ -60,6 +60,26 @@ jobs:
         with:
           extra_args: --only-verified
 
+  db-lint:
+    name: Database Lint (Supabase Splinter)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.111.0
+
+      # Spins up a local Postgres via Docker and applies every migration in
+      # supabase/migrations/ — this lints what the migrations in this PR would
+      # actually produce, not the live database, so it needs no production
+      # secrets and is safe to run on every push/PR.
+      - name: Start local Supabase (applies all migrations)
+        run: supabase start
+
+      - name: Lint database schema
+        run: supabase db lint --local --level warning --fail-on warning
+
   sast-semgrep:
     name: SAST (Semgrep)
     runs-on: ubuntu-latest
