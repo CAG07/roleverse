@@ -13,6 +13,16 @@
 -- Verified against the live database before writing this (not guessed):
 --   - All 4 search_path-mutable functions already fully qualify every
 --     table/schema reference, so SET search_path = '' changes no logic.
+--     One exception found and fixed here: match_campaign_priority_embeddings'
+--     outer SELECT referenced bare id/content/metadata/source_type from its
+--     "scored" CTE — ambiguous against the same-named OUT parameters that
+--     RETURNS TABLE(...) implicitly declares as plpgsql variables in scope
+--     for the whole function body. This was a real, live bug (not just a CI
+--     lint failure): a prior commit introduced the CTE without qualifying
+--     the outer SELECT, breaking every call to this function in production
+--     since it merged — which is used on every GM/Rules Arbiter turn for a
+--     campaign with an uploaded module. Fixed by qualifying every reference
+--     as scored.id, scored.content, etc.
 --   - storage.objects policies are plain {public} role, matching the
 --     migration files exactly (no drift).
 --   - anon has full table-level grants on campaign_members (Supabase's
@@ -101,14 +111,14 @@ BEGIN
       AND ce.source_type = ANY(source_types)
   )
   SELECT
-    id,
-    content,
-    metadata,
-    source_type,
-    (1 - distance)::FLOAT AS similarity
+    scored.id,
+    scored.content,
+    scored.metadata,
+    scored.source_type,
+    (1 - scored.distance)::FLOAT AS similarity
   FROM scored
-  WHERE (1 - distance) > match_threshold
-  ORDER BY distance
+  WHERE (1 - scored.distance) > match_threshold
+  ORDER BY scored.distance
   LIMIT match_count;
 END;
 $$;
