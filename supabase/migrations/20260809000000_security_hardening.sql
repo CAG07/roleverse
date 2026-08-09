@@ -256,7 +256,7 @@ BEGIN
           RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
       END;
      ELSE
-        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
+        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %)', cmd.object_identity, cmd.schema_name;
      END IF;
   END LOOP;
 END;
@@ -272,4 +272,11 @@ $$;
 
 REVOKE EXECUTE ON FUNCTION public.handle_new_campaign() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM PUBLIC;
-REVOKE EXECUTE ON FUNCTION public.get_my_campaign_ids() FROM anon;
+
+-- get_my_campaign_ids() was never granted EXECUTE directly to anon — it only
+-- had the default PUBLIC grant every function gets unless revoked, so
+-- "REVOKE ... FROM anon" alone would be a no-op (anon would still reach it
+-- via PUBLIC). Revoke the PUBLIC grant outright, then re-grant only to
+-- authenticated, which the campaign_members RLS policy needs.
+REVOKE EXECUTE ON FUNCTION public.get_my_campaign_ids() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_my_campaign_ids() TO authenticated;
