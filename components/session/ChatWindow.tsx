@@ -155,6 +155,7 @@ export default function ChatWindow({
   const messagesRef = useRef(messages);
   const streamingMsgRef = useRef<StreamingMsg | null>(null);
   const scrollRafRef = useRef<number | null>(null);
+  const tokenRafRef = useRef<number | null>(null);
   const isInitialRender = useRef(true);
 
   useEffect(() => {
@@ -209,6 +210,7 @@ export default function ChatWindow({
   useEffect(() => {
     return () => {
       if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current);
+      if (tokenRafRef.current !== null) cancelAnimationFrame(tokenRafRef.current);
     };
   }, []);
 
@@ -220,6 +222,10 @@ export default function ChatWindow({
   }, []);
 
   const finalizeStream = useCallback(() => {
+    if (tokenRafRef.current !== null) {
+      cancelAnimationFrame(tokenRafRef.current);
+      tokenRafRef.current = null;
+    }
     const sm = streamingMsgRef.current;
     if (!sm) return;
     setMessages((prev) => [
@@ -347,12 +353,22 @@ export default function ChatWindow({
             case 'token': {
               const chunk = (parsed.data as { text: string }).text;
               if (streamingMsgRef.current) {
-                const updated = {
+                // Accumulate synchronously on the ref (so content is always
+                // correct for finalizeStream/scroll math), but only flush to
+                // state once per animation frame — firing setState per token
+                // caused a render storm on long responses that manifested as
+                // a frozen-looking chat window and a scroll position that
+                // never caught up to the bottom.
+                streamingMsgRef.current = {
                   ...streamingMsgRef.current,
                   content: streamingMsgRef.current.content + chunk,
                 };
-                streamingMsgRef.current = updated;
-                setStreamingMessage(updated);
+                if (tokenRafRef.current === null) {
+                  tokenRafRef.current = requestAnimationFrame(() => {
+                    tokenRafRef.current = null;
+                    if (streamingMsgRef.current) setStreamingMessage(streamingMsgRef.current);
+                  });
+                }
               }
               break;
             }

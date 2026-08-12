@@ -21,11 +21,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import pdfParse from 'pdf-parse-fork';
 import { chunkText } from './chunk';
-import { embedBatch, embedText } from './embed';
+import { embedBatch } from './embed';
 import { extractYoutubeVideoId } from '@/lib/scenes/youtube';
 import { listCampaignSceneFilenames, extractImageRef } from '@/lib/scenes/image-ref';
 import { detectMapCandidatePages } from './pdf-pages';
-import { classifyAndTranscribeMapPage, formatMapTranscriptionMarkdown } from './map-vision';
+import {
+  classifyAndTranscribeMapPage,
+  formatMapRoomMarkdown,
+  formatMapOverviewMarkdown,
+} from './map-vision';
 import type { ChunkMetadata } from './types';
 
 const UPSERT_BATCH_SIZE = 50;
@@ -166,26 +170,46 @@ async function indexMapPages(
       if (!t) continue;
       mapPagesFound++;
 
-      const content = formatMapTranscriptionMarkdown(t);
-      const embedding = await embedText(content);
-      const metadata: ChunkMetadata = {
-        gameSystem: ctx.gameSystem,
-        source: 'user_pdf',
-        category: 'map_layout',
-        title: ctx.fileName,
-        pageNumber: t.pageNumber,
-        mapLabel: t.mapLabel,
-      };
+      // One overview chunk (label, room index, legend) plus one chunk per
+      // room — each room chunk carries its parent map's label/page in its
+      // own text and metadata, so retrieval on a room number that recurs on
+      // another level (e.g. two maps that both have a "Room 19") can't be
+      // confused with the wrong level's chunk.
+      const contents = [
+        formatMapOverviewMarkdown(t),
+        ...t.rooms.map((room) => formatMapRoomMarkdown(t, room)),
+      ];
+      let embeddings: number[][];
+      try {
+        embeddings = await embedBatch(contents);
+      } catch (err) {
+        console.warn(`[ingest] Failed to embed map page ${t.pageNumber}:`, err);
+        continue;
+      }
 
-      const { error } = await supabase.from('campaign_embeddings').insert({
-        campaign_id: ctx.campaignId,
-        user_id: ctx.userId,
-        game_system: ctx.gameSystem,
-        content,
-        embedding,
-        metadata,
-        source_type: 'user_pdf' as const,
+      const rows = contents.map((content, j) => {
+        const room = j === 0 ? null : t.rooms[j - 1];
+        const metadata: ChunkMetadata = {
+          gameSystem: ctx.gameSystem,
+          source: 'user_pdf',
+          category: 'map_layout',
+          title: ctx.fileName,
+          pageNumber: t.pageNumber,
+          mapLabel: t.mapLabel,
+          ...(room ? { roomKey: room.key } : {}),
+        };
+        return {
+          campaign_id: ctx.campaignId,
+          user_id: ctx.userId,
+          game_system: ctx.gameSystem,
+          content,
+          embedding: embeddings[j],
+          metadata,
+          source_type: 'user_pdf' as const,
+        };
       });
+
+      const { error } = await supabase.from('campaign_embeddings').insert(rows);
       if (error) {
         console.warn(`[ingest] Failed to index map page ${t.pageNumber}:`, error.message);
       }

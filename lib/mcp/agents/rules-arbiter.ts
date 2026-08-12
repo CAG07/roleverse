@@ -33,7 +33,7 @@ function buildSystemPrompt(
   const system = getGameSystem(context.gameSystem);
   const systemName = system?.name ?? context.gameSystem;
   const rulesPrompt = system?.rulesPrompt ?? '';
-  const isOsricFallback = context.gameSystem === 'ADD2E' && ragContext.toLowerCase().includes('osric');
+  const usesOsricSource = context.gameSystem === 'ADD1E' || context.gameSystem === 'ADD2E';
 
   const parts = [
     `You are the Rules Arbiter for a ${systemName} tabletop RPG session.`,
@@ -44,6 +44,10 @@ function buildSystemPrompt(
     '- Cite the specific rule or page reference when possible.',
     '- When the answer is ambiguous, present both interpretations and recommend one.',
     '- Never invent rules — if unsure, say so and suggest the GM make a ruling.',
+    '- The Retrieved Rules Context below may come from a document shared between multiple',
+    "  editions of a system (e.g. OSRIC content indexed for both AD&D 1E and 2E). If it marks",
+    '  a mechanic as specific to a different edition than this session\'s, do not apply that',
+    "  mechanic — apply only this edition's variant, per the rulesPrompt above.",
     '',
   ];
 
@@ -82,10 +86,9 @@ function buildSystemPrompt(
     parts.push(
       '## Note on Source Material',
       '',
-      isOsricFallback
-        ? 'No indexed rules text was found for this query. AD&D 2E rules content is not yet fully ' +
-          'indexed — rely on your training knowledge of AD&D 2E and OSRIC for this answer, and note ' +
-          'that you are doing so.'
+      usesOsricSource
+        ? `No indexed rules text matched this specific query. Rely on your training knowledge of ` +
+          `${systemName} and OSRIC for this answer, and note that you are doing so.`
         : 'No indexed rules text was found for this query. Answer from training knowledge and note ' +
           'that you are doing so.',
       '',

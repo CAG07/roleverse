@@ -117,6 +117,9 @@ export default function NewCampaignPage() {
 
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Game System *</label>
+            <p className={styles.formHint}>
+              Choose carefully — the game system can&apos;t be changed once the campaign is created.
+            </p>
             <div className={styles.systemGrid}>
               {systems.map((system) => (
                 <button

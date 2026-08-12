@@ -18,10 +18,15 @@ const add1e: GameSystem = {
   rulesPrompt:
     'You are a rules arbiter for AD&D 1st Edition. Use THAC0 for attack rolls and descending armor class. Enforce strict class and race restrictions per the 1E PHB and DMG.',
   fgRulesetId: '1E',
-  supported: false,
+  supported: true,
   ragSource: {
-    type: 'none',
-    notes: 'No machine-readable SRD available for AD&D 1E — agent relies on training knowledge.',
+    type: 'srd_clone',
+    url: 'https://osricwiki.presgas.name/doku.php',
+    notes:
+      'OSRIC (Old School Reference and Index Compilation) is a retro-clone of AD&D 1E/2E rules ' +
+      'released under the OGL. Indexed under ADD1E via the shared data/osric-stub.md — the same ' +
+      'file is also ingested under ADD2E (see lib/rag/fetchers/osric.ts); the "Where 1E and 2E ' +
+      'Diverge" section of that file calls out the handful of mechanics that differ.',
   },
 };
 
@@ -49,9 +54,10 @@ const add2e: GameSystem = {
     url: 'https://osricwiki.presgas.name/doku.php',
     notes:
       'OSRIC (Old School Reference and Index Compilation) is a retro-clone of AD&D 1E/2E rules ' +
-      'released under the OGL. No clean machine-readable JSON/markdown source was found after ' +
-      'research (see docs/phase-6a-sources.md). Falling back to data/osric-stub.md placeholder. ' +
-      'The Rules Arbiter for ADD2E relies primarily on Claude training knowledge.',
+      'released under the OGL. No clean machine-readable JSON/markdown source was found — ' +
+      'indexed via the hand-authored data/osric-stub.md instead (see .claude/commands/roadmap.md ' +
+      'for the backlog of other systems still needing this treatment). The same file is also ' +
+      'ingested under ADD1E (see lib/rag/fetchers/osric.ts).',
   },
 };
 
@@ -201,7 +207,7 @@ const pathfinder2e: GameSystem = {
       'Foundry VTT PF2E system (MIT-licensed) contains machine-readable compendium data. ' +
       'Compendium packs are stored in LevelDB format (.db files) under packs/. ' +
       'The ingestion fetcher uses the GitHub API to download pack data as JSON via releases. ' +
-      'See docs/phase-6a-sources.md for full sourcing details.',
+      'See lib/rag/fetchers/pf2e.ts for full sourcing details.',
   },
 };
 
