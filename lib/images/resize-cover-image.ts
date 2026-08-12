@@ -8,24 +8,27 @@ const JPEG_QUALITY = 0.85;
 
 export async function resizeCoverImage(file: File, maxDimension: number): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
-  const width = Math.round(bitmap.width * scale);
-  const height = Math.round(bitmap.height * scale);
+  try {
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
 
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Canvas 2D context unavailable');
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas 2D context unavailable');
 
-  ctx.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close();
+    ctx.drawImage(bitmap, 0, 0, width, height);
 
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error('Failed to encode image'))),
-      'image/jpeg',
-      JPEG_QUALITY
-    );
-  });
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('Failed to encode image'))),
+        'image/jpeg',
+        JPEG_QUALITY
+      );
+    });
+  } finally {
+    bitmap.close();
+  }
 }
