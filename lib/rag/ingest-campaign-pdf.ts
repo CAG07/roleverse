@@ -179,7 +179,13 @@ async function indexMapPages(
         formatMapOverviewMarkdown(t),
         ...t.rooms.map((room) => formatMapRoomMarkdown(t, room)),
       ];
-      const embeddings = await embedBatch(contents);
+      let embeddings: number[][];
+      try {
+        embeddings = await embedBatch(contents);
+      } catch (err) {
+        console.warn(`[ingest] Failed to embed map page ${t.pageNumber}:`, err);
+        continue;
+      }
 
       const rows = contents.map((content, j) => {
         const room = j === 0 ? null : t.rooms[j - 1];
