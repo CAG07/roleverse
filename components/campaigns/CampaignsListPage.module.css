@@ -13,19 +13,23 @@
  */
 
 .dashboardRoot {
-  min-height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
   background: var(--void);
-  padding: 2rem 1.5rem;
+  padding: 1.25rem 1.5rem;
+  overflow: hidden;
 }
 
 /* Topbar */
 .topbar {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .pageTitle {
@@ -90,10 +94,11 @@
 
 /* Module rule / section divider */
 .sectionLabel {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 .sectionLabelText {
   font-family: var(--font-heading);
@@ -110,19 +115,31 @@
   background: linear-gradient(90deg, var(--crimson-dim), transparent);
 }
 
-/* Campaign grid */
+/* Campaign grid — Netflix-style: fixed-size poster tiles that wrap to fill
+   the available width (auto-fill), rather than forcing an exact column
+   count. Row count naturally follows from however many tiles fit; on most
+   desktop-height screens 2 rows fit without scrolling, and overflow-y
+   handles anything beyond that instead of hiding it. */
 .campaignGrid {
+  flex: 1 1 auto;
+  min-height: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 1rem;
+  overflow-y: auto;
+  align-content: start;
 }
 
-/* Campaign card */
+/* Campaign card — fixed 3:4 portrait ratio matching a real module/book cover
+   (a classic B/X-era module cover is ~759x999px, ~0.76 width:height), so
+   .cardThumbImg below can crop-to-fill with object-fit: cover like a poster
+   tile instead of needing to letterbox a mismatched box shape. */
 .campaignCard {
   position: relative;
   display: flex;
   flex-direction: column;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 3 / 4;
+  min-height: 0;
   background: var(--surface-card);
   border: var(--rule-thin);
   overflow: hidden;
@@ -183,10 +200,14 @@
   border-right: 1px solid var(--gold-dim);
 }
 
-/* Thumbnail region — top ~62% of the square */
+/* Thumbnail region — fills whatever height the fixed-size text footer below
+   doesn't use. Netflix-style poster treatment: crop-to-fill (object-fit:
+   cover below) rather than letterbox, since the card's 3:4 aspect ratio
+   already closely matches a real module cover's own proportions, so cropping
+   only trims a small margin off the top/bottom rather than mangling the art. */
 .cardThumb {
   position: relative;
-  flex: 1 1 62%;
+  flex: 1;
   min-height: 0;
   display: flex;
   align-items: center;
@@ -207,22 +228,23 @@
   opacity: 0.5;
 }
 
-/* Text region — bottom of the square */
+/* Text region — fixed-height footer, kept compact so the thumbnail above
+   can claim as much of the card as possible. */
 .cardBody {
   flex: 0 0 auto;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
 }
 
 .cardHeader {
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.25rem;
 }
 
 .cardName {
   font-family: var(--font-heading);
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--ivory);
-  margin: 0 0 0.375rem;
+  margin: 0 0 0.2rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -230,25 +252,27 @@
 
 .cardSystemBadge {
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--gold);
   background: var(--gold-tint);
   border: 1px solid var(--gold-dim);
-  padding: 0.2rem 0.5rem;
+  padding: 0.15rem 0.4rem;
   display: inline-block;
 }
 
 .cardDate {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--ivory-dim);
 }
 
 /* Empty state */
 .emptyState {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
