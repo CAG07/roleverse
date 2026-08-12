@@ -110,23 +110,41 @@ export async function classifyAndTranscribeMapPage(
   }
 }
 
-/** Formats a transcription into the plain-text content stored in campaign_embeddings. */
-export function formatMapTranscriptionMarkdown(t: MapTranscription): string {
-  const lines: string[] = [];
-  lines.push(`## Map: ${t.mapLabel ?? `Untitled map (page ${t.pageNumber})`}`);
-  lines.push('');
+/**
+ * Formats a single room from a transcribed map into its own embeddable chunk.
+ * Each chunk carries the parent map's label/page in its own text, not just
+ * metadata, so a room number that recurs on a different level (e.g. two maps
+ * that both have a "Room 19") stays distinguishable both to vector search —
+ * each room is now its own precisely-matchable row instead of being buried
+ * inside one giant whole-page chunk — and to the model reading it.
+ */
+export function formatMapRoomMarkdown(
+  t: MapTranscription,
+  room: { key: string; notes: string; exits: string[] }
+): string {
+  const label = t.mapLabel ?? `Untitled map (page ${t.pageNumber})`;
+  const lines: string[] = [`## ${label} — Room ${room.key}`, ''];
+  if (room.notes) lines.push(room.notes);
+  if (room.exits.length > 0) lines.push(`Exits/connections: ${room.exits.join(', ')}`);
+  return lines.join('\n').trim();
+}
+
+/**
+ * Formats the map-level overview (label, full room index, and any other
+ * legend/scale/compass text) as its own chunk, separate from the per-room
+ * chunks above, so whole-map questions ("what level are we on") still have
+ * something to match against.
+ */
+export function formatMapOverviewMarkdown(t: MapTranscription): string {
+  const label = t.mapLabel ?? `Untitled map (page ${t.pageNumber})`;
+  const lines: string[] = [`## ${label} — Map Overview`, ''];
 
   if (t.rooms.length > 0) {
-    for (const room of t.rooms) {
-      lines.push(`### ${room.key}`);
-      if (room.notes) lines.push(room.notes);
-      if (room.exits.length > 0) lines.push(`Exits/connections: ${room.exits.join(', ')}`);
-      lines.push('');
-    }
+    lines.push(`Rooms on this map: ${t.rooms.map((r) => r.key).join(', ')}`);
   }
 
   if (t.otherVisibleText.length > 0) {
-    lines.push('Other text visible on the map:');
+    lines.push('', 'Other text visible on the map:');
     for (const line of t.otherVisibleText) lines.push(`- ${line}`);
   }
 
