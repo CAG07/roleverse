@@ -132,6 +132,7 @@ export function StudioPage({ campaignId, campaignName, coverImageUrl, characters
                       className={styles.videoEmbed}
                       src={`https://www.youtube.com/embed/${v.videoId}`}
                       title={v.source ?? v.videoId}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     />
                   </div>
