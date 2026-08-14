@@ -52,7 +52,7 @@ export function exportDnd5e(data: AssembledCharacterData, equipment: unknown[]):
   const skills = (data.skills as Record<string, number>) ?? {};
   const skillProfs = (data.skillProficiencies as string[]) ?? [];
   const languages = (data.languages as string[]) ?? [];
-  const featuresTraits = (data.features as string[]) ?? [];
+  const featuresTraits = (data.featuresTraits as string[]) ?? [];
   const equipmentProficiencies = (data.equipmentProficiencies as string[]) ?? [];
   const attacks = (data.attacks as string[]) ?? [];
   const deathSaves = (data.deathSaves as Record<string, number>) ?? {};

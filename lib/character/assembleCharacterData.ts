@@ -23,6 +23,15 @@ export function assembleCharacterData(row: CharacterRow): AssembledCharacterData
   const combat = (row.game_data_combat ?? {}) as Record<string, unknown>;
   const spells = row.spells && !Array.isArray(row.spells) ? row.spells : {};
 
+  // Legacy fallback: 5E's "Features & Traits" field used to be stored under the
+  // `features` key, which silently collided with the unrelated `features:`
+  // (Feature[]) property below and was renamed to `featuresTraits`. Nothing
+  // under the old key was ever deleted — this just makes it visible again
+  // under the new key for characters saved before the rename. Once a character
+  // is re-saved, `stats.featuresTraits` is present and this fallback no longer
+  // applies.
+  const legacyFeaturesTraits = Array.isArray(stats.features) ? (stats.features as string[]) : undefined;
+
   return {
     name: row.name,
     race: row.race,
@@ -35,6 +44,7 @@ export function assembleCharacterData(row: CharacterRow): AssembledCharacterData
     ...skills,
     ...combat,
     ...spells,
+    ...(stats.featuresTraits == null && legacyFeaturesTraits ? { featuresTraits: legacyFeaturesTraits } : {}),
     features: (row.game_data_abilities ?? []) as Feature[],
     customFields: (row.game_data_custom ?? []) as CustomField[],
   };

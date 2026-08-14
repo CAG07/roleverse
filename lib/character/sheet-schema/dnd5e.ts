@@ -121,7 +121,18 @@ const schema: SystemSheetSchema = {
       column: 'stats',
       kind: 'record-open',
     },
-    { key: 'features', label: 'Features & Traits', column: 'stats', kind: 'string-list' },
+    {
+      // Not `features` — that key collides with AssembledCharacterData.features
+      // (the Feature[] from game_data_abilities, always spread in after stats by
+      // assembleCharacterData), which silently clobbers this field on display.
+      // Legacy data saved under the old `features` key before this rename is
+      // recovered via a read-only fallback in assembleCharacterData.ts and the
+      // character edit route — nothing under the old key is ever deleted.
+      key: 'featuresTraits',
+      label: 'Features & Traits',
+      column: 'stats',
+      kind: 'string-list',
+    },
     { key: 'personalityTraits', label: 'Personality Traits', column: 'stats', kind: 'string' },
     { key: 'ideals', label: 'Ideals', column: 'stats', kind: 'string' },
     { key: 'bonds', label: 'Bonds', column: 'stats', kind: 'string' },
