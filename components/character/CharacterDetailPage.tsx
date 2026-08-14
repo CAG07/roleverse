@@ -8,6 +8,8 @@ import { createClient } from '@/lib/supabase/client';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
+import { buildFantasyGroundsExport } from '@/lib/character/export/fantasy-grounds';
+import { buildPlainTextSheet } from '@/lib/character/export/plain-text';
 import CharacterSheet from './CharacterSheet';
 
 interface DCCFunnelMember {
@@ -69,6 +71,37 @@ export function CharacterDetailPage({
   ].filter(Boolean);
 
   const sheetData = assembleCharacterData(character);
+  const exportable = buildFantasyGroundsExport(character.game_system, sheetData, character.equipment ?? []);
+  const plainText = buildPlainTextSheet(character.game_system, sheetData, character.equipment ?? []);
+
+  const downloadFile = (content: string, filename: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExport = () => {
+    if (!exportable) return;
+    downloadFile(exportable.content, exportable.filename, exportable.mimeType);
+  };
+
+  const handleExportText = () => {
+    if (!plainText) return;
+    const slug = (character.name || 'character')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    downloadFile(plainText, `${slug || 'character'}.txt`, 'text/plain');
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -138,6 +171,19 @@ export function CharacterDetailPage({
           </Link>
           <button type="button" className={styles.btnDelete} onClick={() => setConfirmDelete(true)}>
             ✕ Delete
+          </button>
+          {exportable && (
+            <button type="button" className={styles.btnExport} onClick={handleExport}>
+              ⇩ Export to Fantasy Grounds
+            </button>
+          )}
+          {plainText && (
+            <button type="button" className={styles.btnExport} onClick={handleExportText}>
+              ⇩ Export as Text
+            </button>
+          )}
+          <button type="button" className={styles.btnExport} onClick={handlePrint}>
+            🖶 Print / Save as PDF
           </button>
         </div>
         {deleteError && <p className={styles.deleteError}>{deleteError}</p>}

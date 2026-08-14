@@ -98,8 +98,8 @@ export function EditCharacterPage({
       const supabase = createClient();
 
       // Fetch the latest raw columns before merging, so an edit made from a form that
-      // only knows today's schema keys doesn't clobber keys it isn't aware of (e.g. a
-      // future Fantasy Grounds-synced field living in the same JSONB column).
+      // only knows today's schema keys doesn't clobber keys another concurrent write
+      // (another tab, a future feature) added to the same JSONB column.
       const { data: current, error: fetchError } = await supabase
         .from('characters')
         .select('game_data_stats, game_data_combat, game_data_saves, game_data_skills')

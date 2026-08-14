@@ -148,9 +148,9 @@ The full response is accumulated server-side and saved to `sessions.transcript`.
 
 NPC roster entries are not proposed inline during chat. A player or GM explicitly triggers **Extract NPCs** on a session, which parses the transcript (`lib/sessions/extract-npcs.ts`) and surfaces proposals for approval in the NPC roster UI.
 
-## Fantasy Grounds bridge
+## Fantasy Grounds
 
-Desktop sync from Fantasy Grounds into RoleVerse is complete — FG backup-file parsing maps rulesets to game systems and characters into the app.
+RoleVerse has no live sync with Fantasy Grounds, and none is planned — this was previously documented here as complete, which was inaccurate; no FG bridge code exists in this repo. RoleVerse (or a player's own manual tracking) is the source of truth for character/campaign data. Fantasy Grounds support is planned as a one-way export: generating an FG-importable character record from a RoleVerse character sheet, per game system, as part of the character sheet redesign — a player exports once and imports manually in FG, no ongoing connection. RoleVerse itself is meant to be usable standalone for combat and DM actions, with Fantasy Grounds an optional virtual tabletop layered on top rather than a dependency.
 
 ## Deferred / planned (not yet built)
 
@@ -160,3 +160,4 @@ Desktop sync from Fantasy Grounds into RoleVerse is complete — FG backup-file 
 - ~~On-demand AI scene generation~~ — **removed, not deferred.** Not a planned feature. The scene asset library (upload/attach photos, images only — video was considered and dropped, see Storage) is the whole feature; there's no plan to generate new images on demand.
 - Kanka integration for external lore management
 - PF2E proper data sourcing
+- Fantasy Grounds one-way character sheet export (see "Fantasy Grounds" above) — tied to the character sheet redesign, not yet built

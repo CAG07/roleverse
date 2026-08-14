@@ -15,6 +15,8 @@ const schema: SystemSheetSchema = {
     { key: 'hitDice', label: 'Hit Dice', column: 'combat', kind: 'string' },
     { key: 'inspiration', label: 'Inspiration', column: 'combat', kind: 'string' },
     { key: 'experiencePoints', label: 'Experience Points', column: 'stats', kind: 'number' },
+    { key: 'alignment', label: 'Alignment', column: 'stats', kind: 'string' },
+    { key: 'background', label: 'Background', column: 'stats', kind: 'string' },
     {
       // Actual per-save bonus, keyed by ability abbreviation — the older
       // savingThrowProficiencies field below only records which saves are
@@ -93,6 +95,15 @@ const schema: SystemSheetSchema = {
       kind: 'string-list',
     },
     {
+      // Official sheet's "Proficiencies & Languages" box covers armor, weapons,
+      // and tools here — skillProficiencies above only covers skills.
+      key: 'equipmentProficiencies',
+      label: 'Armor, Weapon & Tool Proficiencies',
+      column: 'skills',
+      kind: 'string-list',
+    },
+    { key: 'languages', label: 'Languages', column: 'skills', kind: 'string-list' },
+    {
       key: 'deathSaves',
       label: 'Death Saves',
       column: 'combat',
@@ -110,7 +121,18 @@ const schema: SystemSheetSchema = {
       column: 'stats',
       kind: 'record-open',
     },
-    { key: 'features', label: 'Features & Traits', column: 'stats', kind: 'string-list' },
+    {
+      // Not `features` — that key collides with AssembledCharacterData.features
+      // (the Feature[] from game_data_abilities, always spread in after stats by
+      // assembleCharacterData), which silently clobbers this field on display.
+      // Legacy data saved under the old `features` key before this rename is
+      // recovered via a read-only fallback in assembleCharacterData.ts and the
+      // character edit route — nothing under the old key is ever deleted.
+      key: 'featuresTraits',
+      label: 'Features & Traits',
+      column: 'stats',
+      kind: 'string-list',
+    },
     { key: 'personalityTraits', label: 'Personality Traits', column: 'stats', kind: 'string' },
     { key: 'ideals', label: 'Ideals', column: 'stats', kind: 'string' },
     { key: 'bonds', label: 'Bonds', column: 'stats', kind: 'string' },

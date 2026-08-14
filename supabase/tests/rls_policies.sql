@@ -4,7 +4,7 @@
 
 BEGIN;
 
-SELECT plan(30);
+SELECT plan(29);
 
 -- ============================================================================
 -- 1. Verify RLS is enabled on all tables
@@ -44,12 +44,6 @@ SELECT is(
   (SELECT relrowsecurity FROM pg_class WHERE relname = 'campaign_embeddings' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on campaign_embeddings'
-);
-
-SELECT is(
-  (SELECT relrowsecurity FROM pg_class WHERE relname = 'fg_commands' AND relnamespace = 'public'::regnamespace),
-  true,
-  'RLS is enabled on fg_commands'
 );
 
 SELECT is(

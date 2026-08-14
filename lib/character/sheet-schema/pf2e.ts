@@ -12,7 +12,10 @@ const schema: SystemSheetSchema = {
     { key: 'classDC', label: 'Class DC', column: 'combat', kind: 'number' },
     { key: 'heroPoints', label: 'Hero Points', column: 'combat', kind: 'number', keyStat: true },
     { key: 'speed', label: 'Speed', column: 'combat', kind: 'string' },
+    { key: 'size', label: 'Size', column: 'stats', kind: 'string' },
+    { key: 'senses', label: 'Senses', column: 'stats', kind: 'string' },
     { key: 'experiencePoints', label: 'Experience Points', column: 'stats', kind: 'number' },
+    { key: 'alignment', label: 'Alignment', column: 'stats', kind: 'string' },
     {
       key: 'savingThrows',
       label: 'Saving Throws',
@@ -37,6 +40,14 @@ const schema: SystemSheetSchema = {
       column: 'combat',
       kind: 'record-open',
     },
+    {
+      // Active condition -> value/rank (e.g. "Frightened" -> 2, "Sickened" -> 1).
+      key: 'conditions',
+      label: 'Conditions',
+      column: 'combat',
+      kind: 'record-open',
+    },
+    { key: 'languages', label: 'Languages', column: 'skills', kind: 'string-list' },
     { key: 'feats', label: 'Feats & Abilities', column: 'stats', kind: 'string-list' },
     { key: 'focusPoints', label: 'Focus Points', column: 'combat', kind: 'number' },
     { key: 'focusSpells', label: 'Focus Spells', column: 'stats', kind: 'string-list' },

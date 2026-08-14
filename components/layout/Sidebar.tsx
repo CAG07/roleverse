@@ -18,7 +18,7 @@ const navItems = [
   { href: '/dashboard', label: 'Campaigns', showHomeIcon: true },
   { href: '/workshop', label: 'Workshop' },
   { href: '/image-studio', label: 'Studio' },
-  { href: '/credits', label: 'Upgrade Subscription' },
+  { href: '/credits', label: 'Premium' },
 ] as const;
 
 const footerNavItems = [

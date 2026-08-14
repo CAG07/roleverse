@@ -23,6 +23,17 @@
   font-size: 0.8125rem;
 }
 
+@media print {
+  .sheetRoot {
+    overflow-y: visible;
+    border: 1px solid #333;
+  }
+  .statBox,
+  .combatBox {
+    break-inside: avoid;
+  }
+}
+
 /* Header */
 .sheetHeader {
   border-bottom: 1px solid var(--crimson-dim);
