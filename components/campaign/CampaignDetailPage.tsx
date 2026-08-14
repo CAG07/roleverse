@@ -275,6 +275,74 @@ export function CampaignDetailPage({
             Browse all sessions, transcripts, and AI summaries.
           </p>
         </Link>
+        <Link href={`/campaigns/${id}/studio`} className={styles.actionCard}>
+          <h3 className={styles.actionCardTitle}>Studio</h3>
+          <p className={styles.actionCardBody}>
+            Browse this campaign&apos;s images and videos in one place.
+          </p>
+        </Link>
+      </div>
+
+      <div className={styles.moduleSection}>
+        <div className={styles.moduleSectionHeader}>
+          <span className={styles.moduleSectionLabel}>Module &amp; Campaign Info</span>
+          {!editingModule && (
+            <button
+              type="button"
+              className={styles.btnModuleEdit}
+              onClick={() => {
+                setModuleDraft(savedModuleDescription ?? '');
+                setModuleError(null);
+                setEditingModule(true);
+              }}
+            >
+              {savedModuleDescription ? 'Edit' : '+ Add'}
+            </button>
+          )}
+        </div>
+
+        {editingModule ? (
+          <div className={styles.moduleEditForm}>
+            <p className={styles.moduleHint}>
+              What module or setting are you running? Note any supplements, player kits, or
+              house rules the GM should know about.
+            </p>
+            <textarea
+              className={styles.moduleTextarea}
+              value={moduleDraft}
+              onChange={(e) => setModuleDraft(e.target.value)}
+              placeholder="e.g., Palace of the Silver Princess (B3), using Tasha's expanded options, no multiclassing — or describe your homebrew adventure and house rules"
+              rows={4}
+              disabled={savingModule}
+            />
+            {moduleError && <p className={styles.deleteError}>{moduleError}</p>}
+            <div className={styles.moduleEditActions}>
+              <button
+                type="button"
+                className={styles.btnModuleSave}
+                onClick={() => void handleSaveModuleDescription()}
+                disabled={savingModule}
+              >
+                {savingModule ? 'Saving…' : 'Save'}
+              </button>
+              <button
+                type="button"
+                className={styles.btnCancel}
+                onClick={() => setEditingModule(false)}
+                disabled={savingModule}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : savedModuleDescription ? (
+          <p className={styles.moduleText}>{savedModuleDescription}</p>
+        ) : (
+          <p className={styles.moduleTextPlaceholder}>
+            No module or campaign info set yet — the GM will ask you to describe your adventure
+            as you play.
+          </p>
+        )}
       </div>
 
       <div className={styles.sectionLabel}>
@@ -286,68 +354,6 @@ export function CampaignDetailPage({
         {/* Party Members */}
         <div className={styles.infoPanel}>
           <h3 className={styles.infoPanelTitle}>Party Members</h3>
-
-          <div className={styles.moduleSection}>
-            <div className={styles.moduleSectionHeader}>
-              <span className={styles.moduleSectionLabel}>Module &amp; Campaign Info</span>
-              {!editingModule && (
-                <button
-                  type="button"
-                  className={styles.btnModuleEdit}
-                  onClick={() => {
-                    setModuleDraft(savedModuleDescription ?? '');
-                    setModuleError(null);
-                    setEditingModule(true);
-                  }}
-                >
-                  {savedModuleDescription ? 'Edit' : '+ Add'}
-                </button>
-              )}
-            </div>
-
-            {editingModule ? (
-              <div className={styles.moduleEditForm}>
-                <p className={styles.moduleHint}>
-                  What module or setting are you running? Note any supplements, player kits, or
-                  house rules the GM should know about.
-                </p>
-                <textarea
-                  className={styles.moduleTextarea}
-                  value={moduleDraft}
-                  onChange={(e) => setModuleDraft(e.target.value)}
-                  placeholder="e.g., Palace of the Silver Princess (B3), using Tasha's expanded options, no multiclassing — or describe your homebrew adventure and house rules"
-                  rows={4}
-                  disabled={savingModule}
-                />
-                {moduleError && <p className={styles.deleteError}>{moduleError}</p>}
-                <div className={styles.moduleEditActions}>
-                  <button
-                    type="button"
-                    className={styles.btnModuleSave}
-                    onClick={() => void handleSaveModuleDescription()}
-                    disabled={savingModule}
-                  >
-                    {savingModule ? 'Saving…' : 'Save'}
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.btnCancel}
-                    onClick={() => setEditingModule(false)}
-                    disabled={savingModule}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : savedModuleDescription ? (
-              <p className={styles.moduleText}>{savedModuleDescription}</p>
-            ) : (
-              <p className={styles.moduleTextPlaceholder}>
-                No module or campaign info set yet — the GM will ask you to describe your adventure
-                as you play.
-              </p>
-            )}
-          </div>
 
           {characters.length > 0 ? (
             <div className={styles.characterList}>

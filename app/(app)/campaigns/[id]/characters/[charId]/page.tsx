@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { CharacterDetailPage } from '@/components/character/CharacterDetailPage';
+import { CHARACTER_SHEET_COLUMNS } from '@/lib/character/characterSheetColumns';
 
 interface Props {
   params: Promise<{ id: string; charId: string }>;
@@ -22,9 +23,7 @@ export default async function CharacterDetailRoute({ params }: Props) {
       .single(),
     supabase
       .from('characters')
-      .select(
-        'id, user_id, name, class, race, level, hp, max_hp, notes, game_system, game_data_stats, game_data_combat, game_data_saves, game_data_skills, game_data_abilities, game_data_custom, equipment, spells, updated_at'
-      )
+      .select(`${CHARACTER_SHEET_COLUMNS}, user_id`)
       .eq('id', charId)
       .eq('campaign_id', id)
       .single(),

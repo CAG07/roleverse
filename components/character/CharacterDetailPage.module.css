@@ -208,6 +208,28 @@
   color: var(--crimson-bright);
 }
 
+.btnExport {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+.btnExport:hover {
+  background: rgba(201, 162, 39, 0.12);
+  border-color: var(--gold);
+}
+
 .deleteError {
   font-family: var(--font-body);
   font-size: 0.875rem;
@@ -245,4 +267,32 @@
 /* Sheet wrapper */
 .sheetSection {
   margin-bottom: 1.5rem;
+}
+
+/* Print — see app/globals.css for the color-token swap this relies on.
+   Chrome (back link, edit/delete/export/print buttons) has no purpose on
+   paper; decorative corner ornaments and the header's crimson gradient rule
+   are screen flourishes that just print as odd artifacts. */
+@media print {
+  .root {
+    padding: 0;
+  }
+  .backLink,
+  .actions {
+    display: none;
+  }
+  .corner {
+    display: none;
+  }
+  .headerCard::before {
+    display: none;
+  }
+  .headerCard,
+  .notesSection {
+    border: 1px solid #333;
+    break-inside: avoid;
+  }
+  .hpTrack {
+    border-color: #333;
+  }
 }

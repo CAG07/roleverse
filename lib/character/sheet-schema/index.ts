@@ -5,12 +5,14 @@
 // loose thing used for agent prompting, untouched by this module.
 
 import type { FieldDraft, KeyedDraft, OpenDraft, SheetField, SystemSheetSchema } from './types';
+import add1e from './add1e';
 import add2e from './add2e';
 import dnd5e from './dnd5e';
 import pf2e from './pf2e';
 import dcc from './dcc';
 
 const schemas: Record<string, SystemSheetSchema> = {
+  [add1e.gameSystem]: add1e,
   [add2e.gameSystem]: add2e,
   [dnd5e.gameSystem]: dnd5e,
   [pf2e.gameSystem]: pf2e,

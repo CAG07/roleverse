@@ -64,6 +64,7 @@ const schema: SystemSheetSchema = {
       column: 'stats',
       kind: 'string-list',
     },
+    { key: 'languages', label: 'Languages', column: 'skills', kind: 'string-list' },
   ],
 };
 

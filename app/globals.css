@@ -50,6 +50,51 @@
   --font-body: var(--font-body-loaded, var(--font-serif-fallback));
 }
 
+/* ── Print overrides ─────────────────────────────────────────────── */
+/* Same dark-module theme everywhere on screen; print swaps the design tokens
+   to a light/dark-text palette so "Print / Save as PDF" doesn't waste a page
+   of ink on a near-black background. Component CSS keeps using var(--void)/
+   var(--ivory)/etc. as normal — only the token values change here, so no
+   per-component print rules are needed just to fix colors. --sidebar-width
+   collapsing to 0 removes the persistent nav's reserved margin automatically,
+   since app/(app)/layout.tsx's main element reads that same variable inline. */
+@media print {
+  :root {
+    --sidebar-width: 0px;
+
+    --void: #ffffff;
+    --void-mid: #ffffff;
+    --void-surface: #f4f3f0;
+    --void-raised: #ececea;
+    --void-border: #c9c7c0;
+
+    --crimson: #6e1414;
+    --crimson-bright: #6e1414;
+    --crimson-dim: #a8a49c;
+    --crimson-glow: transparent;
+
+    --gold: #5a4315;
+    --gold-light: #5a4315;
+    --gold-dim: #a8a49c;
+    --gold-glow: transparent;
+    --gold-tint: transparent;
+    --gold-subtle: transparent;
+
+    --ivory: #111111;
+    --ivory-muted: #333333;
+    --ivory-dim: #555555;
+
+    --status-healthy: #1a5c2a;
+
+    --surface-card: #ffffff;
+    --surface-hover: #ffffff;
+  }
+
+  body::before {
+    display: none;
+  }
+}
+
 /* ── Tailwind theme mapping ──────────────────────────────────────── */
 @theme {
   --font-medieval: var(--font-heading);

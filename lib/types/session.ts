@@ -69,11 +69,14 @@ export interface Character {
   race?: string | null;
   hp?: number | null;
   max_hp?: number | null;
+  notes?: string | null;
   game_data_stats?: Record<string, unknown>;
   game_data_combat?: Record<string, unknown>;
   game_data_saves?: Record<string, unknown>;
   game_data_skills?: Record<string, unknown>;
+  game_data_abilities?: unknown[];
   game_data_custom?: unknown[];
   equipment?: unknown[];
+  spells?: Record<string, unknown> | unknown[];
   created_at: string;
 }

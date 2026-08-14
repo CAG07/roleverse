@@ -118,23 +118,26 @@
 
 /* Campaign grid — Netflix-style: fixed-size poster tiles that wrap to fill
    the available width (auto-fill), rather than forcing an exact column
-   count. Row count naturally follows from however many tiles fit; on most
-   desktop-height screens 2 rows fit without scrolling, and overflow-y
-   handles anything beyond that instead of hiding it. */
+   count. 350px minimum lands at 5 columns on a 1920px-wide monitor (page
+   padding + gaps included) without crossing over to 6; narrower windows
+   fall to 4, 3, etc. naturally. Row count follows from however many tiles
+   fit; overflow-y catches anything beyond what's visible instead of hiding
+   it. */
 .campaignGrid {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1rem;
   overflow-y: auto;
   align-content: start;
 }
 
 /* Campaign card — fixed 3:4 portrait ratio matching a real module/book cover
-   (a classic B/X-era module cover is ~759x999px, ~0.76 width:height), so
-   .cardThumbImg below can crop-to-fill with object-fit: cover like a poster
-   tile instead of needing to letterbox a mismatched box shape. */
+   (a classic B/X-era module cover is ~759x999px, ~0.76 width:height) closely
+   enough that .cardThumbImg below can show the whole cover (object-fit:
+   contain) with only a sliver of letterboxing, not the aggressive crop a
+   mismatched box shape would force. */
 .campaignCard {
   position: relative;
   display: flex;
@@ -202,10 +205,9 @@
 }
 
 /* Thumbnail region — fills whatever height the fixed-size text footer below
-   doesn't use. Netflix-style poster treatment: crop-to-fill (object-fit:
-   cover below) rather than letterbox, since the card's 3:4 aspect ratio
-   already closely matches a real module cover's own proportions, so cropping
-   only trims a small margin off the top/bottom rather than mangling the art. */
+   doesn't use. object-fit: contain shows the whole cover uncropped; because
+   the card's 3:4 shape is already very close to a real cover's own ratio,
+   this letterboxes barely at all instead of leaving big empty margins. */
 .cardThumb {
   position: relative;
   flex: 1;
@@ -219,7 +221,7 @@
 .cardThumbImg {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 .cardThumbPlaceholder {
@@ -229,44 +231,44 @@
   opacity: 0.5;
 }
 
-/* Text region — fixed-height footer, kept compact so the thumbnail above
-   can claim as much of the card as possible. */
+/* Text region — fixed-height footer sized for the larger card. */
 .cardBody {
   flex: 0 0 auto;
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem 1rem;
 }
 
 .cardHeader {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.375rem;
 }
 
 .cardName {
   font-family: var(--font-heading);
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--ivory);
-  margin: 0 0 0.2rem;
+  margin: 0 0 0.375rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .cardSystemBadge {
   font-family: var(--font-heading);
-  font-size: 0.55rem;
+  font-size: 0.6rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--gold);
   background: var(--gold-tint);
   border: 1px solid var(--gold-dim);
-  padding: 0.15rem 0.4rem;
+  padding: 0.2rem 0.5rem;
   display: inline-block;
 }
 
 .cardDate {
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--ivory-dim);
 }
 

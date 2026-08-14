@@ -1,11 +1,19 @@
 import type { SystemSheetSchema } from './types';
 
-// Mirrors the mechanical content of the official TSR AD&D 2E character record
-// sheet (THAC0, the 5-category saves, weapon/non-weapon proficiencies, ability
-// score sub-modifiers, thief skills, class abilities, movement/attacks/XP) —
-// not its printed layout or artwork.
+// Mirrors the mechanical content of the official TSR AD&D 1E character record
+// sheet (THAC0, the 5-category saves, weapon proficiencies, ability score
+// sub-modifiers, thief skills, class abilities, movement/attacks/XP) — not its
+// printed layout or artwork. Grounded in data/osric-stub.md, specifically its
+// "Where 1E and 2E Diverge" section, which is why this schema differs from
+// add2e.ts exactly where it does:
+//   - No `nonWeaponProficiencies` field — that's a 2E-only proficiency-slot
+//     system per the stub; 1E core rules have no equivalent.
+//   - Weapon Speed Factor and the 1E-only weapon-vs-armor-type adjustment
+//     table are per-weapon notes, not dedicated fields — they fit as free
+//     text inside `weaponProficiencies` entries rather than adding low-value
+//     fixed fields for a niche optional table.
 const schema: SystemSheetSchema = {
-  gameSystem: 'ADD2E',
+  gameSystem: 'ADD1E',
   fields: [
     { key: 'thac0', label: 'THAC0', column: 'combat', kind: 'number', keyStat: true },
     { key: 'ac', label: 'AC', column: 'combat', kind: 'number', keyStat: true },
@@ -28,14 +36,11 @@ const schema: SystemSheetSchema = {
       },
     },
     {
+      // Weapon Speed Factor and weapon-vs-armor-type adjustments (both 1E-only
+      // optional rules) belong here as free-text notes per entry rather than
+      // as dedicated fields — see file header.
       key: 'weaponProficiencies',
       label: 'Weapon Proficiencies',
-      column: 'combat',
-      kind: 'string-list',
-    },
-    {
-      key: 'nonWeaponProficiencies',
-      label: 'Non-Weapon Proficiencies',
       column: 'combat',
       kind: 'string-list',
     },
@@ -52,7 +57,7 @@ const schema: SystemSheetSchema = {
     },
     {
       // Class abilities: Paladin's lay on hands, Ranger's tracking, Bard's legend
-      // lore, etc. — nothing else on the sheet captured these before.
+      // lore, etc.
       key: 'classAbilities',
       label: 'Class & Racial Abilities',
       column: 'stats',

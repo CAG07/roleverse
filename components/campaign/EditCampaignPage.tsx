@@ -15,7 +15,6 @@ const COVER_IMAGE_MAX_DIMENSION_PX = 1024;
 interface EditCampaignPageProps {
   id: string;
   initialName: string;
-  initialDescription: string;
   initialModuleDescription: string;
   initialGameSystem: string;
   initialCoverImageUrl: string | null;
@@ -24,14 +23,12 @@ interface EditCampaignPageProps {
 export function EditCampaignPage({
   id,
   initialName,
-  initialDescription,
   initialModuleDescription,
   initialGameSystem,
   initialCoverImageUrl,
 }: EditCampaignPageProps) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
-  const [description, setDescription] = useState(initialDescription);
   const [moduleDescription, setModuleDescription] = useState(initialModuleDescription);
   const [coverImageUrl, setCoverImageUrl] = useState(initialCoverImageUrl);
   const [coverImageUploading, setCoverImageUploading] = useState(false);
@@ -98,7 +95,6 @@ export function EditCampaignPage({
         .from('campaigns')
         .update({
           name: name.trim(),
-          description: description.trim() || null,
           module_description: moduleDescription.trim() || null,
           cover_image_url: coverImageUrl,
         })
@@ -177,19 +173,6 @@ export function EditCampaignPage({
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="description" className={styles.formLabel}>
-              Description
-            </label>
-            <textarea
-              id="description"
-              className={styles.formTextarea}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
             />
           </div>
 

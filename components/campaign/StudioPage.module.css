@@ -1,0 +1,186 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ * See CampaignsListPage.module.css for the full rationale (FOUC avoidance).
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+.root {
+  min-height: 100vh;
+  background: var(--void);
+  padding: 1.5rem;
+}
+
+.layout {
+  display: flex;
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Left-hand nav */
+.sideNav {
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.backLink {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--ivory-muted);
+  text-decoration: none;
+  margin-bottom: 1rem;
+}
+.backLink:hover {
+  color: var(--gold);
+}
+
+.navHeading {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  margin-bottom: 0.75rem;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: transparent;
+  border: var(--rule-thin);
+  border-left: 3px solid transparent;
+  color: var(--ivory-muted);
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 0.625rem 0.875rem;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.navItem:hover {
+  color: var(--ivory);
+}
+.navItemActive {
+  color: var(--gold);
+  border-left-color: var(--gold);
+  background: var(--surface-card);
+}
+
+.navCount {
+  font-family: var(--font-body);
+  font-weight: 400;
+  color: var(--ivory-dim);
+}
+
+/* Content */
+.content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.placeholder {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory-muted);
+}
+
+/* Images */
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.imageTile {
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  overflow: hidden;
+}
+
+.imageThumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.imageMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.5rem 0.625rem;
+}
+
+.imageLabel {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--ivory);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.imageSource {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* Videos */
+.videoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.videoTile {
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.videoEmbedWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.videoEmbed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.videoSource {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.videoSnippet {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--ivory-muted);
+  margin: 0;
+}
