@@ -91,7 +91,11 @@ export function CharacterDetailPage({
 
   const handleExportText = () => {
     if (!plainText) return;
-    const slug = (character.name || 'character').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const slug = (character.name || 'character')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
     downloadFile(plainText, `${slug || 'character'}.txt`, 'text/plain');
   };
 
