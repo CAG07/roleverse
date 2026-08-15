@@ -50,6 +50,19 @@ export function StudioPage({ campaignId, campaignName, coverImageUrl, characters
     };
   }, [campaignId]);
 
+  useEffect(() => {
+    if (!lightboxImage) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setLightboxImage(null);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [lightboxImage]);
+
   const images: ImageTile[] = [
     ...sceneAssets.map((a) => ({
       key: `scene-${a.name}`,
