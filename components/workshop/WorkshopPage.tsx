@@ -155,7 +155,7 @@ export function WorkshopPage({ resources, mySubmissions, signedIn }: WorkshopPag
               {filteredResources.map((r) => (
                 <li key={r.id} className={styles.resourceRow}>
                   <a
-                    href={r.affiliate_url ?? r.url}
+                    href={r.is_affiliate ? (r.affiliate_url ?? r.url) : r.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={styles.resourceTitle}

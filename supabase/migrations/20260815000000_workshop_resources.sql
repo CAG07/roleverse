@@ -30,6 +30,13 @@ CREATE TABLE public.workshop_resources (
   affiliate_url TEXT,
   is_affiliate BOOLEAN NOT NULL DEFAULT false,
   is_partner BOOLEAN NOT NULL DEFAULT false,
+  -- Prevents the exact failure mode the "no undisclosed affiliate
+  -- relationship" policy rule exists to guard against: affiliate_url set
+  -- while is_affiliate is false (link silently becomes affiliate, no badge
+  -- shown), or the reverse (badge shown, link isn't actually affiliate).
+  CONSTRAINT workshop_resources_affiliate_consistency CHECK (
+    (NOT is_affiliate AND affiliate_url IS NULL) OR (is_affiliate AND affiliate_url IS NOT NULL)
+  ),
   game_systems TEXT[] NOT NULL DEFAULT '{}',
   source_submission_id UUID,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

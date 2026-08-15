@@ -115,7 +115,12 @@ export function StudioPage({ campaignId, campaignName, coverImageUrl, characters
                     onClick={() => setLightboxImage(img)}
                     role="button"
                     tabIndex={0}
-                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setLightboxImage(img)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setLightboxImage(img);
+                      }
+                    }}
                     aria-label={`View ${img.label} full size`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
