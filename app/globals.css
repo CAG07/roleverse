@@ -43,6 +43,22 @@
   /* Sidebar */
   --sidebar-width: 220px;
 
+  /* Cover tiles — single source of truth for CampaignsListPage and
+     StudioCampaignPicker so their tile sizing can't silently drift apart
+     the way it did before (each file previously hardcoded its own values
+     with a comment claiming they matched, which stopped being true).
+     10/13 (0.7692) is a real-cover-derived ratio, not 3/4 — measured from
+     two actual TSR module PDFs (0.769, 0.759) and chosen to sit at the
+     center of the wider plausible cluster (US Letter trim ~0.773, TSR
+     saddle-stitched ~0.767) rather than overfitting to those two samples.
+     210px tile minimum yields exactly 7 columns at a 1920px reference
+     width (220px sidebar + 48px page padding + 16px gaps) with enough
+     margin inside the (192.5px, 222.3px] band to survive a scrollbar
+     eating into available width — see CampaignsListPage.module.css's
+     .campaignGrid comment for the full column-count math. */
+  --cover-aspect: 10 / 13;
+  --tile-min: 210px;
+
   /* Fonts — reference CSS variables injected by next/font (see app/layout.tsx) */
   --font-serif-fallback: Georgia, serif;
   --font-display: var(--font-display-loaded, var(--font-serif-fallback));

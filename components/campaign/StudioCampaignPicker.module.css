@@ -33,12 +33,12 @@
   color: var(--ivory-muted);
 }
 
-/* Matches the Campaigns page grid sizing exactly — see
-   CampaignsListPage.module.css's .campaignGrid comment for the 1920px math
-   this 300px value is derived from. */
+/* Shares --tile-min/--cover-aspect (globals.css) with the Campaigns page
+   directly, rather than each file hardcoding its own copy of values that
+   are supposed to match — that drifted apart once already. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--tile-min), 1fr));
   gap: 1rem;
 }
 
@@ -51,7 +51,7 @@
 }
 
 .thumb {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: var(--cover-aspect);
   background: var(--void-surface);
   border: var(--rule-thin);
   display: flex;
@@ -83,5 +83,11 @@
   font-family: var(--font-heading);
   font-size: 0.8125rem;
   font-weight: 600;
+  line-height: 1.25;
+  min-height: 2.5em;
   color: var(--ivory);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
