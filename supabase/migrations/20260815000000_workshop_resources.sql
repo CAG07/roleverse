@@ -78,7 +78,7 @@ CREATE POLICY "Users can view own submissions"
   ON public.workshop_submissions FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert own submissions"
+CREATE POLICY "Users can create own submissions"
   ON public.workshop_submissions FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
