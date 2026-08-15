@@ -12,19 +12,18 @@
  * Do NOT convert this file back to styled-jsx or inline styles.
  */
 
+/* Standard menu-page shell, matching CharactersPage, the NPCs page and the
+   Studio picker. Deliberately NOT height-locked: a 100dvh + overflow:hidden
+   root makes correctness depend on the user's viewport height, which is what
+   clipped the bottom row of tiles. Normal document scroll cannot clip. */
 .dashboardRoot {
-  height: 100vh;
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
+  padding: 2rem 1.5rem;
+  min-height: 100vh;
   background: var(--void);
-  padding: 1.25rem 1.5rem;
-  overflow: hidden;
 }
 
 /* Topbar */
 .topbar {
-  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -37,6 +36,7 @@
   font-family: var(--font-heading);
   font-size: 1.5rem;
   font-weight: 600;
+  line-height: 1.2;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ivory);
@@ -46,6 +46,7 @@
 .pageSubtitle {
   font-family: var(--font-body);
   font-size: 0.875rem;
+  line-height: 1.2;
   color: var(--ivory-muted);
   margin: 0.25rem 0 0;
 }
@@ -95,7 +96,6 @@
 
 /* Module rule / section divider */
 .sectionLabel {
-  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -116,38 +116,25 @@
   background: linear-gradient(90deg, var(--crimson-dim), transparent);
 }
 
-/* Campaign grid — Netflix-style: fixed-size poster tiles that wrap to fill
-   the available width (auto-fill), rather than forcing an exact column
-   count. Target: 2 rows of 5 visible without scrolling on a 1920px-wide
-   monitor. The earlier 350px minimum didn't account for the persistent
-   220px sidebar eating into available width, so it actually rendered only
-   4 columns there, not 5 — 300px is comfortably inside the (262px, 318px]
-   range that yields exactly 5 columns at 1920px (1920 - 220 sidebar - 48
-   page padding = 1652px available; 5 tiles + 4×16px gaps fits, 6 doesn't).
-   Narrower windows fall to 4, 3, etc. naturally. Row count follows from
-   however many tiles fit; overflow-y catches anything beyond what's
-   visible instead of hiding it. */
+/* Tile sizing and cover ratio: see --cover-tile / --cover-aspect in
+   globals.css. min() guards against overflow when the container is narrower
+   than the track minimum. */
 .campaignGrid {
-  flex: 1 1 auto;
-  min-height: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--cover-tile), 100%), 1fr));
   gap: 1rem;
-  overflow-y: auto;
-  align-content: start;
 }
 
-/* Campaign card — fixed 3:4 portrait ratio matching a real module/book cover
-   (a classic B/X-era module cover is ~759x999px, ~0.76 width:height) closely
-   enough that .cardThumbImg below can show the whole cover (object-fit:
-   contain) with only a sliver of letterboxing, not the aggressive crop a
-   mismatched box shape would force. */
+/* Campaign card — NO fixed aspect-ratio here (that was the bug: it used to
+   share a fixed total height with .cardBody's footer via flex:1, which left
+   .cardThumb effectively square instead of matching a real cover's shape —
+   see .cardThumb below, which is where the ratio actually belongs). Card
+   height is now intrinsic: ratio-locked thumb + the footer's natural
+   height. */
 .campaignCard {
   position: relative;
   display: flex;
   flex-direction: column;
-  aspect-ratio: 3 / 4;
-  min-height: 0;
   background: var(--surface-card);
   border: var(--rule-thin);
   overflow: hidden;
@@ -208,19 +195,21 @@
   border-right: 1px solid var(--gold-dim);
 }
 
-/* Thumbnail region — fills whatever height the fixed-size text footer below
-   doesn't use. object-fit: contain shows the whole cover uncropped; because
-   the card's 3:4 shape is already very close to a real cover's own ratio,
-   this letterboxes barely at all instead of leaving big empty margins. */
+/* Thumbnail region — ratio-locked to the real measured cover shape
+   (globals.css's --cover-aspect), not a share of leftover flex space. No
+   border on this element: box-sizing is border-box globally, so a border
+   on the ratio-locked box itself would throw off the exact ratio by that
+   many pixels — the divider lives on .cardBody's border-top instead. */
 .cardThumb {
   position: relative;
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: var(--cover-aspect);
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--void-surface);
-  border-bottom: var(--rule-thin);
+  overflow: hidden;
 }
 .cardThumbImg {
   width: 100%;
@@ -229,20 +218,24 @@
   display: block;
 }
 .cardThumbPlaceholder {
-  width: 28%;
-  height: 28%;
+  width: 30%;
+  height: auto;
   color: var(--gold-dim);
   opacity: 0.5;
 }
 
-/* Text region — kept as small as legibly possible so .cardThumb above claims
-   as much of the card's fixed height as it can. */
+/* Text region — border-top (not a border-bottom on .cardThumb) keeps the
+   ratio-locked thumb box border-free, and the card's height stays intrinsic
+   to this footer's actual content instead of a hardcoded pixel budget. */
 .cardBody {
   flex: 0 0 auto;
   padding: 0.5rem 0.625rem;
+  border-top: var(--rule-thin);
 }
 
 .cardHeader {
+  display: flex;
+  align-items: center;
   margin-bottom: 0.25rem;
 }
 
@@ -250,6 +243,10 @@
   font-family: var(--font-heading);
   font-size: 0.8125rem;
   font-weight: 600;
+  line-height: 1.25;
+  /* Exactly 2 lines (2 x 1.25em) whether the title actually wraps or not —
+     keeps every card the same height without a magic pixel number. */
+  min-height: 2.5em;
   color: var(--ivory);
   margin: 0 0 0.2rem;
   display: -webkit-box;
@@ -262,6 +259,7 @@
   font-family: var(--font-heading);
   font-size: 0.55rem;
   font-weight: 600;
+  line-height: 1.25;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--gold);
@@ -274,13 +272,12 @@
 .cardDate {
   font-family: var(--font-body);
   font-size: 0.7rem;
+  line-height: 1.25;
   color: var(--ivory-dim);
 }
 
 /* Empty state */
 .emptyState {
-  flex: 1 1 auto;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
