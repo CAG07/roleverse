@@ -33,12 +33,11 @@
   color: var(--ivory-muted);
 }
 
-/* Shares --tile-min/--cover-aspect (globals.css) with the Campaigns page
-   directly, rather than each file hardcoding its own copy of values that
-   are supposed to match — that drifted apart once already. */
+/* Tile sizing and cover ratio: see --cover-tile / --cover-aspect in
+   globals.css. Must stay identical to CampaignsListPage's .campaignGrid. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--tile-min), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--cover-tile), 100%), 1fr));
   gap: 1rem;
 }
 

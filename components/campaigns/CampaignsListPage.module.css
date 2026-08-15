@@ -12,19 +12,18 @@
  * Do NOT convert this file back to styled-jsx or inline styles.
  */
 
+/* Standard menu-page shell, matching CharactersPage, the NPCs page and the
+   Studio picker. Deliberately NOT height-locked: a 100dvh + overflow:hidden
+   root makes correctness depend on the user's viewport height, which is what
+   clipped the bottom row of tiles. Normal document scroll cannot clip. */
 .dashboardRoot {
-  height: 100vh;
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
+  padding: 2rem 1.5rem;
+  min-height: 100vh;
   background: var(--void);
-  padding: 1rem 1.5rem;
-  overflow: hidden;
 }
 
 /* Topbar */
 .topbar {
-  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -97,7 +96,6 @@
 
 /* Module rule / section divider */
 .sectionLabel {
-  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -118,24 +116,13 @@
   background: linear-gradient(90deg, var(--crimson-dim), transparent);
 }
 
-/* Campaign grid — Netflix-style: fixed-size poster tiles that wrap to fill
-   the available width (auto-fill), rather than forcing an exact column
-   count. --tile-min (globals.css) is 210px, yielding 7 columns at a 1920px
-   reference width (220px sidebar + 48px page padding + 16px gaps = 1652px
-   available; 7 tiles + 6×16px gaps = 1650px fits, 8 doesn't) — see
-   globals.css's --tile-min comment for the full derivation, including why
-   210px specifically (not a naive 225px) and why it's the robust choice
-   within its column-count band. Narrower windows fall to 6, 5, etc.
-   naturally. Row count follows from however many tiles fit; overflow-y
-   catches anything beyond what's visible instead of hiding it. */
+/* Tile sizing and cover ratio: see --cover-tile / --cover-aspect in
+   globals.css. min() guards against overflow when the container is narrower
+   than the track minimum. */
 .campaignGrid {
-  flex: 1 1 auto;
-  min-height: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--tile-min), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--cover-tile), 100%), 1fr));
   gap: 1rem;
-  overflow-y: auto;
-  align-content: start;
 }
 
 /* Campaign card — NO fixed aspect-ratio here (that was the bug: it used to
@@ -148,7 +135,6 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 0;
   background: var(--surface-card);
   border: var(--rule-thin);
   overflow: hidden;
@@ -292,8 +278,6 @@
 
 /* Empty state */
 .emptyState {
-  flex: 1 1 auto;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
