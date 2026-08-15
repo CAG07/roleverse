@@ -33,6 +33,7 @@ export function StudioPage({ campaignId, campaignName, coverImageUrl, characters
   const [tab, setTab] = useState<StudioTab>('images');
   const [sceneAssets, setSceneAssets] = useState<SceneAsset[]>([]);
   const [loadingScenes, setLoadingScenes] = useState(true);
+  const [lightboxImage, setLightboxImage] = useState<ImageTile | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,6 +49,19 @@ export function StudioPage({ campaignId, campaignName, coverImageUrl, characters
       cancelled = true;
     };
   }, [campaignId]);
+
+  useEffect(() => {
+    if (!lightboxImage) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setLightboxImage(null);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [lightboxImage]);
 
   const images: ImageTile[] = [
     ...sceneAssets.map((a) => ({
@@ -73,10 +87,11 @@ export function StudioPage({ campaignId, campaignName, coverImageUrl, characters
     <div className={styles.root}>
       <div className={styles.layout}>
         <nav className={styles.sideNav}>
-          <Link href={`/campaigns/${campaignId}`} className={styles.backLink}>
-            ← {campaignName}
+          <Link href="/dashboard" className={styles.backLink}>
+            ← Back to Dashboard
           </Link>
           <span className={styles.navHeading}>Studio</span>
+          <span className={styles.navSubheading}>{campaignName}</span>
           <button
             type="button"
             className={`${styles.navItem} ${tab === 'images' ? styles.navItemActive : ''}`}
@@ -107,7 +122,20 @@ export function StudioPage({ campaignId, campaignName, coverImageUrl, characters
             ) : (
               <div className={styles.imageGrid}>
                 {images.map((img) => (
-                  <div key={img.key} className={styles.imageTile}>
+                  <div
+                    key={img.key}
+                    className={styles.imageTile}
+                    onClick={() => setLightboxImage(img)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setLightboxImage(img);
+                      }
+                    }}
+                    aria-label={`View ${img.label} full size`}
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={img.url} alt={img.label} className={styles.imageThumb} />
                     <div className={styles.imageMeta}>
@@ -137,6 +165,14 @@ export function StudioPage({ campaignId, campaignName, coverImageUrl, characters
                     />
                   </div>
                   {v.source && <span className={styles.videoSource}>{v.source}</span>}
+                  <a
+                    href={`https://www.youtube.com/watch?v=${v.videoId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.videoUrl}
+                  >
+                    {`https://www.youtube.com/watch?v=${v.videoId}`}
+                  </a>
                   {v.snippet && <p className={styles.videoSnippet}>{v.snippet}</p>}
                 </div>
               ))}
@@ -144,6 +180,37 @@ export function StudioPage({ campaignId, campaignName, coverImageUrl, characters
           )}
         </div>
       </div>
+
+      {lightboxImage && (
+        <div
+          className={styles.lightboxOverlay}
+          role="presentation"
+          onClick={() => setLightboxImage(null)}
+        >
+          <div
+            className={styles.lightboxDialog}
+            role="dialog"
+            aria-modal="true"
+            aria-label={lightboxImage.label}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className={styles.lightboxClose}
+              onClick={() => setLightboxImage(null)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={lightboxImage.url} alt={lightboxImage.label} className={styles.lightboxImg} />
+            <div className={styles.lightboxCaption}>
+              <span className={styles.imageLabel}>{lightboxImage.label}</span>
+              <span className={styles.imageSource}>{lightboxImage.sourceTag}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

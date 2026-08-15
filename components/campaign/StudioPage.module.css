@@ -43,7 +43,16 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ivory);
+}
+
+.navSubheading {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--ivory-muted);
   margin-bottom: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .navItem {
@@ -105,6 +114,11 @@
   background: var(--surface-card);
   border: var(--rule-thin);
   overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.imageTile:hover {
+  border-color: var(--gold-dim);
 }
 
 .imageThumb {
@@ -183,4 +197,74 @@
   font-size: 0.8125rem;
   color: var(--ivory-muted);
   margin: 0;
+}
+
+.videoUrl {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--gold);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: all;
+}
+.videoUrl:hover {
+  text-decoration: underline;
+}
+
+/* Lightbox */
+.lightboxOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 9, 11, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  z-index: 100;
+}
+
+.lightboxDialog {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-card);
+  border: var(--rule-thin);
+}
+
+.lightboxClose {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 28px;
+  height: 28px;
+  background: var(--void);
+  border: var(--rule-thin);
+  color: var(--ivory);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 1;
+}
+.lightboxClose:hover {
+  border-color: var(--gold-dim);
+  color: var(--gold);
+}
+
+.lightboxImg {
+  max-width: 90vw;
+  max-height: 80vh;
+  object-fit: contain;
+  display: block;
+}
+
+.lightboxCaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
 }
