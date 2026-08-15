@@ -33,9 +33,12 @@
   color: var(--ivory-muted);
 }
 
+/* Matches the Campaigns page grid sizing exactly — see
+   CampaignsListPage.module.css's .campaignGrid comment for the 1920px math
+   this 300px value is derived from. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1rem;
 }
 
@@ -49,7 +52,7 @@
 
 .thumb {
   aspect-ratio: 3 / 4;
-  background: var(--surface-card);
+  background: var(--void-surface);
   border: var(--rule-thin);
   display: flex;
   align-items: center;
@@ -62,9 +65,11 @@
 }
 
 .thumbImg {
+  /* contain, not cover — matches CampaignsListPage's principle that a cover
+     image should always display in full, never cropped. */
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .thumbPlaceholder {

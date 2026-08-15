@@ -4,7 +4,7 @@
 
 BEGIN;
 
-SELECT plan(29);
+SELECT plan(34);
 
 -- ============================================================================
 -- 1. Verify RLS is enabled on all tables
@@ -74,6 +74,18 @@ SELECT is(
   (SELECT relrowsecurity FROM pg_class WHERE relname = 'scene_media' AND relnamespace = 'public'::regnamespace),
   true,
   'RLS is enabled on scene_media'
+);
+
+SELECT is(
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'workshop_resources' AND relnamespace = 'public'::regnamespace),
+  true,
+  'RLS is enabled on workshop_resources'
+);
+
+SELECT is(
+  (SELECT relrowsecurity FROM pg_class WHERE relname = 'workshop_submissions' AND relnamespace = 'public'::regnamespace),
+  true,
+  'RLS is enabled on workshop_submissions'
 );
 
 -- ============================================================================
@@ -225,6 +237,37 @@ SELECT ok(
       AND cmd = 'DELETE'
   ),
   'scene_media has DELETE policy (owner only)'
+);
+
+-- workshop_resources / workshop_submissions policies
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'workshop_resources'
+      AND policyname = 'Anyone can view workshop resources'
+      AND cmd = 'SELECT'
+  ),
+  'workshop_resources has public SELECT policy'
+);
+
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'workshop_submissions'
+      AND policyname = 'Users can view own submissions'
+      AND cmd = 'SELECT'
+  ),
+  'workshop_submissions has SELECT policy (own rows only)'
+);
+
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'workshop_submissions'
+      AND policyname = 'Users can create own submissions'
+      AND cmd = 'INSERT'
+  ),
+  'workshop_submissions has INSERT policy (own rows only)'
 );
 
 -- ============================================================================
