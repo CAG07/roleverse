@@ -46,7 +46,7 @@ export async function renderPdfCoverToJpeg(fileBuffer: Buffer, maxDimension: num
   }
 
   const longEdge = Math.max(pageWidth, pageHeight);
-  const scale = Math.min(maxDimension / longEdge, MAX_RENDER_SCALE);
+  const scale = Math.min(1, maxDimension / longEdge, MAX_RENDER_SCALE);
 
   const renderedPng = await renderPageAsImage(pdf, 1, {
     scale,
