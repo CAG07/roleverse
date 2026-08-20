@@ -230,6 +230,36 @@
   color: var(--crimson-bright);
 }
 
+/* Oracle message */
+.msgOracle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+.oracleLabel {
+  display: inline-block;
+  font-family: var(--font-heading);
+  font-size: 0.575rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #4a9a8a;
+  color: #4a9a8a;
+}
+.oracleBubble {
+  max-width: 85%;
+  background: var(--surface-card);
+  border-left: 2px solid #4a9a8a;
+  padding: 0.625rem 0.75rem;
+  font-family: var(--font-body);
+  font-size: var(--chat-font-size, 14px);
+  color: var(--ivory);
+  line-height: 1.5;
+}
+
 /* Player message */
 .msgPlayer {
   display: flex;

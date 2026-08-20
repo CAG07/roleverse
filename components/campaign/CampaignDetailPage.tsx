@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import CampaignFilesPanel from './CampaignFilesPanel';
 import CampaignScenesPanel from './CampaignScenesPanel';
+import OracleRefsPanel from './OracleRefsPanel';
 import type { TranscriptEntry } from '@/lib/types/session';
 
 export interface CampaignCharacter {
@@ -442,6 +443,9 @@ export function CampaignDetailPage({
 
         {/* Modules & Files */}
         <CampaignFilesPanel campaignId={id} />
+
+        {/* Oracle References (solo-play "bring your own oracle") */}
+        <OracleRefsPanel campaignId={id} />
 
         {/* Scene Library */}
         <CampaignScenesPanel campaignId={id} />

@@ -119,6 +119,14 @@ function transcriptToMessages(entries: TranscriptEntry[]): ChatMessage[] {
         timestamp,
       };
     }
+    if (entry.role === 'oracle') {
+      return {
+        id: `hist-${i}`,
+        role: 'oracle' as const,
+        content: entry.content ?? '',
+        timestamp,
+      };
+    }
     return {
       id: `hist-${i}`,
       role: 'agent' as const,
@@ -544,6 +552,16 @@ export default function ChatWindow({
                         </div>
                       ))}
                   </div>
+                  <span className={styles.msgTimestamp}>{relativeTime(msg.timestamp)}</span>
+                </div>
+              );
+            }
+
+            if (msg.role === 'oracle') {
+              return (
+                <div key={msg.id} className={styles.msgOracle}>
+                  <span className={styles.oracleLabel}>Oracle</span>
+                  <div className={styles.oracleBubble}>{renderMarkdown(msg.content)}</div>
                   <span className={styles.msgTimestamp}>{relativeTime(msg.timestamp)}</span>
                 </div>
               );
