@@ -8,11 +8,9 @@ import { Image as ImageIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { resizeCoverImage } from '@/lib/images/resize-cover-image';
-import {
-  COVER_IMAGE_MAX_BYTES,
-  COVER_IMAGE_MAX_DIMENSION_PX,
-  PDF_COVER_MAX_BYTES,
-} from '@/lib/images/cover-image-constants';
+
+const COVER_IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5MB source-file cap
+const COVER_IMAGE_MAX_DIMENSION_PX = 1024;
 
 interface EditCampaignPageProps {
   id: string;
@@ -47,10 +45,8 @@ export function EditCampaignPage({
 
     setCoverImageError('');
 
-    const isPdf = file.type === 'application/pdf';
-    const maxBytes = isPdf ? PDF_COVER_MAX_BYTES : COVER_IMAGE_MAX_BYTES;
-    if (file.size > maxBytes) {
-      setCoverImageError(`${isPdf ? 'PDF' : 'Image'} must be ${maxBytes / (1024 * 1024)}MB or smaller.`);
+    if (file.size > COVER_IMAGE_MAX_BYTES) {
+      setCoverImageError('Image must be 5MB or smaller.');
       return;
     }
 
@@ -62,28 +58,13 @@ export function EditCampaignPage({
       } = await supabase.auth.getUser();
       if (!user) throw new Error('Not signed in');
 
+      const resized = await resizeCoverImage(file, COVER_IMAGE_MAX_DIMENSION_PX);
       const path = `${user.id}/${id}/cover.jpg`;
 
-      if (isPdf) {
-        // Rasterization needs @napi-rs/canvas, a Node native addon that can't
-        // run in the browser — the server route does the work and writes
-        // straight to the same storage path the image branch below uses.
-        const response = await fetch(`/api/campaigns/${id}/cover-from-pdf`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/pdf' },
-          body: file,
-        });
-        if (!response.ok) {
-          const body = (await response.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(body?.error ?? 'Failed to process PDF.');
-        }
-      } else {
-        const resized = await resizeCoverImage(file, COVER_IMAGE_MAX_DIMENSION_PX);
-        const { error: uploadError } = await supabase.storage
-          .from('campaign-covers')
-          .upload(path, resized, { contentType: 'image/jpeg', upsert: true });
-        if (uploadError) throw uploadError;
-      }
+      const { error: uploadError } = await supabase.storage
+        .from('campaign-covers')
+        .upload(path, resized, { contentType: 'image/jpeg', upsert: true });
+      if (uploadError) throw uploadError;
 
       const {
         data: { publicUrl },
@@ -153,7 +134,7 @@ export function EditCampaignPage({
               <div className={styles.coverImageControls}>
                 <input
                   type="file"
-                  accept="image/*,application/pdf"
+                  accept="image/*"
                   onChange={(e) => void handleCoverImageChange(e)}
                   className={styles.coverImageFileInput}
                   id="coverImageFile"
@@ -164,7 +145,7 @@ export function EditCampaignPage({
                   className={styles.btnCoverUpload}
                   aria-disabled={coverImageUploading}
                 >
-                  {coverImageUploading ? 'Uploading…' : coverImageUrl ? 'Replace Cover' : 'Upload Cover'}
+                  {coverImageUploading ? 'Uploading…' : coverImageUrl ? 'Replace Image' : 'Upload Image'}
                 </label>
                 {coverImageUrl && (
                   <button
@@ -176,10 +157,7 @@ export function EditCampaignPage({
                     Remove
                   </button>
                 )}
-                <p className={styles.formHint}>
-                  JPG or PNG up to 5MB, or a single-page PDF up to 8MB (e.g. print just the cover page of a
-                  module to PDF and upload that). Full cover shown, not cropped.
-                </p>
+                <p className={styles.formHint}>JPG or PNG, up to 5MB. Full cover shown, not cropped.</p>
                 {coverImageError && <p className={styles.errorMsg}>{coverImageError}</p>}
               </div>
             </div>
