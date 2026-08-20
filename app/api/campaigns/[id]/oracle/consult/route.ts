@@ -11,7 +11,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
-import { runOracleConsult, MAX_ORACLE_CONSULTS_PER_DAY } from '@/lib/oracle/consult-oracle';
+import {
+  runOracleConsult,
+  retrieveOracleContext,
+  MAX_ORACLE_CONSULTS_PER_DAY,
+  NO_REFERENCE_MESSAGE,
+} from '@/lib/oracle/consult-oracle';
 
 type RouteParams = { params: Promise<{ id: string }> };
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -105,37 +110,46 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Session not found' }, { status: 404 });
   }
 
-  const consumed = await tryConsumeConsult(supabase, id, currentCount ?? 0, resetAt ?? new Date().toISOString());
-  if (!consumed) {
-    return NextResponse.json(
-      {
-        error: `This campaign has reached its limit of ${MAX_ORACLE_CONSULTS_PER_DAY} oracle consultations for today. Try again later, or use Quick Oracle instead.`,
-      },
-      { status: 429 }
-    );
-  }
+  const question = body.question.trim();
 
-  try {
-    const result = await runOracleConsult({
-      campaignId: id,
-      question: body.question.trim(),
-      oracleState,
-    });
-
-    const now = new Date().toISOString();
+  const appendTranscript = async (answer: string) => {
     const { error: transcriptError } = await supabase.rpc('append_session_transcript', {
       p_session_id: body.sessionId,
       p_entries: [
         {
           role: 'oracle',
-          content: `Q: ${body.question.trim()}\nA: ${result.answer}`,
-          timestamp: now,
+          content: `Q: ${question}\nA: ${answer}`,
+          timestamp: new Date().toISOString(),
         },
       ],
     });
     if (transcriptError) {
       console.error('[oracle consult] Failed to append transcript entry:', transcriptError.message);
     }
+  };
+
+  try {
+    // Retrieval happens BEFORE the rate limit is consumed — a knowably-empty
+    // consultation (nothing indexed, or nothing relevant to this question)
+    // costs no quota and no Anthropic API call.
+    const matches = await retrieveOracleContext(id, question);
+    if (matches.length === 0) {
+      await appendTranscript(NO_REFERENCE_MESSAGE);
+      return NextResponse.json({ answer: NO_REFERENCE_MESSAGE, groundedChunks: 0, usedRolls: [] });
+    }
+
+    const consumed = await tryConsumeConsult(supabase, id, currentCount ?? 0, resetAt ?? new Date().toISOString());
+    if (!consumed) {
+      return NextResponse.json(
+        {
+          error: `This campaign has reached its limit of ${MAX_ORACLE_CONSULTS_PER_DAY} oracle consultations for today. Try again later, or use Quick Oracle instead.`,
+        },
+        { status: 429 }
+      );
+    }
+
+    const result = await runOracleConsult({ matches, question, oracleState });
+    await appendTranscript(result.answer);
 
     return NextResponse.json(result);
   } catch (err) {
