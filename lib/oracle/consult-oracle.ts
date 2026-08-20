@@ -16,18 +16,25 @@
 // other named system unless that system is literally what the player
 // uploaded.
 import Anthropic from '@anthropic-ai/sdk';
-import { searchCampaignPriorityContent } from '@/lib/rag/search-campaign-priority';
+import { searchCampaignPriorityContent, type CampaignPriorityMatch } from '@/lib/rag/search-campaign-priority';
 import { parseDiceNotation, rollDice } from '@/lib/mcp/tools/roll-dice';
 
 /** Rolling-daily-cap on BYOO consultations (real Anthropic API cost, unlike
  *  the built-in Flux Oracle, which is free/local and uncapped). Tunable. */
 export const MAX_ORACLE_CONSULTS_PER_DAY = 20;
 
-const NO_REFERENCE_MESSAGE =
-  'No oracle reference has been uploaded yet for this campaign. Upload your oracle system\'s ' +
-  'rulebook (e.g. your own copy of Mythic Game Master Emulator, or any other solo-play oracle ' +
-  'system) under "Manage Oracle References" to use My Oracle — or use Quick Oracle instead, ' +
-  'RoleVerse\'s built-in instant option.';
+// Covers both "nothing has been uploaded at all" and "something is uploaded
+// but nothing relevant enough was retrieved for this specific question" —
+// searchCampaignPriorityContent can return zero matches in either case
+// (e.g. the question just doesn't clear minSimilarity against an otherwise
+// real, indexed reference), so a message that only names the first case
+// would be misleading in the second.
+export const NO_REFERENCE_MESSAGE =
+  'No relevant excerpts were retrieved from your uploaded oracle references. If you haven\'t ' +
+  'uploaded and indexed an oracle reference yet, add one under "Manage Oracle References" ' +
+  '(e.g. your own copy of Mythic Game Master Emulator, or any other solo-play oracle system) ' +
+  '— or use Quick Oracle instead, RoleVerse\'s built-in instant option. Otherwise, try ' +
+  'rephrasing your question to better match the text in your reference.';
 
 /** Max rounds of tool-use before forcing a final text turn — bounded and
  *  narrow (answer one question, roll 0-2 times) unlike the GM's open-ended loop. */
@@ -90,25 +97,34 @@ function buildSystemPrompt(retrievedText: string, oracleState: string | null): s
 }
 
 /**
- * Consult the player's own uploaded oracle reference. Retrieval happens
- * first and, on a total miss, short-circuits before any Claude call — no
- * API cost (or rate-limit consumption) is spent on a knowably-empty case.
+ * Retrieval only — deliberately separate from runOracleConsult so the API
+ * route can check for a total miss BEFORE consuming the daily rate limit or
+ * spending any Anthropic API cost. Calling this first and consuming the
+ * limit only when it returns matches is what keeps a knowably-empty
+ * consultation free.
  */
-export async function runOracleConsult(params: {
-  campaignId: string;
-  question: string;
-  oracleState: string | null;
-}): Promise<OracleConsultResult> {
-  const { campaignId, question, oracleState } = params;
-
-  const matches = await searchCampaignPriorityContent(question, {
+export async function retrieveOracleContext(
+  campaignId: string,
+  question: string
+): Promise<CampaignPriorityMatch[]> {
+  return searchCampaignPriorityContent(question, {
     campaignId,
     sourceTypes: ['oracle_ref'],
   });
+}
 
-  if (matches.length === 0) {
-    return { answer: NO_REFERENCE_MESSAGE, groundedChunks: 0, usedRolls: [] };
-  }
+/**
+ * Consult the player's own uploaded oracle reference, given already-fetched
+ * retrieval matches (see retrieveOracleContext — callers must check for a
+ * zero-match result themselves before calling this, so the rate limit is
+ * only consumed once a real Claude call is about to happen).
+ */
+export async function runOracleConsult(params: {
+  matches: CampaignPriorityMatch[];
+  question: string;
+  oracleState: string | null;
+}): Promise<OracleConsultResult> {
+  const { matches, question, oracleState } = params;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY environment variable is not set');
