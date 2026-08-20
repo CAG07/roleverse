@@ -37,7 +37,7 @@ export type AgentType =
 
 export interface ChatMessage {
   id: string;
-  role: 'agent' | 'player' | 'system';
+  role: 'agent' | 'player' | 'system' | 'oracle';
   agentType?: AgentType;
   playerName?: string;
   content: string;
