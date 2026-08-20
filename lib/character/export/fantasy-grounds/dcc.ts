@@ -25,6 +25,15 @@
 //     actions, corruption-per-spell) are intentionally NOT turned into invented
 //     XML nodes. They're folded into a plain <notes> field instead, consistent
 //     with this project's rule against asserting structure we haven't verified.
+//
+// 2026-08-19: the 0-Level sheet depth pass added title, action dice (now read
+// from real data instead of the earlier hardcoded "1d20"), crit die/table,
+// lucky roll, manually-entered ability modifiers, and melee/missile attack &
+// damage modifiers. None of these have a confirmed FG DCC tag from the one
+// real sample this file has, so — same reasoning as the notes-folded fields
+// above — they go into <notes> rather than inventing more node names: an
+// unrecognized tag is simply ignored by FG on import, but <notes> guarantees
+// the data is visible somewhere regardless.
 import type { AssembledCharacterData } from '@/lib/types/character';
 import { characterDocument, diceLeaf, group, idList, leaf } from './xml';
 
@@ -52,6 +61,8 @@ export function exportDcc(data: AssembledCharacterData, equipment: unknown[]): s
   const corruption = (data.corruption as string[]) ?? [];
   const patronTaint = (data.patronTaint as string[]) ?? [];
   const knownSpells = (data.knownSpells as string[]) ?? [];
+  const abilityModifiers = (data.abilityModifiers as Record<string, number> | undefined) ?? {};
+  const attackModifiers = (data.attackModifiers as Record<string, number> | undefined) ?? {};
 
   const abilitiesXml = group(
     'abilities',
@@ -144,6 +155,17 @@ export function exportDcc(data: AssembledCharacterData, equipment: unknown[]): s
     ...(weapons.some((w) => w.notes)
       ? weapons.filter((w) => w.notes).map((w) => `${w.name}: ${w.notes}`)
       : []),
+    ...((data.title as string) ? [`Title: ${data.title}`] : []),
+    ...((data.baseAttack as string) ? [`Attack: ${data.baseAttack}`] : []),
+    ...((data.critDie as string) ? [`Crit Die: ${data.critDie}`] : []),
+    ...((data.critTable as string) ? [`Crit Table: ${data.critTable}`] : []),
+    ...((data.luckyRoll as string) ? [`Lucky Roll: ${data.luckyRoll}`] : []),
+    ...(Object.keys(abilityModifiers).length > 0
+      ? [`Ability Modifiers: ${Object.entries(abilityModifiers).map(([k, v]) => `${k} ${v}`).join(', ')}`]
+      : []),
+    ...(Object.keys(attackModifiers).length > 0
+      ? [`Attack & Damage Modifiers: ${Object.entries(attackModifiers).map(([k, v]) => `${k} ${v}`).join(', ')}`]
+      : []),
   ];
   const notesXml = notesParts.length > 0 ? leaf('notes', 'string', notesParts.join('\n')) : '';
 
@@ -153,7 +175,7 @@ export function exportDcc(data: AssembledCharacterData, equipment: unknown[]): s
     leaf('occupation', 'string', (data.occupation as string) ?? ''),
     leaf('alignment', 'string', (data.alignment as string) ?? ''),
     leaf('level', 'number', data.level ?? 0),
-    leaf('actiondice', 'string', '1d20'),
+    leaf('actiondice', 'string', (data.actionDice as string) || '1d20'),
     leaf('exp', 'number', (data.experiencePoints as number) ?? 0),
     abilitiesXml,
     classesXml,

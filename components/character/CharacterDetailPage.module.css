@@ -33,130 +33,11 @@
   color: var(--gold);
 }
 
-/* Header card */
-.headerCard {
-  position: relative;
-  background: var(--surface-card);
-  border: var(--rule-thin);
-  padding: 1.5rem;
+/* Actions row — sits below the shared CharacterHeaderBanner card, unbordered */
+.actionsSection {
   margin-bottom: 1.5rem;
 }
-.headerCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--crimson), transparent);
-}
 
-/* Corner ornaments */
-.corner {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-}
-.corner.tl {
-  top: 4px;
-  left: 4px;
-  border-top: 1px solid var(--gold-dim);
-  border-left: 1px solid var(--gold-dim);
-}
-.corner.tr {
-  top: 4px;
-  right: 4px;
-  border-top: 1px solid var(--gold-dim);
-  border-right: 1px solid var(--gold-dim);
-}
-.corner.bl {
-  bottom: 4px;
-  left: 4px;
-  border-bottom: 1px solid var(--gold-dim);
-  border-left: 1px solid var(--gold-dim);
-}
-.corner.br {
-  bottom: 4px;
-  right: 4px;
-  border-bottom: 1px solid var(--gold-dim);
-  border-right: 1px solid var(--gold-dim);
-}
-
-.headerTop {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.375rem;
-}
-
-.charName {
-  font-family: var(--font-heading);
-  font-size: 1.75rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--ivory);
-  margin: 0;
-}
-
-.systemBadge {
-  font-family: var(--font-heading);
-  font-size: 0.6rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ivory);
-  white-space: nowrap;
-  flex-shrink: 0;
-  align-self: flex-start;
-  margin-top: 0.375rem;
-}
-
-.charMeta {
-  font-family: var(--font-body);
-  font-size: 0.875rem;
-  color: var(--ivory-muted);
-  margin: 0 0 1rem;
-}
-
-/* HP bar */
-.hpSection {
-  margin-bottom: 1rem;
-}
-
-.hpLabel {
-  font-family: var(--font-heading);
-  font-size: 0.6rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ivory-muted);
-  margin-bottom: 0.35rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.hpNumbers {
-  font-family: var(--font-heading);
-  font-size: 0.75rem;
-  color: var(--ivory-dim);
-}
-
-.hpTrack {
-  height: 6px;
-  background: var(--void-raised);
-  border: 1px solid var(--void-border);
-}
-
-.hpFill {
-  height: 100%;
-  background: var(--crimson);
-  transition: width 0.3s ease;
-}
-
-/* Actions row */
 .actions {
   display: flex;
   gap: 0.75rem;
@@ -271,28 +152,18 @@
 
 /* Print — see app/globals.css for the color-token swap this relies on.
    Chrome (back link, edit/delete/export/print buttons) has no purpose on
-   paper; decorative corner ornaments and the header's crimson gradient rule
-   are screen flourishes that just print as odd artifacts. */
+   paper. CharacterHeaderBanner.module.css handles its own print rules
+   (corner ornaments, crimson gradient rule, HP track border). */
 @media print {
   .root {
     padding: 0;
   }
   .backLink,
-  .actions {
+  .actionsSection {
     display: none;
   }
-  .corner {
-    display: none;
-  }
-  .headerCard::before {
-    display: none;
-  }
-  .headerCard,
   .notesSection {
     border: 1px solid #333;
     break-inside: avoid;
-  }
-  .hpTrack {
-    border-color: #333;
   }
 }

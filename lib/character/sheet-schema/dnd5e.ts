@@ -17,6 +17,20 @@ const schema: SystemSheetSchema = {
     { key: 'experiencePoints', label: 'Experience Points', column: 'stats', kind: 'number' },
     { key: 'alignment', label: 'Alignment', column: 'stats', kind: 'string' },
     { key: 'background', label: 'Background', column: 'stats', kind: 'string' },
+    { key: 'age', label: 'Age', column: 'stats', kind: 'string' },
+    { key: 'height', label: 'Height', column: 'stats', kind: 'string' },
+    { key: 'weight', label: 'Weight', column: 'stats', kind: 'string' },
+    { key: 'eyes', label: 'Eyes', column: 'stats', kind: 'string' },
+    { key: 'skin', label: 'Skin', column: 'stats', kind: 'string' },
+    { key: 'hair', label: 'Hair', column: 'stats', kind: 'string' },
+    {
+      key: 'currency',
+      label: 'Currency',
+      column: 'stats',
+      kind: 'record-fixed',
+      keys: ['cp', 'sp', 'ep', 'gp', 'pp'],
+      labels: { cp: 'Copper', sp: 'Silver', ep: 'Electrum', gp: 'Gold', pp: 'Platinum' },
+    },
     {
       // Actual per-save bonus, keyed by ability abbreviation — the older
       // savingThrowProficiencies field below only records which saves are
@@ -137,6 +151,7 @@ const schema: SystemSheetSchema = {
     { key: 'ideals', label: 'Ideals', column: 'stats', kind: 'string' },
     { key: 'bonds', label: 'Bonds', column: 'stats', kind: 'string' },
     { key: 'flaws', label: 'Flaws', column: 'stats', kind: 'string' },
+    { key: 'spellcastingAbility', label: 'Spellcasting Ability', column: 'combat', kind: 'string' },
     { key: 'spellSaveDC', label: 'Spell Save DC', column: 'combat', kind: 'number' },
     { key: 'spellAttackModifier', label: 'Spell Attack Modifier', column: 'combat', kind: 'number' },
     {
@@ -146,6 +161,24 @@ const schema: SystemSheetSchema = {
       kind: 'spell-slots',
       levels: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
     },
+    {
+      // The official sheet's "Spells Known"/Cantrips boxes — an actual named
+      // spell list per level with a prepared marker, distinct from spellSlots
+      // above (which only tracks how many slots exist per level).
+      key: 'knownSpells',
+      label: 'Known Spells',
+      column: 'combat',
+      kind: 'table',
+      columns: [
+        { key: 'level', label: 'Level', type: 'number' },
+        { key: 'name', label: 'Spell Name', type: 'text' },
+        { key: 'prepared', label: 'Prepared', type: 'text' },
+      ],
+    },
+    { key: 'characterAppearance', label: 'Character Appearance', column: 'stats', kind: 'text' },
+    { key: 'characterBackstory', label: 'Character Backstory', column: 'stats', kind: 'text' },
+    { key: 'alliesOrganizations', label: 'Allies & Organizations', column: 'stats', kind: 'text' },
+    { key: 'treasureNotes', label: 'Treasure', column: 'stats', kind: 'text' },
   ],
 };
 

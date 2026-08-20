@@ -4,12 +4,17 @@
 // is a separate, UI-focused schema — the registry's own `characterSchema` hint stays a
 // loose thing used for agent prompting, untouched by this module.
 
-import type { FieldDraft, KeyedDraft, OpenDraft, SheetField, SystemSheetSchema } from './types';
+import type { FieldDraft, KeyedDraft, OpenDraft, SheetField, SystemSheetSchema, TableDraft } from './types';
 import add1e from './add1e';
 import add2e from './add2e';
 import dnd5e from './dnd5e';
 import pf2e from './pf2e';
 import dcc from './dcc';
+import dnd35e from './dnd35e';
+import dnd4e from './dnd4e';
+import tor2e from './tor2e';
+import cyberpunk2020 from './cyberpunk2020';
+import fallout2d20 from './fallout2d20';
 
 const schemas: Record<string, SystemSheetSchema> = {
   [add1e.gameSystem]: add1e,
@@ -17,6 +22,11 @@ const schemas: Record<string, SystemSheetSchema> = {
   [dnd5e.gameSystem]: dnd5e,
   [pf2e.gameSystem]: pf2e,
   [dcc.gameSystem]: dcc,
+  [dnd35e.gameSystem]: dnd35e,
+  [dnd4e.gameSystem]: dnd4e,
+  [tor2e.gameSystem]: tor2e,
+  [cyberpunk2020.gameSystem]: cyberpunk2020,
+  [fallout2d20.gameSystem]: fallout2d20,
 };
 
 export function getSheetSchema(gameSystem: string): SystemSheetSchema | null {
@@ -54,11 +64,35 @@ function buildOpenRecord(entries: OpenDraft): Record<string, number> | undefined
   return parsed.length > 0 ? Object.fromEntries(parsed) : undefined;
 }
 
+function buildTable(
+  columns: { key: string; type: 'text' | 'number' }[],
+  rows: TableDraft
+): Record<string, unknown>[] | undefined {
+  const built = rows
+    .map((row) => {
+      const out: Record<string, unknown> = {};
+      for (const col of columns) {
+        const raw = row[col.key] ?? '';
+        if (col.type === 'number') {
+          const n = parseNumber(raw);
+          if (n !== undefined) out[col.key] = n;
+        } else {
+          const trimmed = raw.trim();
+          if (trimmed.length > 0) out[col.key] = trimmed;
+        }
+      }
+      return out;
+    })
+    .filter((row) => Object.keys(row).length > 0);
+  return built.length > 0 ? built : undefined;
+}
+
 function fieldValue(field: SheetField, draft: FieldDraft): unknown {
   switch (field.kind) {
     case 'number':
       return parseNumber(draft as string);
-    case 'string': {
+    case 'string':
+    case 'text': {
       const trimmed = (draft as string).trim();
       return trimmed.length > 0 ? trimmed : undefined;
     }
@@ -75,6 +109,8 @@ function fieldValue(field: SheetField, draft: FieldDraft): unknown {
       return buildKeyedRecord(field.levels, draft as KeyedDraft);
     case 'record-open':
       return buildOpenRecord(draft as OpenDraft);
+    case 'table':
+      return buildTable(field.columns, draft as TableDraft);
     default:
       return undefined;
   }

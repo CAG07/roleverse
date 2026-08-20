@@ -41,6 +41,32 @@ export function NpcForm({ campaignId, campaignName, npc }: NpcFormProps) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generateHint, setGenerateHint] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+
+  const handleGenerate = async () => {
+    setGenerateError(null);
+    setGenerating(true);
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}/npcs/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hint: generateHint }),
+      });
+      const data = await res.json().catch(() => ({ error: 'Request failed' }));
+      if (!res.ok) {
+        setGenerateError((data as { error?: string }).error ?? 'NPC generation failed.');
+        return;
+      }
+      const generated = (data as { npc: NpcInput }).npc;
+      setFields((prev) => ({ ...prev, ...generated }));
+    } catch {
+      setGenerateError('NPC generation failed. Please try again or fill in the form manually.');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const set = (key: keyof NpcInput) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -102,6 +128,30 @@ export function NpcForm({ campaignId, campaignName, npc }: NpcFormProps) {
         <h1 className={styles.title}>{isEditing ? `Edit ${npc!.name}` : 'Add NPC'}</h1>
         <p className={styles.subtitle}>{campaignName}</p>
       </div>
+
+      {!isEditing && (
+        <div className={styles.generateCard}>
+          <p className={styles.generateTitle}>Generate Premade NPC</p>
+          <div className={styles.generateRow}>
+            <input
+              className={styles.input}
+              value={generateHint}
+              onChange={(e) => setGenerateHint(e.target.value)}
+              placeholder="e.g. a suspicious dockside merchant (optional)"
+              disabled={generating}
+            />
+            <button
+              type="button"
+              className={styles.btnSubmit}
+              onClick={() => void handleGenerate()}
+              disabled={generating}
+            >
+              {generating ? 'Generating…' : 'Generate Premade NPC'}
+            </button>
+          </div>
+          {generateError && <p className={styles.errorMsg}>{generateError}</p>}
+        </div>
+      )}
 
       <form onSubmit={(e) => void handleSubmit(e)} className={styles.formCard}>
         <div className={styles.formGrid}>

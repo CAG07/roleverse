@@ -22,6 +22,11 @@ function fieldLines(field: SheetField, data: Record<string, unknown>): string[] 
       if (value == null || value === '') return [];
       return [`${field.label}: ${value}`];
     }
+    case 'text': {
+      const value = data[field.key] as string | undefined;
+      if (!value) return [];
+      return [`${field.label}:`, ...value.split('\n').map((line) => `  ${line}`)];
+    }
     case 'string-list': {
       const items = (data[field.key] as string[] | undefined) ?? [];
       if (items.length === 0) return [];
@@ -44,6 +49,19 @@ function fieldLines(field: SheetField, data: Record<string, unknown>): string[] 
       const entries = Object.entries(record);
       if (entries.length === 0) return [];
       return [`${field.label}: ${entries.map(([lvl, count]) => `Lv${lvl} x${count}`).join(', ')}`];
+    }
+    case 'table': {
+      const rows = (data[field.key] as Record<string, unknown>[] | undefined) ?? [];
+      if (rows.length === 0) return [];
+      return [
+        `${field.label}:`,
+        ...rows.map((row) =>
+          `  - ${field.columns
+            .filter((col) => row[col.key] != null)
+            .map((col) => `${col.label}: ${row[col.key]}`)
+            .join(', ')}`
+        ),
+      ];
     }
     default:
       return [];

@@ -5,6 +5,18 @@
 // data/charsheet_example.xml) rather than official docs — FG publishes no formal
 // schema for this format. A few sheet sections (classdc breakdown, spellcasting
 // tradition nodes) weren't present in that sample and are approximated here.
+//
+// 2026-08-19: added temporary HP / dying / wounded (folded into the existing hp
+// group / new sibling groups — standard PF2E-ruleset concepts, high confidence
+// even though not in the one confirmed sample) and spell attack/DC as direct
+// best-effort leaves. Everything else added in the same character-sheets depth
+// pass (player name, heritage/class notes, AC breakdown, shield, strikes,
+// currency, magical tradition, cantrip/focus stats, known spells, special
+// actions, and the full origin/personality/campaign-notes block) folds into a
+// new top-level <notes> rather than inventing more specific tag names for
+// structures this file has no real sample to check against — an unrecognized
+// tag is simply ignored by FG on import, but <notes> guarantees the data is
+// visible somewhere regardless. Same fold-into-notes pattern as add.ts/dcc.ts.
 import type { AssembledCharacterData } from '@/lib/types/character';
 import { abilityModifier, characterDocument, group, idList, leaf } from './xml';
 
@@ -34,6 +46,12 @@ export function exportPf2e(data: AssembledCharacterData, equipment: unknown[]): 
   const feats = (data.feats as string[]) ?? [];
   const focusSpells = (data.focusSpells as string[]) ?? [];
   const spellSlots = (data.spellSlots as Record<string, number>) ?? {};
+  const currency = (data.currency as Record<string, number> | undefined) ?? {};
+  const acBreakdown = (data.acBreakdown as Record<string, number> | undefined) ?? {};
+  const shield = (data.shield as Record<string, number> | undefined) ?? {};
+  const strikes = (data.strikes as Record<string, unknown>[] | undefined) ?? [];
+  const knownSpells = (data.knownSpells as Record<string, unknown>[] | undefined) ?? [];
+  const specialActions = (data.specialActions as Record<string, unknown>[] | undefined) ?? [];
 
   const abilitiesXml = group(
     'abilities',
@@ -61,8 +79,14 @@ export function exportPf2e(data: AssembledCharacterData, equipment: unknown[]): 
 
   const hpXml = group(
     'hp',
-    [leaf('current', 'number', data.hp ?? 0), leaf('total', 'number', data.maxHp ?? 0)].join('')
+    [
+      leaf('current', 'number', data.hp ?? 0),
+      leaf('total', 'number', data.maxHp ?? 0),
+      leaf('temporary', 'number', (data.temporaryHp as number) ?? 0),
+    ].join('')
   );
+  const dyingXml = group('dying', leaf('total', 'number', (data.dying as number) ?? 0));
+  const woundedXml = group('wounded', leaf('total', 'number', (data.wounded as number) ?? 0));
 
   const skilllistXml = idList(
     'skilllist',
@@ -119,6 +143,93 @@ export function exportPf2e(data: AssembledCharacterData, equipment: unknown[]): 
       .join('')
   );
 
+  const currencyLine =
+    Object.keys(currency).length > 0
+      ? `Currency: ${Object.entries(currency)
+          .map(([k, v]) => `${v} ${k.toUpperCase()}`)
+          .join(', ')}`
+      : null;
+  const acBreakdownLine =
+    Object.keys(acBreakdown).length > 0
+      ? `AC Breakdown: ${Object.entries(acBreakdown)
+          .map(([k, v]) => `${k} ${v}`)
+          .join(', ')}`
+      : null;
+  const shieldLine =
+    Object.keys(shield).length > 0
+      ? `Shield: ${Object.entries(shield)
+          .map(([k, v]) => `${k} ${v}`)
+          .join(', ')}`
+      : null;
+  const strikesLines =
+    strikes.length > 0
+      ? [
+          'Strikes:',
+          ...strikes.map(
+            (s) =>
+              `  - ${s.weapon ?? 'Unknown'} (${s.type ?? '—'}): ${s.attackBonus ?? '—'} to hit, ${s.damage ?? '—'}${s.traits ? ` [${s.traits}]` : ''}`
+          ),
+        ]
+      : [];
+  const knownSpellsLines =
+    knownSpells.length > 0
+      ? [
+          'Known Spells:',
+          ...knownSpells.map(
+            (s) =>
+              `  - ${s.name ?? 'Unknown'} (Rank ${s.rank ?? 0}${s.type ? `, ${s.type}` : ''})${s.prepared ? ` [${s.prepared}]` : ''}${s.cost ? ` — Cost: ${s.cost}` : ''}`
+          ),
+        ]
+      : [];
+  const specialActionsLines =
+    specialActions.length > 0
+      ? [
+          'Special Actions & Reactions:',
+          ...specialActions.map(
+            (a) =>
+              `  - ${a.name ?? 'Unknown'}${a.trigger ? ` (Trigger: ${a.trigger})` : ''}${a.traits ? ` [${a.traits}]` : ''}: ${a.effects ?? ''}`
+          ),
+        ]
+      : [];
+  const notesParts = [
+    ...((data.playersName as string) ? [`Player's Name: ${data.playersName}`] : []),
+    ...((data.heritageTraits as string) ? [`Heritage and Traits: ${data.heritageTraits}`] : []),
+    ...((data.classNotes as string) ? [`Class Notes: ${data.classNotes}`] : []),
+    ...(acBreakdownLine ? [acBreakdownLine] : []),
+    ...(shieldLine ? [shieldLine] : []),
+    ...strikesLines,
+    ...(currencyLine ? [currencyLine] : []),
+    ...((data.magicalTradition as string) ? [`Magical Tradition: ${data.magicalTradition}`] : []),
+    ...((data.casterType as string) ? [`Caster Type: ${data.casterType}`] : []),
+    ...(data.spellAttack != null ? [`Spell Attack: ${data.spellAttack}`] : []),
+    ...(data.spellDC != null ? [`Spell DC: ${data.spellDC}`] : []),
+    ...(data.cantripsPerDay != null ? [`Cantrips per Day: ${data.cantripsPerDay}`] : []),
+    ...(data.cantripRank != null ? [`Cantrip Rank: ${data.cantripRank}`] : []),
+    ...(data.focusSpellRank != null ? [`Focus Spell Rank: ${data.focusSpellRank}`] : []),
+    ...knownSpellsLines,
+    ...specialActionsLines,
+    ...((data.ethnicity as string) ? [`Ethnicity: ${data.ethnicity}`] : []),
+    ...((data.nationality as string) ? [`Nationality: ${data.nationality}`] : []),
+    ...((data.birthplace as string) ? [`Birthplace: ${data.birthplace}`] : []),
+    ...((data.age as string) ? [`Age: ${data.age}`] : []),
+    ...((data.genderPronouns as string) ? [`Gender & Pronouns: ${data.genderPronouns}`] : []),
+    ...((data.height as string) ? [`Height: ${data.height}`] : []),
+    ...((data.weight as string) ? [`Weight: ${data.weight}`] : []),
+    ...((data.appearance as string) ? [`Appearance: ${data.appearance}`] : []),
+    ...((data.attitude as string) ? [`Attitude: ${data.attitude}`] : []),
+    ...((data.deityOrPhilosophy as string) ? [`Deity or Philosophy: ${data.deityOrPhilosophy}`] : []),
+    ...((data.edicts as string) ? [`Edicts: ${data.edicts}`] : []),
+    ...((data.anathema as string) ? [`Anathema: ${data.anathema}`] : []),
+    ...((data.likes as string) ? [`Likes: ${data.likes}`] : []),
+    ...((data.dislikes as string) ? [`Dislikes: ${data.dislikes}`] : []),
+    ...((data.catchphrases as string) ? [`Catchphrases: ${data.catchphrases}`] : []),
+    ...((data.campaignNotes as string) ? [`Campaign Notes: ${data.campaignNotes}`] : []),
+    ...((data.allies as string) ? [`Allies: ${data.allies}`] : []),
+    ...((data.enemies as string) ? [`Enemies: ${data.enemies}`] : []),
+    ...((data.organizations as string) ? [`Organizations: ${data.organizations}`] : []),
+  ];
+  const notesXml = notesParts.length > 0 ? leaf('notes', 'string', notesParts.join('\n')) : '';
+
   const inner = [
     leaf('name', 'string', data.name ?? ''),
     leaf('race', 'string', data.race ?? ''),
@@ -130,11 +241,15 @@ export function exportPf2e(data: AssembledCharacterData, equipment: unknown[]): 
     leaf('hero', 'number', (data.heroPoints as number) ?? 0),
     leaf('classdc', 'number', (data.classDC as number) ?? 0),
     leaf('perceptiontotal', 'number', (data.perception as number) ?? 0),
+    leaf('spellattack', 'number', (data.spellAttack as number) ?? 0),
+    leaf('spelldc', 'number', (data.spellDC as number) ?? 0),
     group('class', [leaf('name', 'string', data.class ?? ''), leaf('level', 'number', data.level ?? 1)].join('')),
     abilitiesXml,
     acXml,
     savesXml,
     hpXml,
+    dyingXml,
+    woundedXml,
     skilllistXml,
     resistWeakXml,
     conditionsXml,
@@ -144,6 +259,7 @@ export function exportPf2e(data: AssembledCharacterData, equipment: unknown[]): 
     focusSpells.length > 0 ? leaf('focusspellnotes', 'string', focusSpells.join('\n')) : '',
     leaf('focuspoints', 'number', (data.focusPoints as number) ?? 0),
     spellSlotsXml,
+    notesXml,
   ].join('');
 
   // Unconfirmed — no real PF2E export sample has surfaced a release string yet

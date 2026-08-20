@@ -14,6 +14,7 @@ import {
   type OpenDraft,
   type SchemaDraft,
   type SheetField,
+  type TableDraft,
 } from '@/lib/character/sheet-schema/types';
 
 export interface DccBespokeValue {
@@ -62,6 +63,7 @@ function hydrateFieldDraft(field: SheetField, columnValue: Record<string, unknow
   switch (field.kind) {
     case 'number':
     case 'string':
+    case 'text':
       return raw != null ? String(raw) : '';
     case 'string-list':
       return Array.isArray(raw) ? (raw as string[]).join('\n') : '';
@@ -84,6 +86,13 @@ function hydrateFieldDraft(field: SheetField, columnValue: Record<string, unknow
         value: String(value),
       }));
       return entries;
+    }
+    case 'table': {
+      const rows = (raw as Record<string, unknown>[] | undefined) ?? [];
+      const draft: TableDraft = rows.map((row) =>
+        Object.fromEntries(field.columns.map((col) => [col.key, row[col.key] != null ? String(row[col.key]) : '']))
+      );
+      return draft;
     }
     default:
       return '';
@@ -368,6 +377,21 @@ function SchemaFieldInput({
           />
         </div>
       );
+    case 'text':
+      return (
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel} htmlFor={`field-${field.key}`}>
+            {field.label}
+          </label>
+          <textarea
+            id={`field-${field.key}`}
+            className={styles.formTextarea}
+            rows={4}
+            value={(draft as string) ?? ''}
+            onChange={(e) => onChange(e.target.value)}
+          />
+        </div>
+      );
     case 'record-fixed': {
       const keyed = (draft as KeyedDraft) ?? {};
       return (
@@ -456,6 +480,53 @@ function SchemaFieldInput({
             onClick={() => onChange([...entries, { name: '', value: '' }])}
           >
             + Add {field.label.replace(/s$/, '')}
+          </button>
+        </div>
+      );
+    }
+    case 'table': {
+      const rows = (draft as TableDraft) ?? [];
+      const emptyRow = Object.fromEntries(field.columns.map((col) => [col.key, '']));
+      const gridStyle = { gridTemplateColumns: `repeat(${field.columns.length}, 1fr) auto` };
+      return (
+        <div className={styles.formGroup}>
+          <div className={styles.formLabel}>{field.label}</div>
+          {rows.length > 0 && (
+            <div className={styles.tableRow} style={gridStyle}>
+              {field.columns.map((col) => (
+                <span key={col.key} className={styles.tableHeaderCell}>
+                  {col.label}
+                </span>
+              ))}
+              <span />
+            </div>
+          )}
+          {rows.map((row, i) => (
+            <div key={i} className={styles.tableRow} style={gridStyle}>
+              {field.columns.map((col) => (
+                <input
+                  key={col.key}
+                  type={col.type === 'number' ? 'number' : 'text'}
+                  className={styles.formInput}
+                  placeholder={col.label}
+                  value={row[col.key] ?? ''}
+                  onChange={(e) =>
+                    onChange(rows.map((r, idx) => (idx === i ? { ...r, [col.key]: e.target.value } : r)))
+                  }
+                />
+              ))}
+              <button
+                type="button"
+                className={styles.openRemove}
+                onClick={() => onChange(rows.filter((_, idx) => idx !== i))}
+                aria-label={`Remove ${field.label} row`}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          <button type="button" className={styles.addBtn} onClick={() => onChange([...rows, emptyRow])}>
+            + Add Row
           </button>
         </div>
       );

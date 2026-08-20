@@ -12,22 +12,34 @@ interface FieldBase {
   column: FieldColumn;
 }
 
+/** Icon shown next to a keyStat combat box's label (e.g. a shield glyph on AC). */
+export type FieldIcon = 'shield';
+
 export interface NumberField extends FieldBase {
   kind: 'number';
   /** Shown in the compact in-session panel, not just the full sheet — reserve for
    *  stats a player needs at a glance mid-combat (AC, THAC0, Perception, ...). */
   keyStat?: boolean;
+  icon?: FieldIcon;
 }
 
 export interface StringField extends FieldBase {
   kind: 'string';
   /** See NumberField.keyStat. */
   keyStat?: boolean;
+  icon?: FieldIcon;
 }
 
 /** Newline-separated list — proficiencies, features, feats, corruption. */
 export interface StringListField extends FieldBase {
   kind: 'string-list';
+}
+
+/** One free-form paragraph — backstory, appearance, allies & organizations,
+ *  treasure notes. Unlike `string` (a short single-line value shown in the
+ *  compact Details grid), `text` gets its own full-width wrapped section. */
+export interface TextField extends FieldBase {
+  kind: 'text';
 }
 
 /** Fixed keyset numeric record with known labels — ADD2E's 5 saves, DCC/PF2E's 3. */
@@ -48,13 +60,23 @@ export interface SpellSlotsField extends FieldBase {
   levels: string[];
 }
 
+/** Multi-column repeating rows — a weapon-attack grid, an animal-companion roster.
+ *  Unlike record-fixed/record-open (one value per key), each row here carries a
+ *  value per declared column, and rows are added/removed freely. */
+export interface TableField extends FieldBase {
+  kind: 'table';
+  columns: { key: string; label: string; type: 'text' | 'number' }[];
+}
+
 export type SheetField =
   | NumberField
   | StringField
   | StringListField
+  | TextField
   | RecordFixedField
   | RecordOpenField
-  | SpellSlotsField;
+  | SpellSlotsField
+  | TableField;
 
 export interface SystemSheetSchema {
   gameSystem: string;
@@ -72,7 +94,10 @@ export interface OpenEntryDraft {
 }
 export type OpenDraft = OpenEntryDraft[];
 
-export type FieldDraft = ScalarDraft | KeyedDraft | OpenDraft;
+/** One row per table entry — each row keyed by the field's own column keys. */
+export type TableDraft = Record<string, string>[];
+
+export type FieldDraft = ScalarDraft | KeyedDraft | OpenDraft | TableDraft;
 
 export type SchemaDraft = Record<string, FieldDraft>;
 
@@ -83,6 +108,7 @@ export function emptyFieldDraft(field: SheetField): FieldDraft {
     case 'spell-slots':
       return Object.fromEntries(field.levels.map((l) => [l, '']));
     case 'record-open':
+    case 'table':
       return [];
     default:
       return '';

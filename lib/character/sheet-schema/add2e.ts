@@ -1,18 +1,31 @@
 import type { SystemSheetSchema } from './types';
 
 // Mirrors the mechanical content of the official TSR AD&D 2E character record
-// sheet (THAC0, the 5-category saves, weapon/non-weapon proficiencies, ability
-// score sub-modifiers, thief skills, class abilities, movement/attacks/XP) —
-// not its printed layout or artwork.
+// sheet (THAC0, the 5-category saves, weapon/non-weapon proficiencies,
+// per-ability adjustments, thief skills, class abilities, movement/attacks/XP),
+// plus the field set from the "AD&D 1st Edition Player Character Sheet
+// (Unearthed Arcana Version)" by Steve Jensen — the author's notes say it's
+// also usable for 2E play, and per data/osric-stub.md's "Where 1E and 2E
+// Diverge" section the only mechanical difference from add1e.ts is the
+// 2E-only proficiency-slot system (`nonWeaponProficiencies`), kept below.
 const schema: SystemSheetSchema = {
   gameSystem: 'ADD2E',
   fields: [
     { key: 'thac0', label: 'THAC0', column: 'combat', kind: 'number', keyStat: true },
-    { key: 'ac', label: 'AC', column: 'combat', kind: 'number', keyStat: true },
-    { key: 'movementRate', label: 'Movement Rate', column: 'combat', kind: 'string' },
+    { key: 'ac', label: 'AC', column: 'combat', kind: 'number', keyStat: true, icon: 'shield' },
     { key: 'numberOfAttacks', label: '# of Attacks', column: 'combat', kind: 'string' },
     { key: 'experiencePoints', label: 'Experience Points', column: 'stats', kind: 'number' },
+    { key: 'xpNeededForNextLevel', label: 'Experience Needed for Next Level', column: 'stats', kind: 'number' },
     { key: 'alignment', label: 'Alignment', column: 'stats', kind: 'string' },
+    { key: 'playersName', label: "Player's Name", column: 'stats', kind: 'string' },
+    { key: 'sex', label: 'Sex', column: 'stats', kind: 'string' },
+    { key: 'height', label: 'Height', column: 'stats', kind: 'string' },
+    { key: 'weight', label: 'Weight', column: 'stats', kind: 'string' },
+    { key: 'age', label: 'Age', column: 'stats', kind: 'string' },
+    { key: 'homeland', label: 'Homeland', column: 'stats', kind: 'string' },
+    { key: 'clan', label: 'Clan', column: 'stats', kind: 'string' },
+    { key: 'liege', label: 'Liege', column: 'stats', kind: 'string' },
+    { key: 'deity', label: 'Deity', column: 'stats', kind: 'string' },
     {
       key: 'savingThrows',
       label: 'Saving Throws',
@@ -20,18 +33,12 @@ const schema: SystemSheetSchema = {
       kind: 'record-fixed',
       keys: ['paralyzation', 'rod', 'petrification', 'breath', 'spell'],
       labels: {
-        paralyzation: 'Para/Poison/Death',
-        rod: 'Rod/Staff/Wand',
-        petrification: 'Petrif./Polymorph',
+        paralyzation: 'Paralysis / Poison / Death',
+        rod: 'Rod / Staff / Wand',
+        petrification: 'Petrification / Polymorph',
         breath: 'Breath Weapon',
-        spell: 'Spell',
+        spell: 'Spells',
       },
-    },
-    {
-      key: 'weaponProficiencies',
-      label: 'Weapon Proficiencies',
-      column: 'combat',
-      kind: 'string-list',
     },
     {
       key: 'nonWeaponProficiencies',
@@ -40,15 +47,176 @@ const schema: SystemSheetSchema = {
       kind: 'string-list',
     },
     {
-      // Derived combat/utility sub-modifiers the official sheet prints per ability
-      // score (Str: hit/damage/weight allowance/open doors/bend bars; Dex: reaction/
-      // missile/AC adjustment; Con: HP adjustment/system shock; etc.) — open-ended
-      // since which ones matter varies by character (e.g. exceptional Strength % only
-      // applies to 18 Strength fighters).
-      key: 'abilityModifiers',
-      label: 'Ability Score Modifiers',
+      // Per-ability derived combat/utility sub-modifiers the official sheet prints
+      // next to each ability score.
+      key: 'strAdjustments',
+      label: 'Strength Adjustments',
       column: 'stats',
-      kind: 'record-open',
+      kind: 'record-fixed',
+      keys: ['toHit', 'damage', 'weightAllowance', 'opensDoors', 'bendBarsLiftGates'],
+      labels: {
+        toHit: 'To Hit',
+        damage: 'Damage',
+        weightAllowance: 'Weight Allowance',
+        opensDoors: 'Opens Doors',
+        bendBarsLiftGates: 'Bend Bars / Lift Gates',
+      },
+    },
+    {
+      key: 'intAdjustments',
+      label: 'Intelligence Adjustments',
+      column: 'stats',
+      kind: 'record-fixed',
+      keys: ['bonusLanguages', 'spellLearnChance', 'minSpellsPerLevel', 'maxSpellsPerLevel'],
+      labels: {
+        bonusLanguages: 'Bonus Languages',
+        spellLearnChance: 'Chance to Learn Spell (%)',
+        minSpellsPerLevel: 'Minimum Spells per Level',
+        maxSpellsPerLevel: 'Maximum Spells per Level',
+      },
+    },
+    {
+      key: 'wisAdjustments',
+      label: 'Wisdom Adjustments',
+      column: 'stats',
+      kind: 'record-fixed',
+      keys: ['magicAttackAdjustment', 'bonusSpells', 'spellFailureChance'],
+      labels: {
+        magicAttackAdjustment: 'Magic Attack Adjustment',
+        bonusSpells: 'Bonus Spells',
+        spellFailureChance: 'Spell Failure Chance (%)',
+      },
+    },
+    {
+      key: 'dexAdjustments',
+      label: 'Dexterity Adjustments',
+      column: 'stats',
+      kind: 'record-fixed',
+      keys: ['missileAttackAdjustment', 'armorClassAdjustment', 'reactionAdjustment'],
+      labels: {
+        missileAttackAdjustment: 'Missile Attack Adjustment',
+        armorClassAdjustment: 'Armor Class Adjustment',
+        reactionAdjustment: 'Reaction Adjustment',
+      },
+    },
+    {
+      key: 'conAdjustments',
+      label: 'Constitution Adjustments',
+      column: 'stats',
+      kind: 'record-fixed',
+      keys: ['hpAdjustment', 'systemShockSurvival', 'resurrectionSurvival'],
+      labels: {
+        hpAdjustment: 'Hit Point Adjustment',
+        systemShockSurvival: 'System Shock Survival (%)',
+        resurrectionSurvival: 'Resurrection Survival (%)',
+      },
+    },
+    {
+      key: 'chrAdjustments',
+      label: 'Charisma Adjustments',
+      column: 'stats',
+      kind: 'record-fixed',
+      keys: ['maxHenchmen', 'loyaltyBase', 'reactionAdjustment'],
+      labels: {
+        maxHenchmen: 'Maximum Henchmen',
+        loyaltyBase: 'Loyalty Base (%)',
+        reactionAdjustment: 'Reaction Adjustment (%)',
+      },
+    },
+    {
+      key: 'acBreakdown',
+      label: 'Armor Class Breakdown',
+      column: 'combat',
+      kind: 'record-fixed',
+      keys: ['base', 'withoutShield', 'rear', 'withoutDexterityBonus'],
+      labels: {
+        base: 'Base',
+        withoutShield: 'Without Shield',
+        rear: 'Rear',
+        withoutDexterityBonus: 'Without Dexterity Bonus',
+      },
+    },
+    {
+      key: 'movementRates',
+      label: 'Movement Rates',
+      column: 'combat',
+      kind: 'record-fixed',
+      keys: ['base', 'encumbered', 'fly', 'swim', 'climb'],
+      labels: {
+        base: 'Base Move Rate',
+        encumbered: 'Encumbered Move Rate',
+        fly: 'Fly Speed',
+        swim: 'Swim Speed',
+        climb: 'Climb Speed',
+      },
+    },
+    { key: 'encumbrance', label: 'Total Encumbrance (Coins)', column: 'combat', kind: 'number' },
+    { key: 'encounterSpeed', label: 'Encounter Speed', column: 'combat', kind: 'number' },
+    {
+      key: 'weaponAttacks',
+      label: 'Weapons',
+      column: 'combat',
+      kind: 'table',
+      columns: [
+        { key: 'weapon', label: 'Weapon', type: 'text' },
+        { key: 'proficiency', label: 'Proficiency', type: 'text' },
+        { key: 'attackRate', label: 'Attack Rate / ROF', type: 'text' },
+        { key: 'thac0', label: 'THAC0', type: 'number' },
+        { key: 'damage', label: 'Damage', type: 'text' },
+        { key: 'range', label: 'Range', type: 'text' },
+        { key: 'special', label: 'Special Abilities', type: 'text' },
+      ],
+    },
+    {
+      key: 'animalCompanions',
+      label: 'Animal Companions',
+      column: 'combat',
+      kind: 'table',
+      columns: [
+        { key: 'name', label: 'Name', type: 'text' },
+        { key: 'hp', label: 'HP', type: 'number' },
+        { key: 'thac0', label: 'THAC0', type: 'number' },
+        { key: 'attacks', label: '# Attacks', type: 'text' },
+        { key: 'damage', label: 'Damage', type: 'text' },
+        { key: 'ac', label: 'AC', type: 'number' },
+        { key: 'abilities', label: 'Abilities', type: 'text' },
+      ],
+    },
+    {
+      key: 'turnUndeadTable',
+      label: 'Turn Undead',
+      column: 'skills',
+      kind: 'record-fixed',
+      keys: [
+        'skeleton',
+        'zombie',
+        'ghoul',
+        'shadow',
+        'wight',
+        'ghast',
+        'wraith',
+        'mummy',
+        'spectre',
+        'vampire',
+        'ghost',
+        'lich',
+        'special',
+      ],
+      labels: {
+        skeleton: 'Skeleton',
+        zombie: 'Zombie',
+        ghoul: 'Ghoul',
+        shadow: 'Shadow',
+        wight: 'Wight',
+        ghast: 'Ghast',
+        wraith: 'Wraith',
+        mummy: 'Mummy',
+        spectre: 'Spectre',
+        vampire: 'Vampire',
+        ghost: 'Ghost',
+        lich: 'Lich',
+        special: 'Special',
+      },
     },
     {
       // Class abilities: Paladin's lay on hands, Ranger's tracking, Bard's legend
@@ -59,12 +227,42 @@ const schema: SystemSheetSchema = {
       kind: 'string-list',
     },
     {
-      // Percentile skill list for Thief-type characters (and Bards, who share the
-      // base list at a lower rate) — only populated when the character has them.
       key: 'thiefSkills',
       label: 'Thief Skills (%)',
       column: 'skills',
-      kind: 'record-open',
+      kind: 'record-fixed',
+      keys: [
+        'pickPockets',
+        'openLocks',
+        'findRemoveTraps',
+        'moveSilently',
+        'hideInShadows',
+        'hearNoise',
+        'climbWalls',
+        'readLanguages',
+      ],
+      labels: {
+        pickPockets: 'Pick Pockets',
+        openLocks: 'Open Locks',
+        findRemoveTraps: 'Find / Remove Traps',
+        moveSilently: 'Move Silently',
+        hideInShadows: 'Hide in Shadows',
+        hearNoise: 'Hear Noise',
+        climbWalls: 'Climb Walls',
+        readLanguages: 'Read Languages',
+      },
+    },
+    {
+      key: 'treasure',
+      label: 'Treasure',
+      column: 'stats',
+      kind: 'record-fixed',
+      keys: ['platinum', 'gold', 'silver'],
+      labels: {
+        platinum: 'Platinum',
+        gold: 'Gold',
+        silver: 'Silver',
+      },
     },
     {
       key: 'languages',

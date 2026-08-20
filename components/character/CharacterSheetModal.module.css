@@ -29,7 +29,10 @@
   border: var(--rule-thin);
   padding: 1.5rem;
   width: 100%;
-  max-width: 36rem;
+  /* Matches the campaign page's effective content width (CharacterDetailPage's
+     .root has no cap of its own — this keeps the popout from wrapping tighter
+     than the campaign-screen sheet does). */
+  max-width: 56rem;
   max-height: calc(100vh - 3rem);
   display: flex;
   flex-direction: column;

@@ -4,6 +4,18 @@
 // (JDCain/FG5eXmlToPdf, FG5eXmlToPdf.Tests/XML/rita.xml) rather than official
 // docs — FG publishes no formal schema for this format. Import in FG via the
 // PC sheet's import-arrow control, or the `/importchar` console command.
+//
+// 2026-08-19: added age/height/weight/eyes/skin/hair as direct best-effort
+// leaves — standard fields on FG's 5E "Personality" info tab, high confidence
+// even though not in the one confirmed sample. Everything else added in the
+// same character-sheets depth pass (currency, spellcasting ability/DC/attack,
+// known spells, appearance/backstory/allies/treasure) folds into a new
+// top-level <notes> instead of inventing more specific tag names: an unknown
+// tag is simply ignored by FG on import (no risk to the rest of the parse),
+// but a tag FG DOES recognize with the wrong shape could still just be blank
+// — <notes> guarantees the data is visible somewhere. See add.ts and dcc.ts
+// for the same fold-into-notes pattern already used elsewhere in this file
+// family.
 import type { AssembledCharacterData } from '@/lib/types/character';
 import { abilityModifier, characterDocument, group, idList, leaf, mentionedIn } from './xml';
 
@@ -57,6 +69,8 @@ export function exportDnd5e(data: AssembledCharacterData, equipment: unknown[]):
   const attacks = (data.attacks as string[]) ?? [];
   const deathSaves = (data.deathSaves as Record<string, number>) ?? {};
   const spellSlots = (data.spellSlots as Record<string, number>) ?? {};
+  const currency = (data.currency as Record<string, number> | undefined) ?? {};
+  const knownSpells = (data.knownSpells as Record<string, unknown>[] | undefined) ?? [];
 
   const abilitiesXml = group(
     'abilities',
@@ -126,6 +140,44 @@ export function exportDnd5e(data: AssembledCharacterData, equipment: unknown[]):
       .join('')
   );
 
+  const currencyLine =
+    Object.keys(currency).length > 0
+      ? `Currency: ${Object.entries(currency)
+          .map(([k, v]) => `${v} ${k.toUpperCase()}`)
+          .join(', ')}`
+      : null;
+  const knownSpellsLines =
+    knownSpells.length > 0
+      ? [
+          'Known Spells:',
+          ...knownSpells.map((s) => {
+            const level = s.level != null ? `Level ${s.level}` : 'Cantrip';
+            const prepared = s.prepared ? ` [${s.prepared}]` : '';
+            return `  - ${level}: ${s.name ?? 'Unknown'}${prepared}`;
+          }),
+        ]
+      : [];
+  const notesParts = [
+    ...(currencyLine ? [currencyLine] : []),
+    ...((data.spellcastingAbility as string)
+      ? [`Spellcasting Ability: ${data.spellcastingAbility}`]
+      : []),
+    ...(data.spellSaveDC != null ? [`Spell Save DC: ${data.spellSaveDC}`] : []),
+    ...(data.spellAttackModifier != null ? [`Spell Attack Modifier: ${data.spellAttackModifier}`] : []),
+    ...knownSpellsLines,
+    ...((data.characterAppearance as string)
+      ? [`Character Appearance: ${data.characterAppearance}`]
+      : []),
+    ...((data.characterBackstory as string)
+      ? [`Character Backstory: ${data.characterBackstory}`]
+      : []),
+    ...((data.alliesOrganizations as string)
+      ? [`Allies & Organizations: ${data.alliesOrganizations}`]
+      : []),
+    ...((data.treasureNotes as string) ? [`Treasure: ${data.treasureNotes}`] : []),
+  ];
+  const notesXml = notesParts.length > 0 ? leaf('notes', 'string', notesParts.join('\n')) : '';
+
   const inner = [
     leaf('name', 'string', data.name ?? ''),
     leaf('race', 'string', data.race ?? ''),
@@ -135,6 +187,13 @@ export function exportDnd5e(data: AssembledCharacterData, equipment: unknown[]):
     leaf('perception', 'number', (data.passivePerception as number) ?? 10),
     leaf('initiative', 'number', (data.initiative as number) ?? 0),
     leaf('speed', 'string', (data.speed as string) ?? ''),
+    leaf('age', 'string', (data.age as string) ?? ''),
+    leaf('height', 'string', (data.height as string) ?? ''),
+    leaf('weight', 'string', (data.weight as string) ?? ''),
+    leaf('eyes', 'string', (data.eyes as string) ?? ''),
+    leaf('skin', 'string', (data.skin as string) ?? ''),
+    leaf('hair', 'string', (data.hair as string) ?? ''),
+    notesXml,
     abilitiesXml,
     defensesXml,
     hpXml,
