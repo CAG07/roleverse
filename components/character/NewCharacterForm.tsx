@@ -37,6 +37,52 @@ export function NewCharacterForm({
   );
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [generateHint, setGenerateHint] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState('');
+
+  const handleGenerate = async () => {
+    setGenerateError('');
+    setGenerating(true);
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}/characters/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hint: generateHint }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setGenerateError(data.error ?? 'Character generation failed.');
+        return;
+      }
+      const character = data.character as {
+        name: string;
+        race: string;
+        class: string;
+        level: number;
+        hp: number;
+        maxHp: number;
+        notes: string;
+        systemFields: { abilityScores: Record<string, string>; fields: SystemFieldsValue['fields'] };
+      };
+      setName(character.name);
+      setRace(character.race);
+      setCharacterClass(character.class);
+      setLevel(String(character.level));
+      setHp(String(character.hp));
+      setMaxHp(String(character.maxHp));
+      setNotes(character.notes);
+      setSystemFields((prev) => ({
+        ...prev,
+        abilityScores: character.systemFields.abilityScores,
+        fields: character.systemFields.fields,
+      }));
+    } catch {
+      setGenerateError('Character generation failed. Please try again or fill in the form manually.');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -122,6 +168,28 @@ export function NewCharacterForm({
       <p className={styles.subtitle}>
         {campaignName} · {gameSystemName}
       </p>
+
+      <div className={styles.generateCard}>
+        <p className={styles.formCardTitle}>Generate Premade Character</p>
+        <div className={styles.formRow}>
+          <input
+            className={styles.formInput}
+            value={generateHint}
+            onChange={(e) => setGenerateHint(e.target.value)}
+            placeholder="e.g. a grizzled dwarven fighter (optional)"
+            disabled={generating}
+          />
+          <button
+            type="button"
+            className={styles.btnSubmit}
+            onClick={() => void handleGenerate()}
+            disabled={generating}
+          >
+            {generating ? 'Generating…' : 'Generate Premade Character'}
+          </button>
+        </div>
+        {generateError && <p className={styles.errorMsg}>{generateError}</p>}
+      </div>
 
       <div className={styles.formCard}>
         <p className={styles.formCardTitle}>Character Details</p>

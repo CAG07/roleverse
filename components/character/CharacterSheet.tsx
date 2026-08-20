@@ -5,6 +5,11 @@ import ADD2ESheet from './sheets/ADD2ESheet';
 import DND5ESheet from './sheets/DND5ESheet';
 import PF2ESheet from './sheets/PF2ESheet';
 import DCCSheet from './sheets/DCCSheet';
+import DND35ESheet from './sheets/DND35ESheet';
+import DND4ESheet from './sheets/DND4ESheet';
+import TOR2ESheet from './sheets/TOR2ESheet';
+import Cyberpunk2020Sheet from './sheets/Cyberpunk2020Sheet';
+import Fallout2D20Sheet from './sheets/Fallout2D20Sheet';
 import GenericSheet from './sheets/GenericSheet';
 
 interface DCCFunnelMember {
@@ -61,6 +66,36 @@ export default function CharacterSheet({
           data={{ ...characterData, equipment }}
           rawGameDataStats={rawGameDataStats}
           funnelParty={funnelParty}
+          compact={compact}
+        />
+      );
+    case '3_5E':
+      return (
+        <DND35ESheet characterId={characterId} data={characterData} equipment={equipment} compact={compact} />
+      );
+    case '4E':
+      return (
+        <DND4ESheet characterId={characterId} data={characterData} equipment={equipment} compact={compact} />
+      );
+    case 'TOR2E':
+      return (
+        <TOR2ESheet characterId={characterId} data={characterData} equipment={equipment} compact={compact} />
+      );
+    case 'CYBERPUNK_2020':
+      return (
+        <Cyberpunk2020Sheet
+          characterId={characterId}
+          data={characterData}
+          equipment={equipment}
+          compact={compact}
+        />
+      );
+    case 'FALLOUT_2D20':
+      return (
+        <Fallout2D20Sheet
+          characterId={characterId}
+          data={characterData}
+          equipment={equipment}
           compact={compact}
         />
       );

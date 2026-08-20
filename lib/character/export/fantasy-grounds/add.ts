@@ -63,8 +63,35 @@
 //     matching what this file already had.
 // Still unconfirmed: the disambiguating field (if any) inside
 // <proficiencylist> for weapon vs. non-weapon entries.
+//
+// 2026-08-19: source field shapes changed on the RoleVerse side (character-sheets
+// depth pass to match a physical AD&D 1E sheet) — `weaponProficiencies` (flat
+// list) is now `weaponAttacks` (a table, one row per wielded weapon);
+// `abilityModifiers` (one open list) is now six fixed per-ability `*Adjustments`
+// records; `movementRate` (one string) is now `movementRates` (fixed
+// base/encumbered/fly/swim/climb); `thiefSkills` is now a fixed 8-key record
+// instead of an open one. None of this changes the FG XML shapes documented
+// above (already verified against real exports) — only which RoleVerse fields
+// feed them. The same pass added several fields with no confirmed FG slot
+// (identity fields, AC breakdown, encumbrance, treasure, turn-undead table,
+// animal companions, and the weapon table's non-name columns) — these fold
+// into <notes> below rather than inventing more specific tag names: an
+// unrecognized tag is simply ignored by FG on import, but <notes> guarantees
+// the data is visible somewhere regardless of whether a guessed tag would
+// have been.
 import type { AssembledCharacterData } from '@/lib/types/character';
 import { characterDocument, group, idList, leaf } from './xml';
+
+const THIEF_SKILL_LABELS: Record<string, string> = {
+  pickPockets: 'Pick Pockets',
+  openLocks: 'Open Locks',
+  findRemoveTraps: 'Find/Remove Traps',
+  moveSilently: 'Move Silently',
+  hideInShadows: 'Hide in Shadows',
+  hearNoise: 'Hear Noise',
+  climbWalls: 'Climb Walls',
+  readLanguages: 'Read Languages',
+};
 
 const ABILITIES: { full: string; tag: string }[] = [
   { full: 'Strength', tag: 'strength' },
@@ -84,22 +111,29 @@ const SAVE_FANOUT: Record<string, string[]> = {
   spell: ['spell'],
 };
 
-function firstNumber(text: string | undefined): number | undefined {
-  if (!text) return undefined;
-  const match = text.match(/\d+/);
-  return match ? parseInt(match[0], 10) : undefined;
-}
-
 export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacterData, equipment: unknown[]): string {
   const abilityScores = (data.abilityScores as Record<string, number>) ?? {};
   const savingThrows = (data.savingThrows as Record<string, number>) ?? {};
-  const weaponProficiencies = (data.weaponProficiencies as string[]) ?? [];
+  const weaponAttacks = (data.weaponAttacks as Record<string, unknown>[] | undefined) ?? [];
   const nonWeaponProficiencies = (data.nonWeaponProficiencies as string[] | undefined) ?? [];
-  const abilityModifiers = (data.abilityModifiers as Record<string, number>) ?? {};
   const classAbilities = (data.classAbilities as string[]) ?? [];
   const thiefSkills = (data.thiefSkills as Record<string, number>) ?? {};
   const languages = (data.languages as string[]) ?? [];
   const spellSlots = (data.spellSlots as Record<string, number>) ?? {};
+  const movementRates = (data.movementRates as Record<string, number> | undefined) ?? {};
+  const acBreakdown = (data.acBreakdown as Record<string, number> | undefined) ?? {};
+  const treasure = (data.treasure as Record<string, number> | undefined) ?? {};
+  const turnUndeadTable = (data.turnUndeadTable as Record<string, number> | undefined) ?? {};
+  const animalCompanions = (data.animalCompanions as Record<string, unknown>[] | undefined) ?? [];
+
+  const adjustmentGroups: [string, Record<string, number> | undefined][] = [
+    ['Strength', data.strAdjustments as Record<string, number> | undefined],
+    ['Intelligence', data.intAdjustments as Record<string, number> | undefined],
+    ['Wisdom', data.wisAdjustments as Record<string, number> | undefined],
+    ['Dexterity', data.dexAdjustments as Record<string, number> | undefined],
+    ['Constitution', data.conAdjustments as Record<string, number> | undefined],
+    ['Charisma', data.chrAdjustments as Record<string, number> | undefined],
+  ];
 
   const abilitiesXml = group(
     'abilities',
@@ -141,7 +175,7 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
         )
       : '';
 
-  const speedNum = firstNumber(data.movementRate as string | undefined);
+  const speedNum = movementRates.base;
   const speedXml =
     speedNum != null ? group('speed', [leaf('base', 'number', speedNum), leaf('total', 'number', speedNum)].join('')) : '';
 
@@ -153,7 +187,7 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
   // distinguishes weapon vs. non-weapon entries within it, so both land here
   // undifferentiated rather than guessing a "type"/"category" sub-field.
   const proficiencyEntries = [
-    ...weaponProficiencies,
+    ...weaponAttacks.map((row) => row.weapon as string | undefined).filter((w): w is string => !!w),
     ...(gameSystem === 'ADD2E' ? nonWeaponProficiencies : []),
   ];
   const proficiencyListXml = idList(
@@ -166,8 +200,8 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
   // skill check, with a <total> field (confirmed via a real export), not <percent>.
   const thiefSkillsXml = idList(
     'skilllist',
-    Object.entries(thiefSkills).map(([name, value]) =>
-      [leaf('name', 'string', name), leaf('total', 'number', value)].join('')
+    Object.entries(thiefSkills).map(([key, value]) =>
+      [leaf('name', 'string', THIEF_SKILL_LABELS[key] ?? key), leaf('total', 'number', value)].join('')
     )
   );
 
@@ -195,18 +229,90 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
       .join('')
   );
 
-  // abilityModifiers (RoleVerse's open name->value list of things like "Str hit: +1")
-  // has no clean home — real AD&D 2E derived stats are specific named fields we can't
-  // confidently target (see file header), so this goes into notes rather than an
-  // invented tag.
+  // The six per-ability *Adjustments records (RoleVerse's name->value sub-mods per
+  // ability score) have no clean home — real AD&D 2E derived stats are specific
+  // named fields we can't confidently target (see file header), so they go into
+  // notes rather than an invented tag.
+  const adjustmentsNote = adjustmentGroups
+    .filter(([, values]) => values && Object.keys(values).length > 0)
+    .map(([label, values]) => `${label}: ${Object.entries(values!).map(([k, v]) => `${k} ${v}`).join(', ')}`)
+    .join('\n');
+
+  const identityLine = [
+    data.playersName ? `Player's Name: ${data.playersName}` : null,
+    data.sex ? `Sex: ${data.sex}` : null,
+    data.height ? `Height: ${data.height}` : null,
+    data.weight ? `Weight: ${data.weight}` : null,
+    data.age ? `Age: ${data.age}` : null,
+    data.homeland ? `Homeland: ${data.homeland}` : null,
+    data.clan ? `Clan: ${data.clan}` : null,
+    data.liege ? `Liege: ${data.liege}` : null,
+    data.deity ? `Deity: ${data.deity}` : null,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+  const movementLine =
+    Object.keys(movementRates).length > 0
+      ? `Movement Rates: ${Object.entries(movementRates)
+          .map(([k, v]) => `${k} ${v}`)
+          .join(', ')}`
+      : null;
+  const acBreakdownLine =
+    Object.keys(acBreakdown).length > 0
+      ? `AC Breakdown: ${Object.entries(acBreakdown)
+          .map(([k, v]) => `${k} ${v}`)
+          .join(', ')}`
+      : null;
+  const treasureLine =
+    Object.keys(treasure).length > 0
+      ? `Treasure: ${Object.entries(treasure)
+          .map(([k, v]) => `${v} ${k}`)
+          .join(', ')}`
+      : null;
+  const turnUndeadLine =
+    Object.keys(turnUndeadTable).length > 0
+      ? `Turn Undead: ${Object.entries(turnUndeadTable)
+          .map(([k, v]) => `${k} ${v}`)
+          .join(', ')}`
+      : null;
+  const weaponDetailLines =
+    weaponAttacks.length > 0
+      ? [
+          'Weapon Details:',
+          ...weaponAttacks.map(
+            (w) =>
+              `  - ${w.weapon ?? 'Unknown'}: proficiency ${w.proficiency ?? '—'}, attack rate ${w.attackRate ?? '—'}, THAC0 ${w.thac0 ?? '—'}, damage ${w.damage ?? '—'}, range ${w.range ?? '—'}${w.special ? `, special: ${w.special}` : ''}`
+          ),
+        ]
+      : [];
+  const animalCompanionLines =
+    animalCompanions.length > 0
+      ? [
+          'Animal Companions:',
+          ...animalCompanions.map(
+            (a) =>
+              `  - ${a.name ?? 'Unknown'}: HP ${a.hp ?? '—'}, THAC0 ${a.thac0 ?? '—'}, # Attacks ${a.attacks ?? '—'}, damage ${a.damage ?? '—'}, AC ${a.ac ?? '—'}${a.abilities ? `, abilities: ${a.abilities}` : ''}`
+          ),
+        ]
+      : [];
+
   const notesParts = [
     // Confirmed no plain-text race field exists on this ruleset's sheet — see
     // file header. Duplicating it here guarantees it's visible somewhere.
     ...(data.race ? [`Race: ${data.race}`] : []),
-    ...(abilityModifiers && Object.keys(abilityModifiers).length > 0
-      ? [`Ability Modifiers: ${Object.entries(abilityModifiers).map(([k, v]) => `${k} ${v}`).join(', ')}`]
-      : []),
+    ...(identityLine ? [identityLine] : []),
+    ...(data.xpNeededForNextLevel != null ? [`XP Needed for Next Level: ${data.xpNeededForNextLevel}`] : []),
+    ...(adjustmentsNote ? [`Ability Adjustments:\n${adjustmentsNote}`] : []),
     ...(classAbilities.length > 0 ? [`Class & Racial Abilities: ${classAbilities.join('; ')}`] : []),
+    ...(movementLine ? [movementLine] : []),
+    ...(acBreakdownLine ? [acBreakdownLine] : []),
+    ...(data.encumbrance != null ? [`Total Encumbrance: ${data.encumbrance}`] : []),
+    ...(data.encounterSpeed != null ? [`Encounter Speed: ${data.encounterSpeed}`] : []),
+    ...(treasureLine ? [treasureLine] : []),
+    ...(turnUndeadLine ? [turnUndeadLine] : []),
+    ...weaponDetailLines,
+    ...animalCompanionLines,
   ];
   const notesXml = notesParts.length > 0 ? leaf('notes', 'string', notesParts.join('\n')) : '';
 

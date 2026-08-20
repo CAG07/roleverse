@@ -7,18 +7,72 @@ import type { SystemSheetSchema } from './types';
 // same principle for named patrons). The mechanical content below (saves, thief skills,
 // spellcasting, corruption, patron taint) matches what a DCC character actually tracks.
 //
-// Occupation, luckySign, alignment, currentLuck, startingLuck, mercurialMagic, and
-// weapons are deliberately NOT schema fields — they keep the bespoke inputs/display
-// DCCFields.tsx and DCCSheet.tsx already have (alignment is a 3-way select, Luck is
-// dual ability-score-and-resource with its own live editor, mercurialMagic/weapons
-// are structured lists).
+// Occupation, luckySign, alignment, currentLuck, startingLuck, and mercurialMagic
+// are deliberately NOT schema fields — they keep the bespoke inputs/display
+// SystemFields.tsx's DCC block and DCCSheet.tsx already have (alignment is a
+// 3-way select, Luck is dual ability-score-and-resource with its own live
+// editor, mercurialMagic is a structured list). `weapons` WAS bespoke the same
+// way but had no matching input UI (DCCSheet.tsx rendered `data.weapons` with
+// nothing able to write it) — moved to a real schema `table` field below so
+// it's actually editable, matching the 0-Level sheet's "Weapons" box.
 const schema: SystemSheetSchema = {
   gameSystem: 'DCC',
   fields: [
-    { key: 'ac', label: 'AC', column: 'combat', kind: 'number', keyStat: true },
+    { key: 'title', label: 'Title', column: 'stats', kind: 'string' },
+    { key: 'ac', label: 'AC', column: 'combat', kind: 'number', keyStat: true, icon: 'shield' },
     { key: 'initiative', label: 'Initiative', column: 'combat', kind: 'number' },
     { key: 'speed', label: 'Speed', column: 'combat', kind: 'string' },
+    { key: 'actionDice', label: 'Action Dice', column: 'combat', kind: 'string' },
+    { key: 'baseAttack', label: 'Attack', column: 'combat', kind: 'string' },
+    { key: 'critDie', label: 'Crit Die', column: 'combat', kind: 'string' },
+    { key: 'critTable', label: 'Crit Table', column: 'combat', kind: 'string' },
+    { key: 'luckyRoll', label: 'Lucky Roll', column: 'combat', kind: 'string' },
     { key: 'experiencePoints', label: 'Experience Points', column: 'stats', kind: 'number' },
+    {
+      // DCC's ability-modifier table is NOT the 5E floor((score-10)/2) formula
+      // (confirmed against real Fantasy Grounds data — see
+      // lib/character/export/fantasy-grounds/dcc.ts). Rather than guess, this
+      // is a plain manually-entered value per the sheet's own "Modifier: ___"
+      // boxes, looked up from the real DCC table.
+      key: 'abilityModifiers',
+      label: 'Ability Modifiers',
+      column: 'stats',
+      kind: 'record-fixed',
+      keys: ['strength', 'agility', 'stamina', 'personality', 'luck', 'intelligence'],
+      labels: {
+        strength: 'Strength',
+        agility: 'Agility',
+        stamina: 'Stamina',
+        personality: 'Personality',
+        luck: 'Luck',
+        intelligence: 'Intelligence',
+      },
+    },
+    {
+      key: 'attackModifiers',
+      label: 'Attack & Damage Modifiers',
+      column: 'combat',
+      kind: 'record-fixed',
+      keys: ['meleeAttack', 'meleeDamage', 'missileAttack', 'missileDamage'],
+      labels: {
+        meleeAttack: 'Melee Attack',
+        meleeDamage: 'Melee Damage',
+        missileAttack: 'Missile Attack',
+        missileDamage: 'Missile Damage',
+      },
+    },
+    {
+      key: 'weapons',
+      label: 'Weapons',
+      column: 'combat',
+      kind: 'table',
+      columns: [
+        { key: 'name', label: 'Weapon', type: 'text' },
+        { key: 'attackMod', label: 'Attack Mod', type: 'number' },
+        { key: 'damage', label: 'Damage', type: 'text' },
+        { key: 'notes', label: 'Notes', type: 'text' },
+      ],
+    },
     { key: 'deedDie', label: 'Deed Die (Warriors / Dwarves)', column: 'combat', kind: 'string' },
     { key: 'backstab', label: 'Backstab (Thieves / Halflings)', column: 'combat', kind: 'string' },
     {

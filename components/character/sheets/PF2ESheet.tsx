@@ -48,7 +48,7 @@ export default function PF2ESheet({ characterId, data, equipment = [], compact }
       equipment={equipment}
       showAbilityModifiers
       metaLines={[`${metaParts.join(' · ')} · Level ${level}`]}
-      hiddenFieldKeys={['proficiencyRanks']}
+      hiddenFieldKeys={['proficiencyRanks', 'background']}
       compact={compact}
       extra={
         <>

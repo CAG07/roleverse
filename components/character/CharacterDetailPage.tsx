@@ -6,11 +6,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { getGameSystem } from '@/lib/game-systems/registry';
 import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
 import { buildFantasyGroundsExport } from '@/lib/character/export/fantasy-grounds';
 import { buildPlainTextSheet } from '@/lib/character/export/plain-text';
 import CharacterSheet from './CharacterSheet';
+import CharacterHeaderBanner from './CharacterHeaderBanner';
 
 interface DCCFunnelMember {
   id: string;
@@ -58,11 +58,6 @@ export function CharacterDetailPage({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  const hpPct =
-    character.hp != null && character.max_hp != null && character.max_hp > 0
-      ? Math.min(100, Math.max(0, (character.hp / character.max_hp) * 100))
-      : 0;
 
   const metaParts = [
     character.race,
@@ -133,35 +128,15 @@ export function CharacterDetailPage({
         ← Back to Characters
       </Link>
 
-      <div className={styles.headerCard}>
-        <span className={`${styles.corner} ${styles.tl}`} />
-        <span className={`${styles.corner} ${styles.tr}`} />
-        <span className={`${styles.corner} ${styles.bl}`} />
-        <span className={`${styles.corner} ${styles.br}`} />
+      <CharacterHeaderBanner
+        name={character.name}
+        gameSystem={character.game_system}
+        metaParts={metaParts}
+        hp={character.hp}
+        maxHp={character.max_hp}
+      />
 
-        <div className={styles.headerTop}>
-          <h1 className={styles.charName}>{character.name}</h1>
-          <span className={styles.systemBadge}>
-            {getGameSystem(character.game_system)?.name ?? character.game_system}
-          </span>
-        </div>
-
-        {metaParts.length > 0 && <p className={styles.charMeta}>{metaParts.join(' · ')}</p>}
-
-        {character.hp != null && character.max_hp != null && (
-          <div className={styles.hpSection}>
-            <div className={styles.hpLabel}>
-              <span>HP</span>
-              <span className={styles.hpNumbers}>
-                {character.hp} / {character.max_hp}
-              </span>
-            </div>
-            <div className={styles.hpTrack}>
-              <div className={styles.hpFill} style={{ width: `${hpPct}%` }} />
-            </div>
-          </div>
-        )}
-
+      <div className={styles.actionsSection}>
         <div className={styles.actions}>
           <Link
             href={`/campaigns/${campaignId}/characters/${character.id}/edit`}

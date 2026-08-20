@@ -30,6 +30,7 @@ export default function DND5ESheet({ characterId, data, equipment = [], compact 
         `${race} ${characterClass}${subclass ? ` (${subclass})` : ''} · Level ${level}`,
         `${background} · ${alignment}`,
       ]}
+      hiddenFieldKeys={['background', 'alignment']}
       compact={compact}
     />
   );

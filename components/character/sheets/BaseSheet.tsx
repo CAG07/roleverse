@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { Shield } from 'lucide-react';
 import styles from './BaseSheet.module.css';
 import InlineNumberEditor from '../InlineNumberEditor';
 import EquipmentList from '../EquipmentList';
@@ -51,6 +52,12 @@ function isCombatScalar(field: SheetField): field is Extract<SheetField, { kind:
   return field.column === 'combat' && (field.kind === 'number' || field.kind === 'string');
 }
 
+/** Plain number/string fields outside the combat column — grouped into one
+ *  "Details" section instead of each needing bespoke per-system placement. */
+function isDetailScalar(field: SheetField): field is Extract<SheetField, { kind: 'number' | 'string' }> {
+  return field.column !== 'combat' && (field.kind === 'number' || field.kind === 'string');
+}
+
 function renderSchemaField(field: SheetField, data: Record<string, unknown>) {
   switch (field.kind) {
     case 'string-list': {
@@ -60,6 +67,16 @@ function renderSchemaField(field: SheetField, data: Record<string, unknown>) {
         <div key={field.key}>
           <div className={styles.sectionLabel}>{field.label}</div>
           <p className={styles.profText}>{items.join(', ')}</p>
+        </div>
+      );
+    }
+    case 'text': {
+      const value = data[field.key] as string | undefined;
+      if (!value) return null;
+      return (
+        <div key={field.key}>
+          <div className={styles.sectionLabel}>{field.label}</div>
+          <p className={styles.textBlock}>{value}</p>
         </div>
       );
     }
@@ -113,6 +130,35 @@ function renderSchemaField(field: SheetField, data: Record<string, unknown>) {
         </div>
       );
     }
+    case 'table': {
+      const rows = (data[field.key] as Record<string, unknown>[] | undefined) ?? [];
+      if (rows.length === 0) return null;
+      return (
+        <div key={field.key}>
+          <div className={styles.sectionLabel}>{field.label}</div>
+          <div className={styles.fieldTableWrap}>
+            <table className={styles.fieldTable}>
+              <thead>
+                <tr>
+                  {field.columns.map((col) => (
+                    <th key={col.key}>{col.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, i) => (
+                  <tr key={i}>
+                    {field.columns.map((col) => (
+                      <td key={col.key}>{(row[col.key] as string | number | undefined) ?? '—'}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
     default:
       return null;
   }
@@ -146,6 +192,10 @@ export default function BaseSheet({
     : combatScalarFields;
   const consumedKeys = new Set([...combatScalarFields.map((f) => f.key), ...hiddenFieldKeys]);
   const remainingFields = schema.fields.filter((f) => !consumedKeys.has(f.key));
+  const detailFields = remainingFields
+    .filter(isDetailScalar)
+    .filter((f) => data[f.key] != null && data[f.key] !== '');
+  const otherFields = remainingFields.filter((f) => !isDetailScalar(f));
 
   const customFields = (data.customFields as CustomField[] | undefined) ?? [];
 
@@ -201,7 +251,10 @@ export default function BaseSheet({
           </div>
           {visibleCombatScalarFields.map((field) => (
             <div key={field.key} className={styles.combatBox}>
-              <span className={styles.combatLabel}>{field.label}</span>
+              <span className={styles.combatLabel}>
+                {field.icon === 'shield' && <Shield size={12} className={styles.combatIcon} />}
+                {field.label}
+              </span>
               <span className={`${styles.combatValue} ${styles.dynamic}`}>
                 {(data[field.key] as number | string | undefined) ?? '—'}
               </span>
@@ -212,7 +265,21 @@ export default function BaseSheet({
 
       {!compact && (
         <>
-          {remainingFields.map((field) => renderSchemaField(field, data))}
+          {detailFields.length > 0 && (
+            <div>
+              <div className={styles.sectionLabel}>Details</div>
+              <div className={styles.detailsGrid}>
+                {detailFields.map((field) => (
+                  <div key={field.key} className={styles.detailBox}>
+                    <span className={styles.detailLabel}>{field.label}</span>
+                    <span className={styles.detailValue}>{data[field.key] as number | string}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {otherFields.map((field) => renderSchemaField(field, data))}
 
           {extra}
 

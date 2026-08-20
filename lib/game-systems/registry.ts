@@ -75,10 +75,13 @@ const dnd3_5e: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for D&D 3.5th Edition. Use ascending AC, base attack bonus, and the skills/feats system from the 3.5E SRD.',
-  supported: false,
+  supported: true,
   ragSource: {
     type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    notes:
+      'No machine-readable SRD ingestion configured yet — agent relies on training knowledge. ' +
+      'Character sheet support shipped 2026-08-19 (lib/character/sheet-schema/dnd35e.ts); a real ' +
+      'RAG stub (matching data/dcc-stub.md/osric-stub.md) is a separate, larger follow-up.',
   },
 };
 
@@ -96,10 +99,13 @@ const dnd4e: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for D&D 4th Edition. Use at-will, encounter, and daily powers. Apply 4E roles (striker, defender, controller, leader) and the minion/elite/solo monster framework.',
-  supported: false,
+  supported: true,
   ragSource: {
     type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    notes:
+      'No machine-readable SRD ingestion configured yet — agent relies on training knowledge. ' +
+      'Character sheet support shipped 2026-08-19 (lib/character/sheet-schema/dnd4e.ts); a real ' +
+      'RAG stub (matching data/dcc-stub.md/osric-stub.md) is a separate, larger follow-up.',
   },
 };
 
@@ -173,7 +179,10 @@ const pathfinder1e: GameSystem = {
   supported: false,
   ragSource: {
     type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    notes:
+      'No machine-readable SRD ingestion configured — agent relies on training knowledge. ' +
+      'Product decision (2026-08-20): PF2E is this project\'s canonical "Pathfinder" system; ' +
+      'PF1E stays unsupported/undeveloped.',
   },
 };
 
@@ -250,7 +259,10 @@ const tor1e: GameSystem = {
   supported: false,
   ragSource: {
     type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    notes:
+      'No machine-readable SRD ingestion configured — agent relies on training knowledge. See ' +
+      'tor2e below — TOR2E is this project\'s canonical "The One Ring" system by product decision ' +
+      '(2026-08-20); TOR1E stays unsupported/undeveloped.',
   },
 };
 
@@ -259,7 +271,10 @@ const tor2e: GameSystem = {
   name: 'The One Ring 2nd Edition',
   description: 'Revised Tolkien RPG with streamlined rules and the new Fellowship Phase.',
   primaryDie: 'd12',
-  abilityScores: ['Body', 'Heart', 'Wits'],
+  // Strength, not "Body" — that's the 1st Edition name (see tor1e below, left
+  // unchanged). Confirmed against the real 2nd Edition character sheet
+  // (all four culture variants: Dwarves/Elves/Hobbits/Men).
+  abilityScores: ['Strength', 'Heart', 'Wits'],
   characterSchema: {
     hope: 'number',
     shadow: 'number',
@@ -267,10 +282,15 @@ const tor2e: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for The One Ring 2nd Edition. Apply the revised 2E Fellowship Phase, Feat die (d12) and Success dice, and the Shadow/Hope tracking rules.',
-  supported: false,
+  supported: true,
   ragSource: {
     type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    notes:
+      'No machine-readable SRD ingestion configured yet — agent relies on training knowledge. ' +
+      'Character sheet support shipped 2026-08-20 (lib/character/sheet-schema/tor2e.ts), grounded ' +
+      'in the real Free League 2E character sheet (all four culture variants). TOR1E stays ' +
+      'unsupported/undeveloped by product decision — TOR2E is this project\'s canonical "The One ' +
+      'Ring" system. A real RAG stub is a separate, larger follow-up.',
   },
 };
 
@@ -288,10 +308,40 @@ const cyberpunk2020: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for Cyberpunk 2020. Use the FNFF (Friday Night Firefight) combat rules, Streetdeal for social encounters, and track Humanity loss for cyberware installation.',
-  supported: false,
+  supported: true,
   ragSource: {
     type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    notes:
+      'No OGL/SRD exists for this proprietary R. Talsorian-licensed game — agent relies on ' +
+      'training knowledge. Character sheet support shipped 2026-08-19 ' +
+      '(lib/character/sheet-schema/cyberpunk2020.ts).',
+  },
+};
+
+const fallout2d20: GameSystem = {
+  id: 'FALLOUT_2D20',
+  name: 'Fallout 2d20',
+  description: 'The post-apocalyptic Wasteland RPG using Modiphius\' 2d20 system, with S.P.E.C.I.A.L. stats.',
+  primaryDie: '2d20',
+  abilityScores: ['Strength', 'Perception', 'Endurance', 'Charisma', 'Intelligence', 'Agility', 'Luck'],
+  characterSchema: {
+    defense: 'number',
+    actionPoints: 'number',
+    luckPoints: 'object',
+    radiation: 'object',
+    damageResistance: 'object',
+    skills: 'object',
+  },
+  rulesPrompt:
+    'You are a rules arbiter for Fallout 2d20. Roll 2d20 against skill target numbers, spend Action Points for combat actions, track Luck Points, Radiation, and damage resistance by type (Normal/Energy/Radiation/Poison).',
+  supported: true,
+  ragSource: {
+    type: 'none',
+    notes:
+      'No OGL/SRD exists for this proprietary Modiphius/Bethesda-licensed game — agent relies on ' +
+      'training knowledge. Added 2026-08-20 as a brand-new system (not part of the original ' +
+      'roadmap 3.10 backlog) at Craig\'s explicit request, including character sheet support ' +
+      '(lib/character/sheet-schema/fallout2d20.ts). A real RAG stub is a separate, larger follow-up.',
   },
 };
 
@@ -309,6 +359,7 @@ const systems: Map<string, GameSystem> = new Map([
   [tor1e.id, tor1e],
   [tor2e.id, tor2e],
   [cyberpunk2020.id, cyberpunk2020],
+  [fallout2d20.id, fallout2d20],
 ]);
 
 /** Get a game system configuration by its ID */

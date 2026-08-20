@@ -24,6 +24,7 @@ export default function ADD2ESheet({ characterId, data, equipment = [], compact 
       data={data}
       equipment={equipment}
       metaLines={[`${race} ${characterClass} · Level ${level} · ${alignment}`]}
+      hiddenFieldKeys={['alignment']}
       compact={compact}
     />
   );
