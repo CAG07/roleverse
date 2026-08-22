@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { GeneratingIndicator } from '@/components/ui/GeneratingIndicator';
 import styles from './NpcForm.module.css';
 import type { Npc, NpcDisposition, NpcInput } from '@/lib/types/npc';
 
@@ -149,6 +150,7 @@ export function NpcForm({ campaignId, campaignName, npc }: NpcFormProps) {
               {generating ? 'Generating…' : 'Generate Premade NPC'}
             </button>
           </div>
+          {generating && <GeneratingIndicator label="Generating a full NPC — this can take up to 30 seconds." />}
           {generateError && <p className={styles.errorMsg}>{generateError}</p>}
         </div>
       )}

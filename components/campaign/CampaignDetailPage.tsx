@@ -9,6 +9,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import CampaignFilesPanel from './CampaignFilesPanel';
 import CampaignScenesPanel from './CampaignScenesPanel';
 import OracleRefsPanel from './OracleRefsPanel';
+import CsvExportPanel from './CsvExportPanel';
 import type { TranscriptEntry } from '@/lib/types/session';
 
 export interface CampaignCharacter {
@@ -35,6 +36,7 @@ interface CampaignDetailPageProps {
   moduleDescription: string | null;
   systemName: string;
   systemDescription: string;
+  gameSystem: string;
   characters: CampaignCharacter[];
   activeSession: { id: string } | null;
   recentSessions: CampaignSession[];
@@ -89,6 +91,7 @@ export function CampaignDetailPage({
   moduleDescription,
   systemName,
   systemDescription,
+  gameSystem,
   characters,
   activeSession,
   recentSessions,
@@ -361,7 +364,7 @@ export function CampaignDetailPage({
               {characters.map((char) => (
                 <Link
                   key={char.id}
-                  href={`/campaigns/${id}/characters/${char.id}`}
+                  href={`/campaigns/${id}/characters/${char.id}?from=campaign`}
                   className={styles.characterCard}
                 >
                   <div className={styles.characterName}>{char.name}</div>
@@ -449,6 +452,9 @@ export function CampaignDetailPage({
 
         {/* Scene Library */}
         <CampaignScenesPanel campaignId={id} />
+
+        {/* Kanka-compatible CSV export */}
+        <CsvExportPanel campaignId={id} campaignName={name} gameSystem={gameSystem} />
       </div>
     </div>
   );

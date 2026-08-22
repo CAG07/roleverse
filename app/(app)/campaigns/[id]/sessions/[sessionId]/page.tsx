@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import Pagination from '@/components/ui/Pagination';
+import SessionExportButton from '@/components/session/SessionExportButton';
 import styles from './page.module.css';
 
 interface TranscriptEntry {
@@ -94,7 +95,10 @@ export default async function SessionLogPage({ params, searchParams }: Props) {
       </Link>
 
       <div className={styles.logHeader}>
-        <h1 className={styles.logTitle}>Session Log</h1>
+        <div className={styles.logHeaderTop}>
+          <h1 className={styles.logTitle}>Session Log</h1>
+          <SessionExportButton campaignId={id} sessionId={sessionId} />
+        </div>
         <div className={styles.logMeta}>
           <span>{startDate} · {startTime}</span>
           <span>·</span>
@@ -147,6 +151,21 @@ export default async function SessionLogPage({ params, searchParams }: Props) {
                     style={{ color: agent.accent, borderColor: agent.accent + '40' }}
                   >
                     {agent.label}
+                  </span>
+                  <div className={styles.entryAgentBubble}>{entry.content}</div>
+                  {time && <span className={styles.entryTime}>{time}</span>}
+                </div>
+              );
+            }
+
+            if (entry.role === 'oracle' && entry.content) {
+              return (
+                <div key={i} className={styles.entryAgent}>
+                  <span
+                    className={styles.entryAgentLabel}
+                    style={{ color: '#8a6a3a', borderColor: '#8a6a3a40' }}
+                  >
+                    Oracle
                   </span>
                   <div className={styles.entryAgentBubble}>{entry.content}</div>
                   {time && <span className={styles.entryTime}>{time}</span>}

@@ -1,0 +1,67 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ * See OracleRefsPanel.module.css for the full rationale (FOUC avoidance).
+ */
+
+.infoPanel {
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  padding: 1.25rem;
+}
+
+.infoPanelTitle {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 0.875rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--crimson-dim);
+}
+
+.explainer {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--ivory-dim);
+  line-height: 1.5;
+  margin: 0 0 0.875rem;
+}
+
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.btnExport {
+  padding: 0.5rem 0.875rem;
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+.btnExport:hover:not(:disabled) {
+  background: var(--gold-tint);
+  border-color: var(--gold);
+}
+.btnExport:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.errorMsg {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--crimson-bright);
+  margin: 0.75rem 0 0;
+}

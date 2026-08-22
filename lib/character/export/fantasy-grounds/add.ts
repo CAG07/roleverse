@@ -4,83 +4,61 @@
 // 1E and 2E play, with OSRIC (the same OGL retro-clone this project already uses
 // for RAG) running on top of it as authorized FG Forge content.
 //
-// Verified 2026-08-13 in two passes against real Fantasy Grounds campaign data:
-// first an unconfigured/blank 2E character record, then the same record after
-// the character was given a name, confirming which fields only appear once populated.
+// Verified 2026-08-13 in three passes against real Fantasy Grounds campaign data
+// (an unconfigured blank 2E record, the same record once named "Enos", and a real
+// standalone single-character export "Enos.xml"):
+//   - THAC0 lives under <combat><thaco> (not a flat <thac0>), 10 individual save
+//     categories fan out from RoleVerse's 5 broad ones, <classes>/<languagelist>/
+//     <inventorylist> are id-lists, thief skills share the generic <skilllist>
+//     (a <total> field, not <percent> — there's no dedicated <thiefskilllist>).
 //
-// Confirmed from the blank record:
-//   - THAC0 lives under <combat><thaco> (not a flat <thac0> — note the spelling,
-//     no "0"), AC lives under <defenses><ac><total> (not under <combat> at all).
-//   - There are 10 individual save categories (paralyzation/poison/death/rod/
-//     staff/wand/petrification/polymorph/breath/spell), not 5 combined ones —
-//     RoleVerse only stores one number per broad OSRIC-style category, so each
-//     is fanned out to its FG sub-categories (they share the same target number
-//     within a category, which is exactly why OSRIC groups them that way).
-//   - Ability score nodes have no generic modifier — real AD&D 2E derived stats
-//     are specific named per-ability fields (hitadj, dmgadj, systemshock, etc.)
-//     that FG's own ruleset computes via lookup tables, not simple math. Rather
-//     than guess a table (DCC's export burned us on exactly this — 15 gave a
-//     bonus of 1, not the +2 a naive guess produced), we only emit score/total
-//     and let FG compute the rest.
-//   - <classes> is an id-list (name/level per entry), matching the same pattern
-//     independently confirmed for both 5E and DCC — not a flat <class> string.
-//
-// Confirmed from the populated pass (a character named "Enos"):
-//   - <name type="string"> is real and top-level, as guessed.
-//   - Proficiencies are NOT two separate lists as originally written — it's a
-//     single shared <proficiencylist> (entries not yet observed populated, so
-//     we can't confirm how weapon vs. non-weapon is distinguished within it)
-//     plus a separate <proficiencies><weapon>/<nonweapon> max/used slot-count
-//     tracker RoleVerse has no source data for and doesn't try to populate.
-//   - <race> has NO plain-text sibling next to <racelink> — this ruleset only
-//     exposes race via the reference-database link, which RoleVerse can't
-//     populate (no matching reference record to point to). We still emit a
-//     plain <race> leaf on the chance FG tolerates/uses it, but ALSO fold race
-//     into <notes> so it's visible somewhere even if the dedicated node isn't.
-//   - <powermeta> spell slots go up to spellslots9 (not just DCC's 5), and the
-//     "spellslotsN not levelN" naming fix made after the DCC sample is now
-//     directly confirmed for this ruleset too, not just inferred cross-ruleset.
-//   - <featurelist> and <traitlist> both exist as separate real containers
-//     (still empty/unpopulated) — which one (if either) RoleVerse's
-//     classAbilities should target is still unclear without a populated
-//     example of either, so that stays folded into notes rather than guessed.
-//
-// Confirmed from a real standalone single-character export ("Enos.xml", via
-// the sheet's own export-arrow/`/exportchar`, not just a campaign db.xml —
-// this is the actual file format a player would import):
-//   - The envelope shape (`<root><character>...`) was right, but `version`
-//     is "5.1" here, not the "3.3" an older external 5E sample used — see
-//     xml.ts's characterDocument doc. `dataversion="20260124"` is also real
-//     and now added.
-//   - Thief skills do NOT live in a `<thiefskilllist>` — that tag doesn't
-//     exist. They're in the SAME generic `<skilllist>` used for any
-//     proficiency-derived skill check in this ruleset (a "nonweapon skill"
-//     entry was observed there), with a `<total>` field, not `<percent>`.
-//   - `<defenses><ac>`, `<hp>`, and `<speed>` each also carry a `<base>`
-//     sub-field alongside `<total>` — added here (same value as total, since
-//     RoleVerse doesn't separately track base-vs-modified for any of these).
-//   - `<proficiencylist>` entries are confirmed single `<name>` leaves,
-//     matching what this file already had.
-// Still unconfirmed: the disambiguating field (if any) inside
-// <proficiencylist> for weapon vs. non-weapon entries.
-//
-// 2026-08-19: source field shapes changed on the RoleVerse side (character-sheets
-// depth pass to match a physical AD&D 1E sheet) — `weaponProficiencies` (flat
-// list) is now `weaponAttacks` (a table, one row per wielded weapon);
-// `abilityModifiers` (one open list) is now six fixed per-ability `*Adjustments`
-// records; `movementRate` (one string) is now `movementRates` (fixed
-// base/encumbered/fly/swim/climb); `thiefSkills` is now a fixed 8-key record
-// instead of an open one. None of this changes the FG XML shapes documented
-// above (already verified against real exports) — only which RoleVerse fields
-// feed them. The same pass added several fields with no confirmed FG slot
-// (identity fields, AC breakdown, encumbrance, treasure, turn-undead table,
-// animal companions, and the weapon table's non-name columns) — these fold
-// into <notes> below rather than inventing more specific tag names: an
-// unrecognized tag is simply ignored by FG on import, but <notes> guarantees
-// the data is visible somewhere regardless of whether a guessed tag would
-// have been.
+// 2026-08-21: re-verified against a SECOND real standalone export — an actual
+// FG-native pregen character never touched by RoleVerse ("Adran Holimion",
+// AD&D 2E, Elf Diviner) — which corrected and substantially extended the
+// picture above:
+//   - CORRECTED: the 2026-08-13 finding that "<race> has no plain-text sibling
+//     next to <racelink>" was wrong (or true only for that specific older
+//     sample) — this new sample has both a real <race> leaf AND <racelink>
+//     side by side. The "duplicate race into <notes> as a workaround" line is
+//     removed accordingly.
+//   - CORRECTED: saves use <base>/<score>, NOT <total> — the 2026-08-13 pass
+//     never actually saw a save populated with a live value to catch this.
+//   - NEW: ability score nodes carry many more real per-ability sub-fields
+//     than previously known — RoleVerse's six *Adjustments records now map
+//     mostly onto real tags instead of falling into notes (see
+//     ABILITY_ADJUSTMENT_FIELDS below). A few sub-fields (INT's min/max
+//     spells per level) still have no confirmed home and stay in notes.
+//   - NEW: <coins> is real (6 slots: PP/GP/EP/SP/CP/unnamed) — RoleVerse's
+//     `treasure` (platinum/gold/silver only) now maps onto slots 1/2/4.
+//   - NEW: <encumbrance><load> is real and much simpler than assumed.
+//   - NEW: <weaponlist> is real (attackbonus/carried/damagelist with
+//     dice+bonus/name), matching the shape already confirmed for DCC —
+//     RoleVerse's `weaponAttacks` table now populates it instead of only
+//     contributing weapon names to <proficiencylist>.
+//   - NEW: per-class <expneeded> is real (nested under <classes><id-NNNNN>,
+//     not top-level) — RoleVerse's `xpNeededForNextLevel` now goes there.
+//   - NEW: <numberattacks> is a real top-level string field, previously not
+//     populated at all.
+//   - NEW: <ac> and <thaco> each also exist as flat top-level scalars in
+//     addition to their detailed <defenses>/<combat> homes — both are now
+//     emitted for safety/compatibility, matching the real file exactly.
+//   - STILL UNCONFIRMED: this sample's one populated <proficiencylist> entry
+//     turned out to be a racial combat-bonus note ("Proficient" / elf's +1
+//     with swords), not a weapon-by-weapon list — casts doubt on, but does
+//     not disprove, populating it with weapon names (still the best
+//     available guess pending a sample with an actual multi-weapon
+//     proficiency list). Left as-is.
+//   - STILL UNCONFIRMED: the real <defenses><ac> breakdown fields are
+//     armor/base/misc/shield/total — a genuinely different shape than
+//     RoleVerse's `acBreakdown` (base/withoutShield/rear/withoutDexterityBonus).
+//     They don't decompose into each other, and this sample's character is
+//     unarmored (every sub-field is 0 or equal to total), so there's no way
+//     to confirm the mapping from a sample that doesn't exercise it. Guessing
+//     wrong VALUES here (as opposed to an unrecognized tag) risks showing a
+//     visibly incorrect AC breakdown on the sheet, which is worse than
+//     omitting it — stays in <notes> pending a populated armored sample.
 import type { AssembledCharacterData } from '@/lib/types/character';
-import { characterDocument, group, idList, leaf } from './xml';
+import { characterDocument, diceLeaf, group, idList, leaf } from './xml';
 
 const THIEF_SKILL_LABELS: Record<string, string> = {
   pickPockets: 'Pick Pockets',
@@ -102,7 +80,7 @@ const ABILITIES: { full: string; tag: string }[] = [
   { full: 'Charisma', tag: 'charisma' },
 ];
 
-// RoleVerse's broad category -> FG's individual sub-categories sharing that value.
+// RoleVerse's broad save category -> FG's individual sub-categories sharing that value.
 const SAVE_FANOUT: Record<string, string[]> = {
   paralyzation: ['paralyzation', 'poison', 'death'],
   rod: ['rod', 'staff', 'wand'],
@@ -110,6 +88,66 @@ const SAVE_FANOUT: Record<string, string[]> = {
   breath: ['breath'],
   spell: ['spell'],
 };
+
+interface AdjustmentField {
+  dataKey: string;
+  subKey: string;
+  fgTag: string;
+  fgType: 'number' | 'string';
+}
+
+// RoleVerse's six *Adjustments records -> real per-ability FG sub-fields,
+// confirmed against the Adran Holimion sample (2026-08-21). Sub-keys not
+// listed here (e.g. Intelligence's min/max spells per level) have no
+// confirmed home and fall through to <notes> — see remainingAdjustmentNote.
+const ABILITY_ADJUSTMENT_FIELDS: Record<string, AdjustmentField[]> = {
+  strength: [
+    { dataKey: 'strAdjustments', subKey: 'toHit', fgTag: 'hitadj', fgType: 'number' },
+    { dataKey: 'strAdjustments', subKey: 'damage', fgTag: 'dmgadj', fgType: 'number' },
+    { dataKey: 'strAdjustments', subKey: 'opensDoors', fgTag: 'opendoors', fgType: 'string' },
+    { dataKey: 'strAdjustments', subKey: 'weightAllowance', fgTag: 'weightallow', fgType: 'number' },
+    { dataKey: 'strAdjustments', subKey: 'bendBarsLiftGates', fgTag: 'bendbars', fgType: 'number' },
+  ],
+  intelligence: [
+    { dataKey: 'intAdjustments', subKey: 'bonusLanguages', fgTag: 'languages', fgType: 'number' },
+    { dataKey: 'intAdjustments', subKey: 'spellLearnChance', fgTag: 'learn', fgType: 'number' },
+  ],
+  wisdom: [
+    { dataKey: 'wisAdjustments', subKey: 'magicAttackAdjustment', fgTag: 'magicdefenseadj', fgType: 'number' },
+    { dataKey: 'wisAdjustments', subKey: 'bonusSpells', fgTag: 'spellbonus', fgType: 'string' },
+    { dataKey: 'wisAdjustments', subKey: 'spellFailureChance', fgTag: 'failure', fgType: 'number' },
+  ],
+  dexterity: [
+    { dataKey: 'dexAdjustments', subKey: 'missileAttackAdjustment', fgTag: 'hitadj', fgType: 'number' },
+    { dataKey: 'dexAdjustments', subKey: 'armorClassAdjustment', fgTag: 'defenseadj', fgType: 'number' },
+    { dataKey: 'dexAdjustments', subKey: 'reactionAdjustment', fgTag: 'reactionadj', fgType: 'number' },
+  ],
+  constitution: [
+    { dataKey: 'conAdjustments', subKey: 'hpAdjustment', fgTag: 'hitpointadj', fgType: 'string' },
+    { dataKey: 'conAdjustments', subKey: 'systemShockSurvival', fgTag: 'systemshock', fgType: 'number' },
+    { dataKey: 'conAdjustments', subKey: 'resurrectionSurvival', fgTag: 'resurrectionsurvival', fgType: 'number' },
+  ],
+  charisma: [
+    { dataKey: 'chrAdjustments', subKey: 'maxHenchmen', fgTag: 'maxhench', fgType: 'number' },
+    { dataKey: 'chrAdjustments', subKey: 'loyaltyBase', fgTag: 'loyalty', fgType: 'number' },
+    { dataKey: 'chrAdjustments', subKey: 'reactionAdjustment', fgTag: 'reaction', fgType: 'number' },
+  ],
+};
+
+/** First dice-notation substring and any flat +/-N bonus after it, e.g.
+ *  "1d4+1 / 1d3+1" -> { dice: '1d4', bonus: 1 } — same "take the first one,
+ *  don't try to represent alternate melee/thrown damage" approach as DCC's
+ *  dieOnly() helper, extended to also capture a bonus since RoleVerse's
+ *  weapon damage strings commonly include one. */
+function firstDiceAndBonus(damage: string | undefined): { dice?: string; bonus?: number } {
+  if (!damage) return {};
+  const match = damage.match(/(\d*d\d+)\s*([+-]\s*\d+)?/i);
+  if (!match) return {};
+  return {
+    dice: match[1].toLowerCase(),
+    bonus: match[2] ? parseInt(match[2].replace(/\s/g, ''), 10) : undefined,
+  };
+}
 
 export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacterData, equipment: unknown[]): string {
   const abilityScores = (data.abilityScores as Record<string, number>) ?? {};
@@ -125,14 +163,15 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
   const treasure = (data.treasure as Record<string, number> | undefined) ?? {};
   const turnUndeadTable = (data.turnUndeadTable as Record<string, number> | undefined) ?? {};
   const animalCompanions = (data.animalCompanions as Record<string, unknown>[] | undefined) ?? [];
+  const baseThac0 = (data.thac0 as number) ?? 20;
 
-  const adjustmentGroups: [string, Record<string, number> | undefined][] = [
-    ['Strength', data.strAdjustments as Record<string, number> | undefined],
-    ['Intelligence', data.intAdjustments as Record<string, number> | undefined],
-    ['Wisdom', data.wisAdjustments as Record<string, number> | undefined],
-    ['Dexterity', data.dexAdjustments as Record<string, number> | undefined],
-    ['Constitution', data.conAdjustments as Record<string, number> | undefined],
-    ['Charisma', data.chrAdjustments as Record<string, number> | undefined],
+  const adjustmentGroups: [string, string, Record<string, number> | undefined][] = [
+    ['strength', 'Strength', data.strAdjustments as Record<string, number> | undefined],
+    ['intelligence', 'Intelligence', data.intAdjustments as Record<string, number> | undefined],
+    ['wisdom', 'Wisdom', data.wisAdjustments as Record<string, number> | undefined],
+    ['dexterity', 'Dexterity', data.dexAdjustments as Record<string, number> | undefined],
+    ['constitution', 'Constitution', data.conAdjustments as Record<string, number> | undefined],
+    ['charisma', 'Charisma', data.chrAdjustments as Record<string, number> | undefined],
   ];
 
   const abilitiesXml = group(
@@ -140,7 +179,15 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
     ABILITIES.map(({ full, tag }) => {
       const score = abilityScores[full];
       if (score == null) return '';
-      return group(tag, [leaf('score', 'number', score), leaf('total', 'number', score)].join(''));
+      const adjustmentLeaves = (ABILITY_ADJUSTMENT_FIELDS[tag] ?? [])
+        .map((field) => {
+          const record = data[field.dataKey] as Record<string, number> | undefined;
+          const value = record?.[field.subKey];
+          if (value == null) return '';
+          return leaf(field.fgTag, field.fgType, field.fgType === 'string' ? String(value) : value);
+        })
+        .join('');
+      return group(tag, [leaf('score', 'number', score), leaf('total', 'number', score), adjustmentLeaves].join(''));
     }).join('')
   );
 
@@ -150,12 +197,14 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
       .flatMap(([roleverseKey, fgTags]) => {
         const value = savingThrows[roleverseKey];
         if (value == null) return [];
-        return fgTags.map((tag) => group(tag, leaf('total', 'number', value)));
+        return fgTags.map((tag) =>
+          group(tag, [leaf('base', 'number', value), leaf('score', 'number', value)].join(''))
+        );
       })
       .join('')
   );
 
-  const combatXml = group('combat', group('thaco', leaf('score', 'number', (data.thac0 as number) ?? 20)));
+  const combatXml = group('combat', group('thaco', leaf('score', 'number', baseThac0)));
 
   const ac = (data.ac as number) ?? 10;
   const defensesXml = group(
@@ -180,12 +229,17 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
     speedNum != null ? group('speed', [leaf('base', 'number', speedNum), leaf('total', 'number', speedNum)].join('')) : '';
 
   const classesXml = idList('classes', [
-    [leaf('name', 'string', data.class ?? ''), leaf('level', 'number', data.level ?? 1)].join(''),
+    [
+      leaf('name', 'string', data.class ?? ''),
+      leaf('level', 'number', data.level ?? 1),
+      data.xpNeededForNextLevel != null ? leaf('expneeded', 'number', data.xpNeededForNextLevel as number) : '',
+    ].join(''),
   ]);
 
-  // Single shared list, confirmed — see file header. We can't yet confirm how FG
-  // distinguishes weapon vs. non-weapon entries within it, so both land here
-  // undifferentiated rather than guessing a "type"/"category" sub-field.
+  // Single shared list, confirmed — see file header. The one populated real
+  // example seen so far held a racial combat-bonus note, not a weapon name,
+  // so this weapon-names guess is unconfirmed either way — kept as the best
+  // available option pending a sample that actually exercises it.
   const proficiencyEntries = [
     ...weaponAttacks.map((row) => row.weapon as string | undefined).filter((w): w is string => !!w),
     ...(gameSystem === 'ADD2E' ? nonWeaponProficiencies : []),
@@ -220,6 +274,55 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
     })
   );
 
+  // Confirmed real structure (Adran Holimion sample): attackbonus/carried/
+  // damagelist (one dice entry with an optional bonus)/name. attackbonus is
+  // derived as the character's base THAC0 minus the weapon row's own THAC0
+  // (a positive value means this weapon attacks better than base) since
+  // RoleVerse tracks an absolute per-weapon THAC0, not a relative bonus.
+  const weaponlistXml = idList(
+    'weaponlist',
+    weaponAttacks.map((w) => {
+      const name = w.weapon as string | undefined;
+      if (!name) return '';
+      const weaponThac0 = w.thac0 as number | undefined;
+      const attackBonus = weaponThac0 != null ? baseThac0 - weaponThac0 : 0;
+      const { dice, bonus } = firstDiceAndBonus(w.damage as string | undefined);
+      const damagelist = dice
+        ? group(
+            'damagelist',
+            group('id-00001', [diceLeaf('dice', dice), bonus ? leaf('bonus', 'number', bonus) : ''].join(''))
+          )
+        : '';
+      return [
+        leaf('name', 'string', name),
+        leaf('attackbonus', 'number', attackBonus),
+        leaf('carried', 'number', 1),
+        damagelist,
+      ].join('');
+    })
+  );
+
+  // Confirmed real structure: 6 named slots (PP/GP/EP/SP/CP/unnamed).
+  // RoleVerse's `treasure` only tracks platinum/gold/silver, so only
+  // slots 1/2/4 are populated — no electrum/copper source data.
+  const coinsXml = group(
+    'coins',
+    [
+      treasure.platinum != null
+        ? group('slot1', [leaf('amount', 'number', treasure.platinum), leaf('name', 'string', 'PP')].join(''))
+        : '',
+      treasure.gold != null
+        ? group('slot2', [leaf('amount', 'number', treasure.gold), leaf('name', 'string', 'GP')].join(''))
+        : '',
+      treasure.silver != null
+        ? group('slot4', [leaf('amount', 'number', treasure.silver), leaf('name', 'string', 'SP')].join(''))
+        : '',
+    ].join('')
+  );
+
+  const encumbranceXml =
+    data.encumbrance != null ? group('encumbrance', leaf('load', 'number', data.encumbrance as number)) : '';
+
   // Sub-tag naming (spellslotsN, not levelN) confirmed via a real DCC export's
   // <powermeta><spellslots1><max>... structure — same CoreRPG-derived convention.
   const spellSlotsXml = group(
@@ -229,21 +332,22 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
       .join('')
   );
 
-  // The six per-ability *Adjustments records (RoleVerse's name->value sub-mods per
-  // ability score) have no clean home — real AD&D 2E derived stats are specific
-  // named fields we can't confidently target (see file header), so they go into
-  // notes rather than an invented tag.
-  const adjustmentsNote = adjustmentGroups
-    .filter(([, values]) => values && Object.keys(values).length > 0)
-    .map(([label, values]) => `${label}: ${Object.entries(values!).map(([k, v]) => `${k} ${v}`).join(', ')}`)
+  // Whatever sub-keys ABILITY_ADJUSTMENT_FIELDS didn't map to a real tag
+  // (e.g. Intelligence's min/max spells per level) still has no confirmed
+  // home and goes into notes, same reasoning as the file header's AC-breakdown note.
+  const remainingAdjustmentsNote = adjustmentGroups
+    .map(([tag, label, values]) => {
+      if (!values) return null;
+      const consumedKeys = new Set((ABILITY_ADJUSTMENT_FIELDS[tag] ?? []).map((f) => f.subKey));
+      const remaining = Object.entries(values).filter(([k]) => !consumedKeys.has(k));
+      if (remaining.length === 0) return null;
+      return `${label}: ${remaining.map(([k, v]) => `${k} ${v}`).join(', ')}`;
+    })
+    .filter((line): line is string => line != null)
     .join('\n');
 
   const identityLine = [
     data.playersName ? `Player's Name: ${data.playersName}` : null,
-    data.sex ? `Sex: ${data.sex}` : null,
-    data.height ? `Height: ${data.height}` : null,
-    data.weight ? `Weight: ${data.weight}` : null,
-    data.age ? `Age: ${data.age}` : null,
     data.homeland ? `Homeland: ${data.homeland}` : null,
     data.clan ? `Clan: ${data.clan}` : null,
     data.liege ? `Liege: ${data.liege}` : null,
@@ -264,26 +368,25 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
           .map(([k, v]) => `${k} ${v}`)
           .join(', ')}`
       : null;
-  const treasureLine =
-    Object.keys(treasure).length > 0
-      ? `Treasure: ${Object.entries(treasure)
-          .map(([k, v]) => `${v} ${k}`)
-          .join(', ')}`
-      : null;
   const turnUndeadLine =
     Object.keys(turnUndeadTable).length > 0
       ? `Turn Undead: ${Object.entries(turnUndeadTable)
           .map(([k, v]) => `${k} ${v}`)
           .join(', ')}`
       : null;
+  // Only the columns weaponlist has no real field for — name/damage/THAC0
+  // are now covered by weaponlistXml above, so this stays much shorter than
+  // before rather than duplicating them.
   const weaponDetailLines =
     weaponAttacks.length > 0
       ? [
-          'Weapon Details:',
-          ...weaponAttacks.map(
-            (w) =>
-              `  - ${w.weapon ?? 'Unknown'}: proficiency ${w.proficiency ?? '—'}, attack rate ${w.attackRate ?? '—'}, THAC0 ${w.thac0 ?? '—'}, damage ${w.damage ?? '—'}, range ${w.range ?? '—'}${w.special ? `, special: ${w.special}` : ''}`
-          ),
+          'Weapon Notes:',
+          ...weaponAttacks
+            .filter((w) => w.proficiency || w.attackRate || w.range || w.special)
+            .map(
+              (w) =>
+                `  - ${w.weapon ?? 'Unknown'}: proficiency ${w.proficiency ?? '—'}, attack rate ${w.attackRate ?? '—'}, range ${w.range ?? '—'}${w.special ? `, special: ${w.special}` : ''}`
+            ),
         ]
       : [];
   const animalCompanionLines =
@@ -298,18 +401,12 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
       : [];
 
   const notesParts = [
-    // Confirmed no plain-text race field exists on this ruleset's sheet — see
-    // file header. Duplicating it here guarantees it's visible somewhere.
-    ...(data.race ? [`Race: ${data.race}`] : []),
     ...(identityLine ? [identityLine] : []),
-    ...(data.xpNeededForNextLevel != null ? [`XP Needed for Next Level: ${data.xpNeededForNextLevel}`] : []),
-    ...(adjustmentsNote ? [`Ability Adjustments:\n${adjustmentsNote}`] : []),
+    ...(remainingAdjustmentsNote ? [`Ability Adjustments (no confirmed FG field):\n${remainingAdjustmentsNote}`] : []),
     ...(classAbilities.length > 0 ? [`Class & Racial Abilities: ${classAbilities.join('; ')}`] : []),
     ...(movementLine ? [movementLine] : []),
     ...(acBreakdownLine ? [acBreakdownLine] : []),
-    ...(data.encumbrance != null ? [`Total Encumbrance: ${data.encumbrance}`] : []),
     ...(data.encounterSpeed != null ? [`Encounter Speed: ${data.encounterSpeed}`] : []),
-    ...(treasureLine ? [treasureLine] : []),
     ...(turnUndeadLine ? [turnUndeadLine] : []),
     ...weaponDetailLines,
     ...animalCompanionLines,
@@ -321,6 +418,9 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
     leaf('race', 'string', data.race ?? ''),
     leaf('alignment', 'string', (data.alignment as string) ?? ''),
     leaf('exp', 'number', (data.experiencePoints as number) ?? 0),
+    leaf('ac', 'number', ac),
+    leaf('thaco', 'number', baseThac0),
+    (data.numberOfAttacks as string) ? leaf('numberattacks', 'string', data.numberOfAttacks as string) : '',
     abilitiesXml,
     savesXml,
     combatXml,
@@ -332,6 +432,9 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
     thiefSkillsXml,
     languagelistXml,
     inventorylistXml,
+    weaponlistXml,
+    coinsXml,
+    encumbranceXml,
     spellSlotsXml,
     notesXml,
   ].join('');
