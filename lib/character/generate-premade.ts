@@ -338,7 +338,7 @@ export async function fillInPremadeCharacter(
     name: existing.name.trim() || (typeof input.name === 'string' && input.name.trim() ? input.name.trim() : 'Unnamed Character'),
     race: existing.race.trim() || (typeof input.race === 'string' ? input.race.trim() : ''),
     class: existing.class.trim() || (typeof input.class === 'string' ? input.class.trim() : ''),
-    level: existing.level > 0 ? existing.level : clampLevel(input.level, gameSystem),
+    level: existing.level >= (gameSystem === 'DCC' ? 0 : 1) ? existing.level : clampLevel(input.level, gameSystem),
     hp,
     maxHp,
     notes: existing.notes.trim() || (typeof input.notes === 'string' ? input.notes.trim() : ''),
