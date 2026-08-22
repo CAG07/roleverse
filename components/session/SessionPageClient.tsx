@@ -77,7 +77,11 @@ export default function SessionPageClient({
       return;
     }
     const supabase = createClient();
-    void supabase.from('sessions').update({ scene_media: sceneMedia }).eq('id', sessionId);
+    const persist = async () => {
+      const { error } = await supabase.from('sessions').update({ scene_media: sceneMedia }).eq('id', sessionId);
+      if (error) console.error('Failed to persist scene media', error);
+    };
+    void persist();
   }, [sceneMedia, sessionId]);
   // Manual override of the scene panel's collapsed/expanded state. null means
   // "no override yet — defer to the automatic behavior" (collapsed when there's
