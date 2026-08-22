@@ -190,6 +190,162 @@ function clampLevel(raw: unknown, gameSystem: string): number {
   return Math.max(min, Math.min(30, Math.round(n)));
 }
 
+/** True if a schema-driven field draft has no user-entered content, and is
+ *  therefore a candidate for the AI to fill in during "complete this character." */
+function isFieldDraftBlank(field: SheetField, draft: SchemaDraft[string] | undefined): boolean {
+  if (draft == null) return true;
+  switch (field.kind) {
+    case 'number':
+    case 'string':
+    case 'text':
+    case 'string-list':
+      return (draft as string).trim() === '';
+    case 'record-fixed':
+    case 'spell-slots': {
+      const keyed = draft as KeyedDraft;
+      return Object.values(keyed).every((v) => (v ?? '').trim() === '');
+    }
+    case 'record-open':
+      return (draft as OpenDraft).length === 0;
+    case 'table':
+      return (draft as TableDraft).length === 0;
+    default:
+      return true;
+  }
+}
+
+export interface ExistingCharacterState {
+  name: string;
+  race: string;
+  class: string;
+  level: number;
+  hp: number;
+  maxHp: number;
+  notes: string;
+  abilityScores: Record<string, string>;
+  fields: SchemaDraft;
+}
+
+/** Summarizes which universal + schema fields already have real values, so the
+ *  prompt can tell the model exactly what's already decided vs. still needed —
+ *  cheaper and more reliable than asking the model to infer "blank" itself. */
+function summarizeKnownFields(gameSystem: string, existing: ExistingCharacterState): string {
+  const schema = getSheetSchema(gameSystem);
+  const lines: string[] = [];
+
+  const universal: [string, string][] = [
+    ['name', existing.name],
+    ['race', existing.race],
+    ['class', existing.class],
+  ];
+  for (const [label, value] of universal) {
+    lines.push(value.trim() ? `${label}: ${value} (KEEP — already set)` : `${label}: (blank — please fill in)`);
+  }
+  lines.push(`level: ${existing.level}`, `hp/maxHp: ${existing.hp}/${existing.maxHp}`);
+  if (existing.notes.trim()) lines.push(`notes: ${existing.notes} (KEEP — already set)`);
+  else lines.push('notes: (blank — please fill in)');
+
+  for (const [ability, value] of Object.entries(existing.abilityScores)) {
+    lines.push(
+      value.trim() ? `${ability} score: ${value} (KEEP)` : `${ability} score: (blank — please fill in)`
+    );
+  }
+
+  if (schema) {
+    for (const field of schema.fields) {
+      const blank = isFieldDraftBlank(field, existing.fields[field.key]);
+      lines.push(`${field.label}: ${blank ? '(blank — please fill in)' : '(KEEP — already set)'}`);
+    }
+  }
+
+  return lines.join('\n');
+}
+
+/** "Complete this sparse character" — same generation tool/schema as
+ *  generatePremadeCharacter, but the prompt is told exactly which fields
+ *  already have real values (see summarizeKnownFields) and instructed to
+ *  invent plausible values only for the rest. The already-filled values are
+ *  then re-applied verbatim over whatever the model returned for them, so a
+ *  model that ignores the "don't change this" instruction can't actually
+ *  overwrite anything the player already entered. */
+export async function fillInPremadeCharacter(
+  gameSystem: string,
+  existing: ExistingCharacterState,
+  hint?: string
+): Promise<GeneratedCharacter> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY environment variable is not set');
+
+  const schema = getSheetSchema(gameSystem);
+  const abilityNames = getGameSystem(gameSystem)?.abilityScores ?? [];
+  const tool = buildCharacterGenerationTool(gameSystem);
+  const client = new Anthropic({ apiKey });
+
+  const systemName = getGameSystem(gameSystem)?.name ?? gameSystem;
+  const knownFieldsSummary = summarizeKnownFields(gameSystem, existing);
+  const userPrompt =
+    `Complete this partially-created ${systemName} character. Here is what's already decided ` +
+    `(marked KEEP) and what still needs a value (marked blank):\n\n${knownFieldsSummary}` +
+    (hint?.trim() ? `\n\nAdditional guidance: ${hint.trim()}` : '') +
+    '\n\nReturn a value for every field the tool schema offers, including the KEEP ones (repeat ' +
+    'their given value back) — the caller will only use your values for the blank fields, but the ' +
+    'tool call must still be complete.';
+
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: MAX_TOKENS,
+    system:
+      `You complete partially-filled tabletop RPG characters for ${systemName}, inventing ` +
+      'mechanically sound, thematically consistent values only for the fields marked blank. ' +
+      'Never contradict a field marked KEEP — build the blank fields to fit what is already set ' +
+      '(e.g. a race/class already chosen should inform ability scores and class features). Always ' +
+      'call the generateCharacter tool with your result — do not respond with plain text.',
+    tools: [tool],
+    tool_choice: { type: 'tool', name: 'generateCharacter' },
+    messages: [{ role: 'user', content: userPrompt }],
+  });
+
+  const toolUse = response.content.find(
+    (b): b is Anthropic.Messages.ToolUseBlock => b.type === 'tool_use' && b.name === 'generateCharacter'
+  );
+  if (!toolUse) throw new Error('Character generation did not return a result');
+
+  const input = toolUse.input as Record<string, unknown>;
+
+  const abilityScoresRaw = (input.abilityScores as Record<string, unknown> | undefined) ?? {};
+  const abilityScores: Record<string, string> = Object.fromEntries(
+    abilityNames.map((n) => {
+      if (existing.abilityScores[n]?.trim()) return [n, existing.abilityScores[n]];
+      return [n, typeof abilityScoresRaw[n] === 'number' ? String(abilityScoresRaw[n]) : ''];
+    })
+  );
+
+  const fieldsRaw = (input.fields as Record<string, unknown> | undefined) ?? {};
+  const fields: SchemaDraft = {};
+  if (schema) {
+    for (const field of schema.fields) {
+      const existingDraft = existing.fields[field.key];
+      fields[field.key] = isFieldDraftBlank(field, existingDraft)
+        ? toFieldDraft(field, fieldsRaw[field.key])
+        : existingDraft;
+    }
+  }
+
+  const maxHp = existing.maxHp > 0 ? existing.maxHp : typeof input.maxHp === 'number' ? Math.max(1, Math.round(input.maxHp)) : 1;
+  const hp = existing.hp > 0 || existing.maxHp > 0 ? existing.hp : Math.min(maxHp, typeof input.hp === 'number' ? Math.max(0, Math.round(input.hp)) : maxHp);
+
+  return {
+    name: existing.name.trim() || (typeof input.name === 'string' && input.name.trim() ? input.name.trim() : 'Unnamed Character'),
+    race: existing.race.trim() || (typeof input.race === 'string' ? input.race.trim() : ''),
+    class: existing.class.trim() || (typeof input.class === 'string' ? input.class.trim() : ''),
+    level: existing.level > 0 ? existing.level : clampLevel(input.level, gameSystem),
+    hp,
+    maxHp,
+    notes: existing.notes.trim() || (typeof input.notes === 'string' ? input.notes.trim() : ''),
+    systemFields: { abilityScores, fields },
+  };
+}
+
 export async function generatePremadeCharacter(gameSystem: string, hint?: string): Promise<GeneratedCharacter> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY environment variable is not set');

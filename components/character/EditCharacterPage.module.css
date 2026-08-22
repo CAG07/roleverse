@@ -74,6 +74,11 @@
   );
 }
 
+.generateCard {
+  composes: formCard;
+  margin-bottom: 1.5rem;
+}
+
 .formCardTitle {
   font-family: var(--font-heading);
   font-size: 0.75rem;
