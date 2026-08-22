@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import SessionPageClient from '@/components/session/SessionPageClient';
-import type { Character, TranscriptEntry } from '@/lib/types/session';
+import type { Character, SceneMedia, TranscriptEntry } from '@/lib/types/session';
 import { CHARACTER_SHEET_COLUMNS } from '@/lib/character/characterSheetColumns';
 
 interface SessionPageProps {
@@ -37,10 +37,11 @@ export default async function SessionPage({ params }: SessionPageProps) {
   // Resume active session if one exists, only create a new one if none is found
   let sessionId: string;
   let initialTranscript: TranscriptEntry[] = [];
+  let initialSceneMedia: SceneMedia | null = null;
 
   const { data: activeSession } = await supabase
     .from('sessions')
-    .select('id, transcript')
+    .select('id, transcript, scene_media')
     .eq('campaign_id', id)
     .eq('user_id', user!.id)
     .is('ended_at', null)
@@ -51,6 +52,8 @@ export default async function SessionPage({ params }: SessionPageProps) {
   if (activeSession) {
     sessionId = activeSession.id as string;
     initialTranscript = ((activeSession.transcript as TranscriptEntry[] | null) ?? []).slice(-200);
+    const storedScene = activeSession.scene_media as (Omit<SceneMedia, 'timestamp'> & { timestamp: string }) | null;
+    initialSceneMedia = storedScene ? { ...storedScene, timestamp: new Date(storedScene.timestamp) } : null;
   } else {
     // Brand-new session — the Game Master fetches the prior session's recap itself
     // (lib/mcp/agents/game-master.ts) and opens with a narrated scene, so nothing
@@ -73,6 +76,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
       gameSystem={campaign.game_system}
       characters={characters}
       initialTranscript={initialTranscript}
+      initialSceneMedia={initialSceneMedia}
     />
   );
 }

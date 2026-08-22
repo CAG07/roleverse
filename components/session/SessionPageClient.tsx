@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, type CSSProperties } from 'react';
+import { useState, useCallback, useEffect, useRef, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp, Maximize2 } from 'lucide-react';
 import SessionSidebar from '@/components/session/SessionSidebar';
@@ -9,6 +9,7 @@ import ChatWindow from '@/components/session/ChatWindow';
 import CharacterSheet from '@/components/character/CharacterSheet';
 import CharacterSheetModal from '@/components/character/CharacterSheetModal';
 import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
+import { createClient } from '@/lib/supabase/client';
 import PartyStatus from '@/components/session/PartyStatus';
 import SessionNotes from '@/components/session/SessionNotes';
 import type { SceneMedia, Character, TranscriptEntry } from '@/lib/types/session';
@@ -54,6 +55,7 @@ export default function SessionPageClient({
   gameSystem,
   characters,
   initialTranscript = [],
+  initialSceneMedia = null,
 }: {
   sessionId: string;
   campaignId: string;
@@ -61,9 +63,22 @@ export default function SessionPageClient({
   gameSystem: string;
   characters: Character[];
   initialTranscript?: TranscriptEntry[];
+  initialSceneMedia?: SceneMedia | null;
 }) {
   const router = useRouter();
-  const [sceneMedia, setSceneMedia] = useState<SceneMedia | null>(null);
+  const [sceneMedia, setSceneMedia] = useState<SceneMedia | null>(initialSceneMedia);
+  // Skip the first persistence write — sceneMedia already matches the DB
+  // value it was hydrated from, so there's nothing to save on mount.
+  const skipNextPersist = useRef(true);
+
+  useEffect(() => {
+    if (skipNextPersist.current) {
+      skipNextPersist.current = false;
+      return;
+    }
+    const supabase = createClient();
+    void supabase.from('sessions').update({ scene_media: sceneMedia }).eq('id', sessionId);
+  }, [sceneMedia, sessionId]);
   // Manual override of the scene panel's collapsed/expanded state. null means
   // "no override yet — defer to the automatic behavior" (collapsed when there's
   // no scene media, expanded when there is). Reset whenever the scene changes so
