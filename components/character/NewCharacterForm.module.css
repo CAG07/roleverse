@@ -177,7 +177,7 @@
     background-color 0.2s,
     border-color 0.2s;
 }
-.btnImportFile:hover {
+.btnImportFile:hover:not([aria-disabled='true']) {
   background: var(--gold-tint);
   border-color: var(--gold);
 }
