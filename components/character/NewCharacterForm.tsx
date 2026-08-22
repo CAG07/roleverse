@@ -2,13 +2,16 @@
 
 import styles from './NewCharacterForm.module.css';
 import { useState } from 'react';
-import type { FormEvent } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { GeneratingIndicator } from '@/components/ui/GeneratingIndicator';
-import SystemFields, { createSystemFieldsValue, buildCharacterColumns } from './SystemFields';
+import { parseFGAddCharacterXml } from '@/lib/character/import/fantasy-grounds/parse-add';
+import SystemFields, { createSystemFieldsValue, buildCharacterColumns, hydrateSystemFieldsValue } from './SystemFields';
 import type { SystemFieldsValue } from './SystemFields';
+
+const FG_IMPORT_SUPPORTED_SYSTEMS = new Set(['ADD1E', 'ADD2E']);
 
 interface NewCharacterFormProps {
   campaignId: string;
@@ -41,6 +44,10 @@ export function NewCharacterForm({
   const [generateHint, setGenerateHint] = useState('');
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState('');
+  const [importedEquipment, setImportedEquipment] = useState<{ name: string; quantity: number }[]>([]);
+  const fgImportSupported = FG_IMPORT_SUPPORTED_SYSTEMS.has(gameSystem);
 
   const handleGenerate = async () => {
     setGenerateError('');
@@ -82,6 +89,36 @@ export function NewCharacterForm({
       setGenerateError('Character generation failed. Please try again or fill in the form manually.');
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleImportFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setImportError('');
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const parsed = parseFGAddCharacterXml(text);
+      if ('error' in parsed) {
+        setImportError(parsed.error);
+        return;
+      }
+      setName(parsed.name);
+      setRace(parsed.race);
+      setCharacterClass(parsed.class);
+      setLevel(String(parsed.level || minLevel));
+      if (parsed.hp != null) setHp(String(parsed.hp));
+      if (parsed.maxHp != null) setMaxHp(String(parsed.maxHp));
+      if (parsed.notes) setNotes(parsed.notes);
+      setSystemFields(hydrateSystemFieldsValue(gameSystem, parsed.columns));
+      setImportedEquipment(parsed.equipment);
+    } catch {
+      setImportError('Failed to read this file. Make sure it is a Fantasy Grounds character export (.xml).');
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -142,6 +179,7 @@ export function NewCharacterForm({
           game_data_combat: columns.combat,
           game_data_saves: columns.saves,
           game_data_skills: columns.skills,
+          ...(importedEquipment.length > 0 ? { equipment: importedEquipment } : {}),
         })
         .select('id')
         .single();
@@ -191,6 +229,34 @@ export function NewCharacterForm({
         </div>
         {generating && <GeneratingIndicator label="Generating a full character sheet — this can take up to 30 seconds." />}
         {generateError && <p className={styles.errorMsg}>{generateError}</p>}
+      </div>
+
+      <div className={styles.generateCard}>
+        <p className={styles.formCardTitle}>Import from Fantasy Grounds</p>
+        {fgImportSupported ? (
+          <>
+            <input
+              type="file"
+              accept=".xml,text/xml,application/xml"
+              id="fgImportFile"
+              className={styles.fileInputHidden}
+              onChange={(e) => void handleImportFile(e)}
+              disabled={importing}
+            />
+            <label htmlFor="fgImportFile" className={styles.btnImportFile} aria-disabled={importing}>
+              {importing ? 'Importing…' : 'Choose Fantasy Grounds .xml File'}
+            </label>
+            <p className={styles.importHint}>
+              Import a character exported from Fantasy Grounds. Fields don&apos;t need to match
+              exactly — review and adjust the form below after importing.
+            </p>
+            {importError && <p className={styles.errorMsg}>{importError}</p>}
+          </>
+        ) : (
+          <p className={styles.hint}>
+            Fantasy Grounds import currently supports AD&amp;D 1E and 2E characters only.
+          </p>
+        )}
       </div>
 
       <div className={styles.formCard}>
