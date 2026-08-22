@@ -9,6 +9,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
 import { buildFantasyGroundsExport } from '@/lib/character/export/fantasy-grounds';
 import { buildPlainTextSheet } from '@/lib/character/export/plain-text';
+import { downloadFile, slugify } from '@/lib/export/download-file';
 import CharacterSheet from './CharacterSheet';
 import CharacterHeaderBanner from './CharacterHeaderBanner';
 
@@ -69,16 +70,6 @@ export function CharacterDetailPage({
   const exportable = buildFantasyGroundsExport(character.game_system, sheetData, character.equipment ?? []);
   const plainText = buildPlainTextSheet(character.game_system, sheetData, character.equipment ?? []);
 
-  const downloadFile = (content: string, filename: string, mimeType: string) => {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
   const handleExport = () => {
     if (!exportable) return;
     downloadFile(exportable.content, exportable.filename, exportable.mimeType);
@@ -86,12 +77,8 @@ export function CharacterDetailPage({
 
   const handleExportText = () => {
     if (!plainText) return;
-    const slug = (character.name || 'character')
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-    downloadFile(plainText, `${slug || 'character'}.txt`, 'text/plain');
+    const slug = slugify(character.name || 'character', 'character');
+    downloadFile(plainText, `${slug}.txt`, 'text/plain');
   };
 
   const handlePrint = () => {
