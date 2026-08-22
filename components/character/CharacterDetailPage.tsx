@@ -47,6 +47,11 @@ interface CharacterDetailPageProps {
   campaignName: string;
   character: CharacterDetail;
   funnelParty?: DCCFunnelMember[];
+  /** Where the back link goes — context-aware based on how this page was reached
+   *  (campaign party list vs. the Characters list page). Defaults preserve the
+   *  original "always Characters list" behavior for any caller that doesn't pass it. */
+  backHref?: string;
+  backLabel?: string;
 }
 
 export function CharacterDetailPage({
@@ -54,6 +59,8 @@ export function CharacterDetailPage({
   campaignName,
   character,
   funnelParty,
+  backHref,
+  backLabel,
 }: CharacterDetailPageProps) {
   const router = useRouter();
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -111,8 +118,8 @@ export function CharacterDetailPage({
         onCancel={() => setConfirmDelete(false)}
       />
 
-      <Link href={`/campaigns/${campaignId}/characters`} className={styles.backLink}>
-        ← Back to Characters
+      <Link href={backHref ?? `/campaigns/${campaignId}/characters`} className={styles.backLink}>
+        ← {backLabel ?? 'Back to Characters'}
       </Link>
 
       <CharacterHeaderBanner

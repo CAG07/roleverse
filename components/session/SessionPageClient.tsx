@@ -11,7 +11,6 @@ import CharacterSheetModal from '@/components/character/CharacterSheetModal';
 import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
 import PartyStatus from '@/components/session/PartyStatus';
 import SessionNotes from '@/components/session/SessionNotes';
-import OraclePanel from '@/components/session/OraclePanel';
 import type { SceneMedia, Character, TranscriptEntry } from '@/lib/types/session';
 import styles from './SessionPageClient.module.css';
 
@@ -214,6 +213,7 @@ export default function SessionPageClient({
             gameSystem={gameSystem}
             isDM
             campaignId={campaignId}
+            sessionId={sessionId}
             fontSize={chatFontSize}
             onFontSizeChange={handleFontSizeChange}
           />
@@ -346,8 +346,6 @@ export default function SessionPageClient({
           )}
           <div className={styles.panelDivider} />
           <SessionNotes campaignId={campaignId} />
-          <div className={styles.panelDivider} />
-          <OraclePanel campaignId={campaignId} sessionId={sessionId} />
         </div>
       </div>
     </div>

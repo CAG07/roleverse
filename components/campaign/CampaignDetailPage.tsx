@@ -364,7 +364,7 @@ export function CampaignDetailPage({
               {characters.map((char) => (
                 <Link
                   key={char.id}
-                  href={`/campaigns/${id}/characters/${char.id}`}
+                  href={`/campaigns/${id}/characters/${char.id}?from=campaign`}
                   className={styles.characterCard}
                 >
                   <div className={styles.characterName}>{char.name}</div>

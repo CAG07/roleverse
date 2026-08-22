@@ -6,6 +6,7 @@ import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { GeneratingIndicator } from '@/components/ui/GeneratingIndicator';
 import SystemFields, { createSystemFieldsValue, buildCharacterColumns } from './SystemFields';
 import type { SystemFieldsValue } from './SystemFields';
 
@@ -188,6 +189,7 @@ export function NewCharacterForm({
             {generating ? 'Generating…' : 'Generate Premade Character'}
           </button>
         </div>
+        {generating && <GeneratingIndicator label="Generating a full character sheet — this can take up to 30 seconds." />}
         {generateError && <p className={styles.errorMsg}>{generateError}</p>}
       </div>
 
