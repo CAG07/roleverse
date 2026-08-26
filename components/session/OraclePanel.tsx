@@ -13,11 +13,12 @@ import {
   type Likelihood,
   type OracleResult,
 } from '@/lib/oracle/builtin-oracle';
+import { generatePlotHook, formatPlotHook } from '@/lib/oracle/plot-hook-generator';
 
 const LIKELIHOODS = Object.keys(LIKELIHOOD_LABELS) as Likelihood[];
 const ORACLE_STATE_DEBOUNCE_MS = 800;
 
-type Tab = 'quick' | 'mine';
+type Tab = 'quick' | 'mine' | 'seed';
 
 interface OraclePanelProps {
   campaignId: string;
@@ -48,6 +49,13 @@ export default function OraclePanel({ campaignId, sessionId }: OraclePanelProps)
   const handleQuickAsk = useCallback(() => {
     setQuickResult(consultOracle(likelihood, flux));
   }, [likelihood, flux]);
+
+  // --- Plot Seed (built-in, fully client-side generator) ---
+  const [plotHook, setPlotHook] = useState<string | null>(null);
+
+  const handleGenerateHook = useCallback(() => {
+    setPlotHook(formatPlotHook(generatePlotHook()));
+  }, []);
 
   // --- My Oracle (bring-your-own, retrieval-grounded) ---
   const [oracleState, setOracleState] = useState('');
@@ -137,6 +145,13 @@ export default function OraclePanel({ campaignId, sessionId }: OraclePanelProps)
         >
           My Oracle
         </button>
+        <button
+          type="button"
+          className={`${styles.tabBtn}${tab === 'seed' ? ` ${styles.tabBtnActive}` : ''}`}
+          onClick={() => setTab('seed')}
+        >
+          Plot Seed
+        </button>
       </div>
 
       {tab === 'quick' ? (
@@ -187,6 +202,19 @@ export default function OraclePanel({ campaignId, sessionId }: OraclePanelProps)
               </span>
             </div>
           )}
+        </div>
+      ) : tab === 'seed' ? (
+        <div className={styles.tabBody}>
+          <p className={styles.explainer}>
+            Instant, free, no setup — a random plot hook for sandbox play with no prewritten
+            adventure. Generate one whenever you need somewhere to start.
+          </p>
+
+          <button type="button" className={styles.askBtn} onClick={handleGenerateHook}>
+            Generate
+          </button>
+
+          {plotHook && <p className={styles.myAnswer}>{plotHook}</p>}
         </div>
       ) : (
         <div className={styles.tabBody}>
