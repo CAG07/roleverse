@@ -77,6 +77,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
       characters={characters}
       initialTranscript={initialTranscript}
       initialSceneMedia={initialSceneMedia}
+      aiAssistEnabled={(campaign.ai_assist_enabled as boolean | null) ?? true}
     />
   );
 }

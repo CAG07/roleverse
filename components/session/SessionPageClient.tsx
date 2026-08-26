@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp, Maximize2 } from 'lucide-react';
 import SessionSidebar from '@/components/session/SessionSidebar';
 import SceneDisplay from '@/components/session/SceneDisplay';
 import ChatWindow from '@/components/session/ChatWindow';
+import JournalPanel from '@/components/session/JournalPanel';
 import CharacterSheet from '@/components/character/CharacterSheet';
 import CharacterSheetModal from '@/components/character/CharacterSheetModal';
 import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
@@ -56,6 +57,7 @@ export default function SessionPageClient({
   characters,
   initialTranscript = [],
   initialSceneMedia = null,
+  aiAssistEnabled = true,
 }: {
   sessionId: string;
   campaignId: string;
@@ -64,6 +66,7 @@ export default function SessionPageClient({
   characters: Character[];
   initialTranscript?: TranscriptEntry[];
   initialSceneMedia?: SceneMedia | null;
+  aiAssistEnabled?: boolean;
 }) {
   const router = useRouter();
   const [sceneMedia, setSceneMedia] = useState<SceneMedia | null>(initialSceneMedia);
@@ -211,7 +214,7 @@ export default function SessionPageClient({
           className={`${styles.tabBtn}${mobileTab === 'chat' ? ` ${styles.active}` : ''}`}
           onClick={() => setMobileTab('chat')}
         >
-          ✦ Chat
+          {aiAssistEnabled ? '✦ Chat' : '✦ Journal'}
         </button>
         <button
           className={`${styles.tabBtn}${mobileTab === 'character' ? ` ${styles.active}` : ''}`}
@@ -235,6 +238,7 @@ export default function SessionPageClient({
             sessionId={sessionId}
             fontSize={chatFontSize}
             onFontSizeChange={handleFontSizeChange}
+            aiAssistEnabled={aiAssistEnabled}
           />
         </div>
 
@@ -264,12 +268,16 @@ export default function SessionPageClient({
             className={styles.chatPanel}
             style={{ '--chat-font-size': `${chatFontSize}px` } as CSSProperties}
           >
-            <ChatWindow
-              onSceneMediaUpdate={setSceneMedia}
-              sessionId={sessionId}
-              campaignId={campaignId}
-              initialTranscript={initialTranscript}
-            />
+            {aiAssistEnabled ? (
+              <ChatWindow
+                onSceneMediaUpdate={setSceneMedia}
+                sessionId={sessionId}
+                campaignId={campaignId}
+                initialTranscript={initialTranscript}
+              />
+            ) : (
+              <JournalPanel sessionId={sessionId} initialTranscript={initialTranscript} />
+            )}
           </div>
         </div>
 

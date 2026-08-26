@@ -76,6 +76,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       activeSession={activeSession ?? null}
       recentSessions={recentSessions ?? []}
       sessionCount={sessionCount ?? 0}
+      aiAssistEnabled={(campaign.ai_assist_enabled as boolean | null) ?? true}
     />
   );
 }

@@ -458,6 +458,54 @@
   cursor: not-allowed;
 }
 
+/* AI Assist toggle */
+.aiAssistHint {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--ivory-muted);
+  line-height: 1.5;
+  margin: 0 0 0.875rem;
+}
+
+.aiAssistToggleRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.aiAssistToggleBtn {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: var(--void-surface);
+  border: 1px solid var(--void-border);
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+.aiAssistToggleBtn:hover:not(:disabled) {
+  border-color: var(--gold-dim);
+  color: var(--ivory);
+}
+.aiAssistToggleBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.aiAssistToggleBtnActive {
+  background: var(--gold-tint);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.aiAssistToggleBtnActive:hover:not(:disabled) {
+  color: var(--gold);
+}
+
 /* Character list */
 .characterList {
   display: flex;

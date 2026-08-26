@@ -38,7 +38,7 @@ export async function POST(
 
   const { data: campaign } = await supabase
     .from('campaigns')
-    .select('game_system')
+    .select('game_system, ai_assist_enabled')
     .eq('id', session.campaign_id)
     .single();
 
@@ -58,26 +58,34 @@ export async function POST(
   // response, but MUST still run to completion (a bare un-awaited promise has no
   // such guarantee on Vercel's serverless runtime; after() does). NPC rostering
   // happens live during play via the flagNpc tool, not at session end.
-  after(async () => {
-    const transcript: TranscriptEntry[] = Array.isArray(session.transcript)
-      ? (session.transcript as TranscriptEntry[])
-      : [];
+  //
+  // Skipped entirely when AI Assist is off: a journal-mode session's transcript
+  // is the player's own freeform writing (see JournalPanel.tsx), never something
+  // sent to Claude on their behalf — that's the whole point of turning AI Assist
+  // off, not just hiding the chat window.
+  const aiAssistEnabled = (campaign?.ai_assist_enabled as boolean | null) ?? true;
+  if (aiAssistEnabled) {
+    after(async () => {
+      const transcript: TranscriptEntry[] = Array.isArray(session.transcript)
+        ? (session.transcript as TranscriptEntry[])
+        : [];
 
-    const systemId = (campaign?.game_system as string | undefined) ?? '';
-    const gameSystemName = getGameSystem(systemId)?.name ?? systemId;
+      const systemId = (campaign?.game_system as string | undefined) ?? '';
+      const gameSystemName = getGameSystem(systemId)?.name ?? systemId;
 
-    try {
-      const summary = await generateSessionSummary(transcript, gameSystemName);
+      try {
+        const summary = await generateSessionSummary(transcript, gameSystemName);
 
-      await supabase
-        .from('sessions')
-        .update({ summary, summary_generated_at: new Date().toISOString() })
-        .eq('id', sessionId);
-    } catch (err) {
-      // Summary is a nice-to-have. Log and continue — session already ended above.
-      console.error('[session-end] Summary generation failed:', err);
-    }
-  });
+        await supabase
+          .from('sessions')
+          .update({ summary, summary_generated_at: new Date().toISOString() })
+          .eq('id', sessionId);
+      } catch (err) {
+        // Summary is a nice-to-have. Log and continue — session already ended above.
+        console.error('[session-end] Summary generation failed:', err);
+      }
+    });
+  }
 
   return NextResponse.json({ success: true });
 }

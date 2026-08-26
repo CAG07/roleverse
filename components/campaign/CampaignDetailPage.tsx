@@ -41,6 +41,7 @@ interface CampaignDetailPageProps {
   activeSession: { id: string } | null;
   recentSessions: CampaignSession[];
   sessionCount: number;
+  aiAssistEnabled: boolean;
 }
 
 function pluralize(value: number, unit: string): string {
@@ -96,6 +97,7 @@ export function CampaignDetailPage({
   activeSession,
   recentSessions,
   sessionCount,
+  aiAssistEnabled,
 }: CampaignDetailPageProps) {
   const router = useRouter();
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -108,6 +110,26 @@ export function CampaignDetailPage({
   const [savedModuleDescription, setSavedModuleDescription] = useState(moduleDescription);
   const [savingModule, setSavingModule] = useState(false);
   const [moduleError, setModuleError] = useState<string | null>(null);
+  const [aiAssist, setAiAssist] = useState(aiAssistEnabled);
+  const [savingAiAssist, setSavingAiAssist] = useState(false);
+  const [aiAssistError, setAiAssistError] = useState<string | null>(null);
+
+  const handleSetAiAssist = async (next: boolean) => {
+    if (next === aiAssist || savingAiAssist) return;
+    setSavingAiAssist(true);
+    setAiAssistError(null);
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('campaigns')
+      .update({ ai_assist_enabled: next })
+      .eq('id', id);
+    if (error) {
+      setAiAssistError(error.message);
+    } else {
+      setAiAssist(next);
+    }
+    setSavingAiAssist(false);
+  };
 
   const handleSaveModuleDescription = async () => {
     setSavingModule(true);
@@ -446,6 +468,35 @@ export function CampaignDetailPage({
 
         {/* Modules & Files */}
         <CampaignFilesPanel campaignId={id} />
+
+        {/* AI Assist toggle — off runs the session as a freeform journal instead of an AI chat */}
+        <div className={styles.infoPanel}>
+          <h3 className={styles.infoPanelTitle}>AI Assist</h3>
+          <p className={styles.aiAssistHint}>
+            On: play against the AI Game Master in chat, as usual. Off: the session screen
+            shows a plain journal instead — no AI chat window at all. The Oracle and your
+            character sheet stay available either way.
+          </p>
+          <div className={styles.aiAssistToggleRow}>
+            <button
+              type="button"
+              className={`${styles.aiAssistToggleBtn}${aiAssist ? ` ${styles.aiAssistToggleBtnActive}` : ''}`}
+              onClick={() => void handleSetAiAssist(true)}
+              disabled={savingAiAssist}
+            >
+              On
+            </button>
+            <button
+              type="button"
+              className={`${styles.aiAssistToggleBtn}${!aiAssist ? ` ${styles.aiAssistToggleBtnActive}` : ''}`}
+              onClick={() => void handleSetAiAssist(false)}
+              disabled={savingAiAssist}
+            >
+              Off
+            </button>
+          </div>
+          {aiAssistError && <p className={styles.deleteError}>{aiAssistError}</p>}
+        </div>
 
         {/* Oracle References (solo-play "bring your own oracle") */}
         <OracleRefsPanel campaignId={id} />
