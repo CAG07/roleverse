@@ -10,12 +10,14 @@ import { streamRulesArbiterAgent } from '@/lib/mcp/agents/rules-arbiter';
 import { routeMessage } from '@/lib/mcp/coordinator';
 import { buildPartyContext } from '@/lib/mcp/context/party-context';
 import { registerRollDiceTool } from '@/lib/mcp/tools/roll-dice';
+import { registerRollComplicationTool } from '@/lib/mcp/tools/roll-complication';
 import type { AgentMessage, AgentStreamResult, MCPContext } from '@/lib/mcp/types';
 import { formatSSE } from '@/lib/sse';
 import { createClient } from '@/lib/supabase/server';
 
 // Register MCP tools on module load (runs once per cold start)
 registerRollDiceTool();
+registerRollComplicationTool();
 
 interface MessageRequestBody {
   message: string;
