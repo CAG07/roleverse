@@ -73,12 +73,15 @@ const BUILD_ENCOUNTER_TOOL: Anthropic.Messages.Tool = {
 const UPDATE_LOCATION_TOOL: Anthropic.Messages.Tool = {
   name: 'updateLocation',
   description:
-    'Call this once when the party moves to a genuinely new area within an uploaded module ' +
-    '(not on every turn, and not for a return visit to an already-established area). Compose ' +
-    'a short label for where the party now is in your own words (e.g. "entrance courtyard", ' +
-    '"room 12") rather than reusing the player\'s exact wording — this does a fresh, targeted ' +
-    'search of the uploaded module for that specific area, including any confirmed map layout, ' +
-    'so you can ground your narration in it instead of inventing details.',
+    'Call this once when the party moves to a genuinely new area (not on every turn, and not ' +
+    'for a return visit to an already-established area). Compose a short label for where the ' +
+    'party now is in your own words (e.g. "entrance courtyard", "room 12", "the old watchtower") ' +
+    "rather than reusing the player's exact wording. If the campaign has an uploaded module, " +
+    'this does a fresh, targeted search of it for that specific area, including any confirmed ' +
+    "map layout. If there's no module content for this area — including sandbox campaigns with " +
+    'no module at all — it instead returns a structured location seed (terrain, notable features, ' +
+    'number of exits) that is persisted so the same label comes back identically on a future ' +
+    "visit. Either way, ground your narration in what's returned instead of inventing conflicting details.",
   input_schema: {
     type: 'object' as const,
     properties: {
@@ -359,10 +362,12 @@ function buildSystemPrompt(
     '  meaningfully interacted with, call the flagNpc tool with what you know about them.',
     '  Do not call it for throwaway background characters, and never for an NPC already',
     '  listed under "Established NPCs in this scene" below.',
-    '- When the party moves to a genuinely new area within an uploaded module, call the',
-    '  updateLocation tool once with a short label for where they now are, composed in your own',
-    '  words. Use its returned content — especially any confirmed map layout — to ground your',
-    '  narration; do not call it again for the same area or on every turn.',
+    '- When the party moves to a genuinely new area, call the updateLocation tool once with a',
+    '  short label for where they now are, composed in your own words. Use its returned content',
+    '  — confirmed map layout, module excerpts, or a generated location seed (terrain/features/',
+    '  exits) when there is no module — to ground your narration; do not call it again for the',
+    '  same area or on every turn. A generated seed describes structure only: build vivid prose',
+    '  around it, but do not invent additional terrain, features, or exits that contradict it.',
     '- Keep responses concise (2-4 paragraphs max) and end with a clear prompt for player action.',
     '- Maintain consistent tone: gritty and grounded for AD&D, heroic for 5E, etc.',
     '',
