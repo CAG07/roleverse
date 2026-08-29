@@ -677,6 +677,10 @@ async function executeToolBlock(
       };
     }
 
+    // No lower clamp: negative HP is a meaningful, real state elsewhere in this
+    // app (see computeCharacterStatus in SessionPageClient.tsx — hp === 0 is
+    // unconscious/dying, hp < 0 is dead). Clamping to 0 here would silently make
+    // the death state unreachable through this tool.
     let newHp = (character.hp ?? 0) + delta;
     if (character.max_hp != null) newHp = Math.min(newHp, character.max_hp);
 

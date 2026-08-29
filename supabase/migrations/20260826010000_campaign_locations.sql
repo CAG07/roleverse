@@ -33,7 +33,10 @@ CREATE TABLE IF NOT EXISTS public.campaign_locations (
 
 CREATE INDEX campaign_locations_campaign_idx ON public.campaign_locations(campaign_id);
 CREATE INDEX campaign_locations_owner_idx ON public.campaign_locations(owner_id);
-CREATE INDEX campaign_locations_label_lower_idx ON public.campaign_locations(campaign_id, LOWER(label));
+-- No separate LOWER(label) index: the UNIQUE(campaign_id, label) constraint above
+-- already indexes (campaign_id, label), and the lookup in update-location.ts uses
+-- .ilike('label', ...), which a functional LOWER() index wouldn't be used by anyway
+-- (Postgres only uses that shape for a literal `WHERE LOWER(label) = ...` predicate).
 
 ALTER TABLE public.campaign_locations ENABLE ROW LEVEL SECURITY;
 
