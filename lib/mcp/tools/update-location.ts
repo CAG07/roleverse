@@ -121,10 +121,30 @@ export async function executeUpdateLocation(
   });
 
   if (insertError) {
-    // Non-fatal — the GM still gets a usable seed this turn even if
-    // persistence failed (e.g. a rare unique-constraint race on the same
-    // label); it just won't be remembered on a future revisit.
+    // Non-fatal — but try to return the persisted row if this was a uniqueness race,
+    // so the GM doesn't narrate from a seed that won't be remembered.
     console.warn('[updateLocation] Failed to persist generated location:', insertError);
+
+    const { data: raced } = await supabase
+      .from('campaign_locations')
+      .select('terrain, features, exit_count')
+      .eq('campaign_id', context.campaignId)
+      .eq('label', locationLabel)
+      .maybeSingle();
+
+    if (raced) {
+      return {
+        locationLabel,
+        mapLayout,
+        moduleExcerpts,
+        generatedLocation: {
+          terrain: raced.terrain as string,
+          features: (raced.features as string[] | null) ?? [],
+          exitCount: raced.exit_count as number,
+          isNew: false,
+        },
+      };
+    }
   }
 
   return {
