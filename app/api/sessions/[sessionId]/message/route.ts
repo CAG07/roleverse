@@ -57,15 +57,19 @@ export async function POST(
     return NextResponse.json({ error: 'Session has ended' }, { status: 400 });
   }
 
-  // --- Look up campaign for gameSystem ---
+  // --- Look up campaign for gameSystem and AI Assist availability ---
   const { data: campaign, error: campaignError } = await supabase
     .from('campaigns')
-    .select('id, game_system')
+    .select('id, game_system, ai_assist_enabled')
     .eq('id', session.campaign_id)
     .single();
 
   if (campaignError || !campaign) {
     return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+  }
+
+  if (!campaign.ai_assist_enabled) {
+    return NextResponse.json({ error: 'AI Assist is disabled for this campaign' }, { status: 403 });
   }
 
   // --- Parse body ---
