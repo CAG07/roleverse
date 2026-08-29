@@ -28,6 +28,16 @@ export interface SceneMedia {
   timestamp: Date;
 }
 
+/** A GM-proposed HP change the player must confirm before it's applied — never
+ *  written automatically. See lib/mcp/agents/game-master.ts's flagHpChange tool. */
+export interface FlaggedHpChange {
+  characterId: string;
+  characterName: string;
+  delta: number;
+  newHp: number;
+  reason?: string;
+}
+
 export type MessageSource = 'typed' | 'discord_voice';
 
 export type AgentType =
@@ -44,6 +54,7 @@ export interface ChatMessage {
   source?: MessageSource; // how the message was input
   sceneMedia?: SceneMedia; // attached media if agent sent one
   flaggedNpcs?: FlaggedNpc[]; // NPCs the Game Master flagged for the player to confirm
+  flaggedHpChanges?: (FlaggedHpChange & { key: string })[]; // HP changes the player must confirm
   timestamp: Date;
 }
 

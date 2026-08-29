@@ -10,6 +10,7 @@ import { fetchPreviousEndedSessionSummary } from '@/lib/sessions/previous-summar
 import { searchCampaignPriorityContent } from '@/lib/rag/search-campaign-priority';
 import type { CampaignPriorityMatch } from '@/lib/rag/search-campaign-priority';
 import type { Npc, NpcKnownFact, FlaggedNpc, NpcDisposition } from '@/lib/types/npc';
+import type { FlaggedHpChange } from '@/lib/types/session';
 import { executeBuildEncounter } from '../tools/build-encounter';
 import type { BuildEncounterInput } from '../tools/build-encounter';
 import { executeUpdateLocation } from '../tools/update-location';
@@ -129,6 +130,58 @@ const FLAG_NPC_TOOL: Anthropic.Messages.Tool = {
 };
 
 // ---------------------------------------------------------------------------
+// flagHpChange Anthropic tool definition
+// ---------------------------------------------------------------------------
+
+const FLAG_HP_CHANGE_TOOL: Anthropic.Messages.Tool = {
+  name: 'flagHpChange',
+  description:
+    'Call this whenever your narration has a player character take damage or get healed, so ' +
+    'the player can confirm the change with one click instead of editing their own sheet by ' +
+    "hand. Give the signed amount, never a new total — negative for damage, positive for " +
+    "healing. This only proposes the change; you never edit a character's sheet yourself, and " +
+    'the change does not take effect until the player confirms it.',
+  input_schema: {
+    type: 'object' as const,
+    properties: {
+      character_name: {
+        type: 'string',
+        description: 'Exact name of the player character affected',
+      },
+      delta: {
+        type: 'integer',
+        description: 'Signed HP change: negative for damage, positive for healing',
+      },
+      reason: {
+        type: 'string',
+        description: 'Brief reason, e.g. "hit by the orc\'s axe" or "drank a potion of healing"',
+      },
+    },
+    required: ['character_name', 'delta'],
+  },
+};
+
+interface PartyCharacter {
+  id: string;
+  name: string;
+  hp: number | null;
+  max_hp: number | null;
+}
+
+async function fetchCampaignCharacters(campaignId: string): Promise<PartyCharacter[]> {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from('characters')
+      .select('id, name, hp, max_hp')
+      .eq('campaign_id', campaignId);
+    return (data as PartyCharacter[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Module / adventure description (Issue 3 — campaign context injection)
 // ---------------------------------------------------------------------------
 
@@ -214,6 +267,7 @@ function buildToolList(): Anthropic.Messages.Tool[] {
     BUILD_ENCOUNTER_TOOL,
     FLAG_NPC_TOOL,
     UPDATE_LOCATION_TOOL,
+    FLAG_HP_CHANGE_TOOL,
   ];
 }
 
@@ -366,6 +420,12 @@ function buildSystemPrompt(
     '  meaningfully interacted with, call the flagNpc tool with what you know about them.',
     '  Do not call it for throwaway background characters, and never for an NPC already',
     '  listed under "Established NPCs in this scene" below.',
+    '- Whenever your narration has a player character take damage or get healed, call the',
+    '  flagHpChange tool with their exact name and the signed HP delta (negative for damage,',
+    "  positive for healing) so the player can confirm it with one click. This doesn't change",
+    '  who decides the amount — you still narrate it exactly as you would otherwise — it only',
+    "  offers to apply the number for them. Never state a character's new HP total yourself;",
+    '  the confirmed change is what updates it.',
     '- When the party moves to a genuinely new area, call the updateLocation tool once with a',
     '  short label for where they now are, composed in your own words. Use its returned content',
     '  — confirmed map layout, module excerpts, or a generated location seed (terrain/features/',
@@ -498,7 +558,9 @@ async function executeToolBlock(
   mcpToolCalls: MCPToolCall[],
   mcpToolResults: MCPToolResult[],
   allNpcs: Npc[],
-  flaggedNpcs: FlaggedNpc[]
+  flaggedNpcs: FlaggedNpc[],
+  allCharacters: PartyCharacter[],
+  flaggedHpChanges: FlaggedHpChange[]
 ): Promise<Anthropic.Messages.ToolResultBlockParam> {
   if (block.name === 'buildEncounter') {
     const input = block.input as BuildEncounterInput;
@@ -591,6 +653,48 @@ async function executeToolBlock(
     };
   }
 
+  if (block.name === 'flagHpChange') {
+    const input = block.input as { character_name?: string; delta?: number; reason?: string };
+    const name = input.character_name?.trim();
+    const delta = typeof input.delta === 'number' ? Math.trunc(input.delta) : NaN;
+
+    if (!name || Number.isNaN(delta) || delta === 0) {
+      return {
+        type: 'tool_result',
+        tool_use_id: block.id,
+        content: 'Error: character_name and a non-zero integer delta are required',
+        is_error: true,
+      };
+    }
+
+    const character = allCharacters.find((c) => c.name.toLowerCase() === name.toLowerCase());
+    if (!character) {
+      return {
+        type: 'tool_result',
+        tool_use_id: block.id,
+        content: `Error: no character named "${name}" found in this campaign.`,
+        is_error: true,
+      };
+    }
+
+    let newHp = (character.hp ?? 0) + delta;
+    if (character.max_hp != null) newHp = Math.min(newHp, character.max_hp);
+
+    flaggedHpChanges.push({
+      characterId: character.id,
+      characterName: character.name,
+      delta,
+      newHp,
+      reason: input.reason?.trim() || undefined,
+    });
+
+    return {
+      type: 'tool_result',
+      tool_use_id: block.id,
+      content: 'Proposed — the player will be asked to confirm this HP change before it applies.',
+    };
+  }
+
   // MCP tool (roll-dice, etc.)
   const call: MCPToolCall = {
     name: block.name,
@@ -622,9 +726,10 @@ export async function* streamGameMasterAgent(
 
   const client = new Anthropic({ apiKey });
 
-  const [previousSummary, allNpcs, moduleDescription, moduleMatches] = await Promise.all([
+  const [previousSummary, allNpcs, allCharacters, moduleDescription, moduleMatches] = await Promise.all([
     fetchPreviousEndedSessionSummary(context.campaignId),
     fetchCampaignNpcs(context.campaignId),
+    fetchCampaignCharacters(context.campaignId),
     fetchModuleDescription(context.campaignId),
     searchCampaignPriorityContent(message, {
       campaignId: context.campaignId,
@@ -663,6 +768,7 @@ export async function* streamGameMasterAgent(
   const mcpToolCalls: MCPToolCall[] = [];
   const mcpToolResults: MCPToolResult[] = [];
   const flaggedNpcs: FlaggedNpc[] = [];
+  const flaggedHpChanges: FlaggedHpChange[] = [];
 
   while (true) {
     const stream = client.messages.stream({
@@ -690,7 +796,16 @@ export async function* streamGameMasterAgent(
 
     for (const block of toolUseBlocks) {
       toolResultBlocks.push(
-        await executeToolBlock(block, context, mcpToolCalls, mcpToolResults, allNpcs, flaggedNpcs)
+        await executeToolBlock(
+          block,
+          context,
+          mcpToolCalls,
+          mcpToolResults,
+          allNpcs,
+          flaggedNpcs,
+          allCharacters,
+          flaggedHpChanges
+        )
       );
     }
 
@@ -704,6 +819,7 @@ export async function* streamGameMasterAgent(
     toolCalls: mcpToolCalls.length > 0 ? mcpToolCalls : undefined,
     toolResults: mcpToolResults.length > 0 ? mcpToolResults : undefined,
     flaggedNpcs: flaggedNpcs.length > 0 ? flaggedNpcs : undefined,
+    flaggedHpChanges: flaggedHpChanges.length > 0 ? flaggedHpChanges : undefined,
     sceneMedia: await extractSceneMediaFromModuleMatches(moduleMatches, context),
   };
 }
@@ -723,9 +839,10 @@ export async function runGameMasterAgent(
 
   const client = new Anthropic({ apiKey });
 
-  const [previousSummary, allNpcs, moduleDescription, moduleMatches] = await Promise.all([
+  const [previousSummary, allNpcs, allCharacters, moduleDescription, moduleMatches] = await Promise.all([
     fetchPreviousEndedSessionSummary(context.campaignId),
     fetchCampaignNpcs(context.campaignId),
+    fetchCampaignCharacters(context.campaignId),
     fetchModuleDescription(context.campaignId),
     searchCampaignPriorityContent(message, {
       campaignId: context.campaignId,
@@ -763,6 +880,7 @@ export async function runGameMasterAgent(
   const mcpToolCalls: MCPToolCall[] = [];
   const mcpToolResults: MCPToolResult[] = [];
   const flaggedNpcs: FlaggedNpc[] = [];
+  const flaggedHpChanges: FlaggedHpChange[] = [];
 
   let response = await client.messages.create({
     model: MODEL,
@@ -780,7 +898,16 @@ export async function runGameMasterAgent(
 
     for (const block of toolUseBlocks) {
       toolResultBlocks.push(
-        await executeToolBlock(block, context, mcpToolCalls, mcpToolResults, allNpcs, flaggedNpcs)
+        await executeToolBlock(
+          block,
+          context,
+          mcpToolCalls,
+          mcpToolResults,
+          allNpcs,
+          flaggedNpcs,
+          allCharacters,
+          flaggedHpChanges
+        )
       );
     }
 
@@ -807,6 +934,7 @@ export async function runGameMasterAgent(
     toolCalls: mcpToolCalls.length > 0 ? mcpToolCalls : undefined,
     toolResults: mcpToolResults.length > 0 ? mcpToolResults : undefined,
     flaggedNpcs: flaggedNpcs.length > 0 ? flaggedNpcs : undefined,
+    flaggedHpChanges: flaggedHpChanges.length > 0 ? flaggedHpChanges : undefined,
     sceneMedia: await extractSceneMediaFromModuleMatches(moduleMatches, context),
   };
 }

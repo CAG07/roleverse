@@ -169,6 +169,11 @@ export async function POST(
             emit('npc_flag', { npc });
           }
         }
+        if (result.flaggedHpChanges?.length) {
+          for (const change of result.flaggedHpChanges) {
+            emit('hp_flag', { change });
+          }
+        }
         if (result.sceneMedia) {
           emit('scene_media', { media: result.sceneMedia });
         }
