@@ -17,6 +17,7 @@ interface SessionSidebarProps {
   sessionId: string;
   fontSize: number;
   onFontSizeChange: (size: number) => void;
+  aiAssistEnabled?: boolean;
   // onStopSession removed — sessions are stopped from campaign settings only
 }
 
@@ -51,6 +52,7 @@ export default function SessionSidebar({
   sessionId,
   fontSize,
   onFontSizeChange,
+  aiAssistEnabled = true,
 }: SessionSidebarProps) {
   return (
     <aside className={styles.sessionSidebar}>
@@ -97,7 +99,7 @@ export default function SessionSidebar({
           </CollapsibleSection>
         )}
 
-        <CollapsibleSection title="Oracle" defaultOpen={false}>
+        <CollapsibleSection title="Oracle" defaultOpen={!aiAssistEnabled}>
           <OraclePanel campaignId={campaignId} sessionId={sessionId} />
         </CollapsibleSection>
       </div>

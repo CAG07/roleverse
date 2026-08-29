@@ -10,12 +10,14 @@ import { streamRulesArbiterAgent } from '@/lib/mcp/agents/rules-arbiter';
 import { routeMessage } from '@/lib/mcp/coordinator';
 import { buildPartyContext } from '@/lib/mcp/context/party-context';
 import { registerRollDiceTool } from '@/lib/mcp/tools/roll-dice';
+import { registerRollComplicationTool } from '@/lib/mcp/tools/roll-complication';
 import type { AgentMessage, AgentStreamResult, MCPContext } from '@/lib/mcp/types';
 import { formatSSE } from '@/lib/sse';
 import { createClient } from '@/lib/supabase/server';
 
 // Register MCP tools on module load (runs once per cold start)
 registerRollDiceTool();
+registerRollComplicationTool();
 
 interface MessageRequestBody {
   message: string;
@@ -55,15 +57,19 @@ export async function POST(
     return NextResponse.json({ error: 'Session has ended' }, { status: 400 });
   }
 
-  // --- Look up campaign for gameSystem ---
+  // --- Look up campaign for gameSystem and AI Assist availability ---
   const { data: campaign, error: campaignError } = await supabase
     .from('campaigns')
-    .select('id, game_system')
+    .select('id, game_system, ai_assist_enabled')
     .eq('id', session.campaign_id)
     .single();
 
   if (campaignError || !campaign) {
     return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+  }
+
+  if (!campaign.ai_assist_enabled) {
+    return NextResponse.json({ error: 'AI Assist is disabled for this campaign' }, { status: 403 });
   }
 
   // --- Parse body ---
@@ -165,6 +171,11 @@ export async function POST(
         if (result.flaggedNpcs?.length) {
           for (const npc of result.flaggedNpcs) {
             emit('npc_flag', { npc });
+          }
+        }
+        if (result.flaggedHpChanges?.length) {
+          for (const change of result.flaggedHpChanges) {
+            emit('hp_flag', { change });
           }
         }
         if (result.sceneMedia) {

@@ -243,7 +243,7 @@ export default function BaseSheet({
             <span className={`${styles.combatValue} ${styles.hp}`}>
               <InlineNumberEditor
                 value={hp}
-                onSave={(newHp) => void updateCharacterHp(characterId, newHp)}
+                onSave={(newHp) => void updateCharacterHp(characterId, newHp).catch(() => {})}
                 ariaLabel="Current HP"
               />
               /{maxHp}
