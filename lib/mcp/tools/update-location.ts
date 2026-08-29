@@ -93,7 +93,7 @@ export async function executeUpdateLocation(
     .from('campaign_locations')
     .select('terrain, features, exit_count')
     .eq('campaign_id', context.campaignId)
-    .ilike('label', locationLabel)
+    .eq('label', locationLabel)
     .maybeSingle();
 
   if (existing) {
