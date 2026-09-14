@@ -15,9 +15,10 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "type-check": "tsc --noEmit",
-    "test": "echo \"Tests will be added in Phase 3\"",
-    "test:watch": "echo \"Tests will be added in Phase 3\"",
-    "test:coverage": "echo \"Tests will be added in Phase 3\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "check:css-modules": "tsx scripts/check-css-modules.ts",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",
@@ -74,6 +75,8 @@
     "tailwindcss": "^4.2.4",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.60.1"
+    "typescript-eslint": "^8.60.1",
+    "vitest": "^5.0.0",
+    "@vitest/coverage-v8": "^5.0.0"
   }
 }

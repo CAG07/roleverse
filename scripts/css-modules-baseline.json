@@ -1,0 +1,234 @@
+[
+  {
+    "file": "app/(app)/campaigns/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/campaigns/[id]/characters/new/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/campaigns/[id]/characters/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/campaigns/[id]/characters/[charId]/edit/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/campaigns/[id]/characters/[charId]/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/campaigns/[id]/edit/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/campaigns/[id]/npcs/new/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/campaigns/[id]/npcs/[npcId]/edit/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/campaigns/[id]/npcs/[npcId]/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/campaigns/[id]/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/campaigns/[id]/session/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/campaigns/[id]/sessions/page.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "app/(app)/campaigns/[id]/sessions/[sessionId]/page.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "app/(app)/campaigns/[id]/studio/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/dashboard/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/image-studio/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/layout.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/layout.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "app/(app)/loading.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/loading.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "app/(app)/workshop/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/layout.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/auth/SignInPage.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/campaign/CampaignDetailPage.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/campaign/CampaignFilesPanel.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/campaign/CampaignList.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/campaign/CampaignScenesPanel.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/campaign/GameSystemSelector.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/campaign/OracleRefsPanel.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/campaigns/CampaignsListPage.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/character/CharacterDetailPage.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/character/CharacterHeaderBanner.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/character/CharacterSheet.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/character/CharactersListPage.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/character/sheets/ADD1ESheet.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/character/sheets/ADD2ESheet.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/character/sheets/Cyberpunk2020Sheet.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/character/sheets/DND35ESheet.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/character/sheets/DND4ESheet.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/character/sheets/DND5ESheet.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/character/sheets/Fallout2D20Sheet.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/character/sheets/TOR2ESheet.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/icons/D20Icon.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/session/ChatWindow.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/session/FGConnectionStatus.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/session/PartyStatus.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/session/SceneDisplay.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/session/SessionPageClient.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/session/VoiceStatus.tsx",
+    "reason": "uses inline style={{ }}"
+  },
+  {
+    "file": "components/ui/avatar.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/ui/badge.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/ui/button.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/ui/card.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/ui/input.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/ui/label.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/ui/select.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "components/ui/textarea.tsx",
+    "reason": "missing sibling .module.css"
+  }
+]

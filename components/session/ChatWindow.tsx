@@ -16,6 +16,7 @@ import type { ChatMessage, SceneMedia, AgentType, TranscriptEntry, FlaggedHpChan
 import type { AgentMessage, AgentSceneMedia } from '@/lib/mcp/types';
 import type { FlaggedNpc } from '@/lib/types/npc';
 import { updateCharacterHp } from '@/lib/characters/character-updates';
+import { transcriptToMessages } from '@/lib/sessions/transcript-to-messages';
 
 // Agent color/label mapping — matches design spec
 const AGENT_CONFIG: Record<string, { accent: string; label: string }> = {
@@ -106,44 +107,6 @@ interface ChatWindowProps {
   sessionId: string;
   campaignId: string;
   initialTranscript?: TranscriptEntry[];
-}
-
-function transcriptToMessages(entries: TranscriptEntry[]): ChatMessage[] {
-  return entries.map((entry, i) => {
-    const parsedTimestamp = entry.timestamp ? new Date(entry.timestamp) : null;
-    const timestamp =
-      parsedTimestamp && !Number.isNaN(parsedTimestamp.getTime()) ? parsedTimestamp : new Date();
-    if (entry.role === 'player') {
-      return {
-        id: `hist-${i}`,
-        role: 'player' as const,
-        playerName: 'You',
-        content: entry.content ?? '',
-        source: 'typed' as const,
-        timestamp,
-      };
-    }
-    if (entry.role === 'oracle') {
-      return {
-        id: `hist-${i}`,
-        role: 'oracle' as const,
-        content: entry.content ?? '',
-        timestamp,
-      };
-    }
-    return {
-      id: `hist-${i}`,
-      role: 'agent' as const,
-      agentType:
-        entry.agentType === 'game_master' ||
-        entry.agentType === 'rules_arbiter' ||
-        entry.agentType === 'lore_keeper'
-          ? (entry.agentType as AgentType)
-          : undefined,
-      content: entry.content ?? '',
-      timestamp,
-    };
-  });
 }
 
 export default function ChatWindow({
