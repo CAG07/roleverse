@@ -21,39 +21,42 @@ CREATE TABLE IF NOT EXISTS public.message_rate_limits (
 
 ALTER TABLE public.message_rate_limits ENABLE ROW LEVEL SECURITY;
 
+-- SELECT only — lets a user see their own usage if ever surfaced in the UI.
+-- Deliberately NO client INSERT/UPDATE policy. Every write goes through the
+-- SECURITY DEFINER function below instead: a client-writable counter column
+-- (even one scoped to auth.uid() = user_id) would let a user PATCH their own
+-- message_count directly via PostgREST to reset or lower it, defeating the
+-- cap entirely — this closes that off completely rather than trying to
+-- constrain the value a WITH CHECK clause would allow.
 DROP POLICY IF EXISTS "Users can view own rate limit rows" ON public.message_rate_limits;
 CREATE POLICY "Users can view own rate limit rows"
   ON public.message_rate_limits FOR SELECT
   USING (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "Users can insert own rate limit rows" ON public.message_rate_limits;
-CREATE POLICY "Users can insert own rate limit rows"
-  ON public.message_rate_limits FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Users can update own rate limit rows" ON public.message_rate_limits;
-CREATE POLICY "Users can update own rate limit rows"
-  ON public.message_rate_limits FOR UPDATE
-  USING (auth.uid() = user_id);
-
--- Atomic increment-with-cap. Runs as invoker (no SECURITY DEFINER), same as
--- append_session_transcript, relying on the RLS policies above — p_user_id
--- must equal auth.uid() for the INSERT/UPDATE to succeed at all.
+-- Atomic increment-with-cap. SECURITY DEFINER so it can write despite there
+-- being no client INSERT/UPDATE policy — but a SECURITY DEFINER function is
+-- only as safe as what it trusts from the caller, so it takes NO arguments:
+-- the acting user comes from auth.uid() (never a caller-supplied user_id,
+-- which a malicious direct RPC call could otherwise point at someone else's
+-- row), and the cap is a hardcoded literal (never a caller-supplied p_cap,
+-- which could otherwise be inflated past what the server intends to allow).
+-- Keep this literal in sync with MESSAGE_DAILY_LIMIT
+-- (lib/sessions/rate-limit.ts, used for the user-facing message only) by
+-- hand — changing the cap means a new migration that CREATE OR REPLACEs
+-- this function with the new value, same as any other deployed migration.
 -- Returns the new count if the increment succeeded (i.e. was under cap),
 -- or NULL if the cap was already reached (no row returned/updated).
-CREATE OR REPLACE FUNCTION public.increment_message_rate_limit(
-  p_user_id UUID,
-  p_cap INTEGER
-)
+CREATE OR REPLACE FUNCTION public.increment_message_rate_limit()
 RETURNS INTEGER
 LANGUAGE SQL
+SECURITY DEFINER
 SET search_path = ''
 AS $$
   INSERT INTO public.message_rate_limits (user_id, day, message_count)
-  VALUES (p_user_id, CURRENT_DATE, 1)
+  VALUES (auth.uid(), CURRENT_DATE, 1)
   ON CONFLICT (user_id, day)
   DO UPDATE SET message_count = public.message_rate_limits.message_count + 1
-  WHERE public.message_rate_limits.message_count < p_cap
+  WHERE public.message_rate_limits.message_count < 75
   RETURNING message_count;
 $$;
 

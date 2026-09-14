@@ -45,10 +45,13 @@ export async function POST(
 
   // --- Enforce per-user daily message cap (fail open on RPC error — a DB
   // hiccup must never lock a real player out mid-session) ---
-  const { data: newRateCount, error: rateLimitError } = await supabase.rpc(
-    'increment_message_rate_limit',
-    { p_user_id: user.id, p_cap: MESSAGE_DAILY_LIMIT }
-  );
+  // No arguments: the RPC derives the acting user from auth.uid() and
+  // enforces a hardcoded cap server-side, in SQL — see
+  // supabase/migrations/20260913000000_message_rate_limits.sql for why
+  // neither is a caller-supplied parameter. MESSAGE_DAILY_LIMIT here is
+  // display text only; keep it in sync with that migration's literal by hand.
+  const { data: newRateCount, error: rateLimitError } =
+    await supabase.rpc('increment_message_rate_limit');
   if (rateLimitError) {
     console.warn('[rate-limit] RPC failed, failing open:', rateLimitError);
   } else if (newRateCount === null) {

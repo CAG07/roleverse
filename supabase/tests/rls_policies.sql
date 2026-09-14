@@ -18,7 +18,7 @@ SELECT is_empty(
   $$
     SELECT relname FROM pg_class
     WHERE relnamespace = 'public'::regnamespace
-      AND relkind = 'r'
+      AND relkind IN ('r', 'p')
       AND relrowsecurity = false
   $$,
   'No table in public schema has RLS disabled'

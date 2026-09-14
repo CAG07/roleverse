@@ -77,13 +77,18 @@ export async function updateSession(request: NextRequest) {
   // so an accepting user doesn't loop back into their own gate.
   const isWelcomeRoute = request.nextUrl.pathname === '/welcome';
   if (user && !isPublicRoute && !isWelcomeRoute) {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('tos_accepted_at')
       .eq('id', user.id)
-      .maybeSingle(); // no row yet is expected, not an error
+      .maybeSingle(); // no row yet is expected, not an error — profileError is
 
-    if (!profile || !profile.tos_accepted_at) {
+    if (profileError) {
+      // Fail open, same policy as the rate limiter: a transient DB/RLS
+      // failure must never trap every authenticated user behind /welcome,
+      // whose own accept-action hits this same database and would fail too.
+      console.warn('[tos-gate] profile lookup failed, failing open:', profileError);
+    } else if (!profile || !profile.tos_accepted_at) {
       const url = request.nextUrl.clone();
       url.pathname = '/welcome';
       return NextResponse.redirect(url);
