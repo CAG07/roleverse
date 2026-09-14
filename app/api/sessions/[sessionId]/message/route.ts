@@ -14,6 +14,8 @@ import { registerRollComplicationTool } from '@/lib/mcp/tools/roll-complication'
 import type { AgentMessage, AgentStreamResult, MCPContext } from '@/lib/mcp/types';
 import { formatSSE } from '@/lib/sse';
 import { createClient } from '@/lib/supabase/server';
+import { MESSAGE_DAILY_LIMIT } from '@/lib/sessions/rate-limit';
+import { buildTranscriptEntries } from '@/lib/sessions/build-transcript-entry';
 
 // Register MCP tools on module load (runs once per cold start)
 registerRollDiceTool();
@@ -39,6 +41,23 @@ export async function POST(
 
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // --- Enforce per-user daily message cap (fail open on RPC error — a DB
+  // hiccup must never lock a real player out mid-session) ---
+  const { data: newRateCount, error: rateLimitError } = await supabase.rpc(
+    'increment_message_rate_limit',
+    { p_user_id: user.id, p_cap: MESSAGE_DAILY_LIMIT }
+  );
+  if (rateLimitError) {
+    console.warn('[rate-limit] RPC failed, failing open:', rateLimitError);
+  } else if (newRateCount === null) {
+    return NextResponse.json(
+      {
+        error: `You've reached today's message limit (${MESSAGE_DAILY_LIMIT}). It resets at midnight UTC — thanks for your patience during the beta!`,
+      },
+      { status: 429 }
+    );
   }
 
   // --- Look up session (RLS enforces ownership) ---
@@ -190,10 +209,7 @@ export async function POST(
           const now = new Date().toISOString();
           const { error: transcriptError } = await supabase.rpc('append_session_transcript', {
             p_session_id: sessionId,
-            p_entries: [
-              { role: 'player', content: message, timestamp: now },
-              { role: 'agent', agentType: agentRole, content: fullContent, timestamp: now },
-            ],
+            p_entries: buildTranscriptEntries(message, agentRole, fullContent, now),
           });
           if (transcriptError) {
             console.warn('[transcript] Failed to save transcript entry:', transcriptError);
@@ -209,15 +225,7 @@ export async function POST(
           const now = new Date().toISOString();
           const { error: transcriptError } = await supabase.rpc('append_session_transcript', {
             p_session_id: sessionId,
-            p_entries: [
-              { role: 'player', content: message, timestamp: now },
-              {
-                role: 'agent',
-                agentType: agentRole,
-                content: fullContent + ' [truncated]',
-                timestamp: now,
-              },
-            ],
+            p_entries: buildTranscriptEntries(message, agentRole, fullContent + ' [truncated]', now),
           });
           if (transcriptError) {
             // already in error path — log only, don't let this mask the original error

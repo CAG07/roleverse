@@ -94,13 +94,6 @@ desktop/out
 desktop/build
 desktop/node_modules
 
-# Test files
-__tests__
-*.test.ts
-*.test.tsx
-*.spec.ts
-*.spec.tsx
-
 # Logs
 logs
 *.log

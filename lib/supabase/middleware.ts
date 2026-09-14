@@ -72,6 +72,24 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  // Terms of Service acceptance gate — authenticated + allowlisted users who
+  // haven't accepted are redirected to /welcome. /welcome itself is excluded
+  // so an accepting user doesn't loop back into their own gate.
+  const isWelcomeRoute = request.nextUrl.pathname === '/welcome';
+  if (user && !isPublicRoute && !isWelcomeRoute) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('tos_accepted_at')
+      .eq('id', user.id)
+      .maybeSingle(); // no row yet is expected, not an error
+
+    if (!profile || !profile.tos_accepted_at) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/welcome';
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Redirect to dashboard if already logged in and trying to access landing
   if (user && request.nextUrl.pathname === '/') {
     const url = request.nextUrl.clone();
