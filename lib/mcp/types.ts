@@ -2,6 +2,7 @@
 // Core MCP type system for tool definitions, agent messages, and context
 
 import type { FlaggedNpc } from '@/lib/types/npc';
+import type { FlaggedHpChange } from '@/lib/types/session';
 
 /** Tool definition — describes a tool agents can call */
 export interface MCPToolDefinition {
@@ -67,6 +68,7 @@ export interface AgentStreamResult {
   toolCalls?: MCPToolCall[];
   toolResults?: MCPToolResult[];
   flaggedNpcs?: FlaggedNpc[];
+  flaggedHpChanges?: FlaggedHpChange[];
   sceneMedia?: AgentSceneMedia;
 }
 
@@ -77,5 +79,6 @@ export interface AgentResponse {
   toolCalls?: MCPToolCall[]; // tools the agent invoked
   toolResults?: MCPToolResult[]; // results from those calls
   flaggedNpcs?: FlaggedNpc[]; // NPCs the game_master flagged for the player to confirm
+  flaggedHpChanges?: FlaggedHpChange[]; // HP changes the game_master flagged for the player to confirm
   sceneMedia?: AgentSceneMedia; // if agent wants to auto-attach media
 }

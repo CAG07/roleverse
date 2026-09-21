@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
 import { X } from 'lucide-react';
-import { listCampaignScenes, type SceneAsset } from '@/lib/campaigns/scene-assets';
+import { listCampaignScenes, uploadCampaignScene, type SceneAsset } from '@/lib/campaigns/scene-assets';
 import type { SceneMedia } from '@/lib/types/session';
 import styles from './ScenePickerModal.module.css';
 
@@ -16,7 +16,9 @@ interface ScenePickerModalProps {
 export default function ScenePickerModal({ open, campaignId, onClose, onSelect }: ScenePickerModalProps) {
   const [assets, setAssets] = useState<SceneAsset[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [listError, setListError] = useState('');
+  const [uploadError, setUploadError] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [prevOpen, setPrevOpen] = useState(open);
 
   // Reset to a fresh loading state whenever the modal transitions to open —
@@ -26,7 +28,8 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
     setPrevOpen(open);
     if (open) {
       setLoading(true);
-      setError('');
+      setListError('');
+      setUploadError('');
     }
   }
 
@@ -35,7 +38,7 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
     let cancelled = false;
     void listCampaignScenes(campaignId).then((result) => {
       if (cancelled) return;
-      if (result.error) setError(result.error);
+      if (result.error) setListError(result.error);
       setAssets(result.assets);
       setLoading(false);
     });
@@ -43,6 +46,25 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
       cancelled = true;
     };
   }, [open, campaignId]);
+
+  const handleUpload = useCallback(
+    async (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = '';
+      if (!file) return;
+
+      setUploadError('');
+      setUploading(true);
+      const { asset, error: uploadErr } = await uploadCampaignScene(campaignId, file);
+      if (uploadErr || !asset) {
+        setUploadError(uploadErr ?? 'Failed to upload file.');
+      } else {
+        setAssets((prev) => [...prev, asset]);
+      }
+      setUploading(false);
+    },
+    [campaignId]
+  );
 
   const handlePick = useCallback(
     (asset: SceneAsset) => {
@@ -77,10 +99,25 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
           </button>
         </div>
 
+        <div className={styles.uploadRow}>
+          <input
+            type="file"
+            accept="image/*"
+            id="scenePickerUpload"
+            className={styles.fileInput}
+            onChange={(e) => void handleUpload(e)}
+            disabled={uploading}
+          />
+          <label htmlFor="scenePickerUpload" className={styles.btnUpload} aria-disabled={uploading}>
+            {uploading ? 'Uploading…' : '+ Upload New Photo'}
+          </label>
+        </div>
+        {uploadError && <p className={styles.errorMsg}>{uploadError}</p>}
+
         {loading ? (
           <p className={styles.placeholder}>Loading…</p>
-        ) : error ? (
-          <p className={styles.errorMsg}>{error}</p>
+        ) : listError ? (
+          <p className={styles.errorMsg}>{listError}</p>
         ) : assets.length > 0 ? (
           <div className={styles.assetGrid}>
             {assets.map((a) => (

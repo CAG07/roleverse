@@ -115,6 +115,23 @@
   color: var(--crimson-bright);
 }
 
+.tableRow {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: center;
+  overflow-x: auto;
+}
+
+.tableHeaderCell {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+}
+
 .addBtn {
   font-family: var(--font-heading);
   font-size: 0.65rem;

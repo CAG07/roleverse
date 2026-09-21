@@ -31,7 +31,8 @@ jobs:
       - name: ESLint
         run: npx eslint . --max-warnings 0
 
-
+      - name: CSS Modules convention
+        run: npm run check:css-modules
 
   typecheck:
     name: TypeScript

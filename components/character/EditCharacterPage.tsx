@@ -6,6 +6,7 @@ import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { GeneratingIndicator } from '@/components/ui/GeneratingIndicator';
 import SystemFields, { buildCharacterColumns, hydrateSystemFieldsValue } from './SystemFields';
 import type { SystemFieldsValue } from './SystemFields';
 
@@ -65,6 +66,65 @@ export function EditCharacterPage({
   );
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fillInHint, setFillInHint] = useState('');
+  const [fillingIn, setFillingIn] = useState(false);
+  const [fillInError, setFillInError] = useState('');
+
+  const handleFillIn = async () => {
+    setFillInError('');
+    setFillingIn(true);
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}/characters/${characterId}/fill-in`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hint: fillInHint,
+          existing: {
+            name,
+            race,
+            class: characterClass,
+            level: parseInt(level, 10) || 0,
+            hp: parseInt(hp, 10) || 0,
+            maxHp: parseInt(maxHp, 10) || 0,
+            notes,
+            abilityScores: systemFields.abilityScores,
+            fields: systemFields.fields,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFillInError(data.error ?? 'AI fill-in failed.');
+        return;
+      }
+      const character = data.character as {
+        name: string;
+        race: string;
+        class: string;
+        level: number;
+        hp: number;
+        maxHp: number;
+        notes: string;
+        systemFields: { abilityScores: Record<string, string>; fields: SystemFieldsValue['fields'] };
+      };
+      setName(character.name);
+      setRace(character.race);
+      setCharacterClass(character.class);
+      setLevel(String(character.level));
+      setHp(String(character.hp));
+      setMaxHp(String(character.maxHp));
+      setNotes(character.notes);
+      setSystemFields((prev) => ({
+        ...prev,
+        abilityScores: character.systemFields.abilityScores,
+        fields: character.systemFields.fields,
+      }));
+    } catch {
+      setFillInError('AI fill-in failed. Please try again or fill in the remaining fields manually.');
+    } finally {
+      setFillingIn(false);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -98,8 +158,8 @@ export function EditCharacterPage({
       const supabase = createClient();
 
       // Fetch the latest raw columns before merging, so an edit made from a form that
-      // only knows today's schema keys doesn't clobber keys it isn't aware of (e.g. a
-      // future Fantasy Grounds-synced field living in the same JSONB column).
+      // only knows today's schema keys doesn't clobber keys another concurrent write
+      // (another tab, a future feature) added to the same JSONB column.
       const { data: current, error: fetchError } = await supabase
         .from('characters')
         .select('game_data_stats, game_data_combat, game_data_saves, game_data_skills')
@@ -160,6 +220,33 @@ export function EditCharacterPage({
 
       <h1 className={styles.pageTitle}>Edit Character</h1>
       <p className={styles.subtitle}>{campaignName}</p>
+
+      <div className={styles.generateCard}>
+        <p className={styles.formCardTitle}>AI Fill In Missing Fields</p>
+        <div className={styles.formRow}>
+          <input
+            className={styles.formInput}
+            value={fillInHint}
+            onChange={(e) => setFillInHint(e.target.value)}
+            placeholder="Optional guidance, e.g. focus on backstory and personality"
+            disabled={fillingIn}
+          />
+          <button
+            type="button"
+            className={styles.btnSubmit}
+            onClick={() => void handleFillIn()}
+            disabled={fillingIn}
+          >
+            {fillingIn ? 'Filling In…' : 'Fill In Missing Fields'}
+          </button>
+        </div>
+        <p className={styles.hint}>
+          Invents values only for blank fields below — anything already filled in is left exactly
+          as-is. Review the results before saving.
+        </p>
+        {fillingIn && <GeneratingIndicator label="Completing this character — this can take up to 30 seconds." />}
+        {fillInError && <p className={styles.errorMsg}>{fillInError}</p>}
+      </div>
 
       <div className={styles.formCard}>
         <p className={styles.formCardTitle}>Character Details</p>

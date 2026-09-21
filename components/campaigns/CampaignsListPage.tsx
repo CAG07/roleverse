@@ -78,6 +78,8 @@ export function CampaignsListPage({ campaigns }: CampaignsListPageProps) {
                     src={campaign.cover_image_url}
                     alt=""
                     className={styles.cardThumbImg}
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <ImageIcon className={styles.cardThumbPlaceholder} />

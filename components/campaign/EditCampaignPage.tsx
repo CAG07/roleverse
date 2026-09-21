@@ -6,16 +6,15 @@ import type { ChangeEvent, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Image as ImageIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { getAllGameSystems } from '@/lib/game-systems/registry';
-import { resizeImageToSquare } from '@/lib/images/resize-to-square';
+import { getGameSystem } from '@/lib/game-systems/registry';
+import { resizeCoverImage } from '@/lib/images/resize-cover-image';
 
 const COVER_IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5MB source-file cap
-const COVER_IMAGE_TARGET_PX = 1024;
+const COVER_IMAGE_MAX_DIMENSION_PX = 1024;
 
 interface EditCampaignPageProps {
   id: string;
   initialName: string;
-  initialDescription: string;
   initialModuleDescription: string;
   initialGameSystem: string;
   initialCoverImageUrl: string | null;
@@ -24,23 +23,20 @@ interface EditCampaignPageProps {
 export function EditCampaignPage({
   id,
   initialName,
-  initialDescription,
   initialModuleDescription,
   initialGameSystem,
   initialCoverImageUrl,
 }: EditCampaignPageProps) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
-  const [description, setDescription] = useState(initialDescription);
   const [moduleDescription, setModuleDescription] = useState(initialModuleDescription);
-  const [gameSystem, setGameSystem] = useState(initialGameSystem);
   const [coverImageUrl, setCoverImageUrl] = useState(initialCoverImageUrl);
   const [coverImageUploading, setCoverImageUploading] = useState(false);
   const [coverImageError, setCoverImageError] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const systems = getAllGameSystems();
+  const gameSystem = getGameSystem(initialGameSystem);
 
   const handleCoverImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -62,7 +58,7 @@ export function EditCampaignPage({
       } = await supabase.auth.getUser();
       if (!user) throw new Error('Not signed in');
 
-      const resized = await resizeImageToSquare(file, COVER_IMAGE_TARGET_PX);
+      const resized = await resizeCoverImage(file, COVER_IMAGE_MAX_DIMENSION_PX);
       const path = `${user.id}/${id}/cover.jpg`;
 
       const { error: uploadError } = await supabase.storage
@@ -90,10 +86,6 @@ export function EditCampaignPage({
       setError('Campaign name is required.');
       return;
     }
-    if (!gameSystem) {
-      setError('Please select a game system.');
-      return;
-    }
 
     setLoading(true);
 
@@ -103,9 +95,7 @@ export function EditCampaignPage({
         .from('campaigns')
         .update({
           name: name.trim(),
-          description: description.trim() || null,
           module_description: moduleDescription.trim() || null,
-          game_system: gameSystem,
           cover_image_url: coverImageUrl,
         })
         .eq('id', id);
@@ -167,7 +157,7 @@ export function EditCampaignPage({
                     Remove
                   </button>
                 )}
-                <p className={styles.formHint}>JPG or PNG, up to 5MB. Cropped to a square.</p>
+                <p className={styles.formHint}>JPG or PNG, up to 5MB. Full cover shown, not cropped.</p>
                 {coverImageError && <p className={styles.errorMsg}>{coverImageError}</p>}
               </div>
             </div>
@@ -183,19 +173,6 @@ export function EditCampaignPage({
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="description" className={styles.formLabel}>
-              Description
-            </label>
-            <textarea
-              id="description"
-              className={styles.formTextarea}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
             />
           </div>
 
@@ -217,24 +194,15 @@ export function EditCampaignPage({
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Game System *</label>
-            <div className={styles.systemGrid}>
-              {systems.map((system) => (
-                <button
-                  key={system.id}
-                  type="button"
-                  className={`${styles.systemOption}${gameSystem === system.id ? ` ${styles.selected}` : ''}`}
-                  onClick={() => setGameSystem(system.id)}
-                >
-                  <span className={`${styles.corner} ${styles.tl}`} />
-                  <span className={`${styles.corner} ${styles.tr}`} />
-                  <span className={`${styles.corner} ${styles.bl}`} />
-                  <span className={`${styles.corner} ${styles.br}`} />
-                  <p className={styles.systemName}>{system.name}</p>
-                  <p className={styles.systemDescription}>{system.description}</p>
-                </button>
-              ))}
+            <label className={styles.formLabel}>Game System</label>
+            <div className={styles.systemLocked}>
+              <p className={styles.systemName}>{gameSystem?.name ?? initialGameSystem}</p>
+              {gameSystem && <p className={styles.systemDescription}>{gameSystem.description}</p>}
             </div>
+            <p className={styles.formHint}>
+              The game system is locked once a campaign is created and can&apos;t be changed.
+              Start a new campaign to play a different system.
+            </p>
           </div>
 
           {error && <p className={styles.errorMsg}>{error}</p>}

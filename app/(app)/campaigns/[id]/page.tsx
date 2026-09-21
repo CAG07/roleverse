@@ -71,10 +71,12 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       moduleDescription={campaign.module_description as string | null}
       systemName={systemName}
       systemDescription={systemDescription}
+      gameSystem={campaign.game_system as string}
       characters={characters ?? []}
       activeSession={activeSession ?? null}
       recentSessions={recentSessions ?? []}
       sessionCount={sessionCount ?? 0}
+      aiAssistEnabled={(campaign.ai_assist_enabled as boolean | null) ?? true}
     />
   );
 }

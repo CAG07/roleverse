@@ -6,9 +6,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { getGameSystem } from '@/lib/game-systems/registry';
 import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
+import { buildFantasyGroundsExport } from '@/lib/character/export/fantasy-grounds';
+import { buildPlainTextSheet } from '@/lib/character/export/plain-text';
+import { downloadFile, slugify } from '@/lib/export/download-file';
 import CharacterSheet from './CharacterSheet';
+import CharacterHeaderBanner from './CharacterHeaderBanner';
 
 interface DCCFunnelMember {
   id: string;
@@ -44,6 +47,11 @@ interface CharacterDetailPageProps {
   campaignName: string;
   character: CharacterDetail;
   funnelParty?: DCCFunnelMember[];
+  /** Where the back link goes — context-aware based on how this page was reached
+   *  (campaign party list vs. the Characters list page). Defaults preserve the
+   *  original "always Characters list" behavior for any caller that doesn't pass it. */
+  backHref?: string;
+  backLabel?: string;
 }
 
 export function CharacterDetailPage({
@@ -51,16 +59,13 @@ export function CharacterDetailPage({
   campaignName,
   character,
   funnelParty,
+  backHref,
+  backLabel,
 }: CharacterDetailPageProps) {
   const router = useRouter();
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  const hpPct =
-    character.hp != null && character.max_hp != null && character.max_hp > 0
-      ? Math.min(100, Math.max(0, (character.hp / character.max_hp) * 100))
-      : 0;
 
   const metaParts = [
     character.race,
@@ -69,6 +74,23 @@ export function CharacterDetailPage({
   ].filter(Boolean);
 
   const sheetData = assembleCharacterData(character);
+  const exportable = buildFantasyGroundsExport(character.game_system, sheetData, character.equipment ?? []);
+  const plainText = buildPlainTextSheet(character.game_system, sheetData, character.equipment ?? []);
+
+  const handleExport = () => {
+    if (!exportable) return;
+    downloadFile(exportable.content, exportable.filename, exportable.mimeType);
+  };
+
+  const handleExportText = () => {
+    if (!plainText) return;
+    const slug = slugify(character.name || 'character', 'character');
+    downloadFile(plainText, `${slug}.txt`, 'text/plain');
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -96,39 +118,19 @@ export function CharacterDetailPage({
         onCancel={() => setConfirmDelete(false)}
       />
 
-      <Link href={`/campaigns/${campaignId}/characters`} className={styles.backLink}>
-        ← Back to Characters
+      <Link href={backHref ?? `/campaigns/${campaignId}/characters`} className={styles.backLink}>
+        ← {backLabel ?? 'Back to Characters'}
       </Link>
 
-      <div className={styles.headerCard}>
-        <span className={`${styles.corner} ${styles.tl}`} />
-        <span className={`${styles.corner} ${styles.tr}`} />
-        <span className={`${styles.corner} ${styles.bl}`} />
-        <span className={`${styles.corner} ${styles.br}`} />
+      <CharacterHeaderBanner
+        name={character.name}
+        gameSystem={character.game_system}
+        metaParts={metaParts}
+        hp={character.hp}
+        maxHp={character.max_hp}
+      />
 
-        <div className={styles.headerTop}>
-          <h1 className={styles.charName}>{character.name}</h1>
-          <span className={styles.systemBadge}>
-            {getGameSystem(character.game_system)?.name ?? character.game_system}
-          </span>
-        </div>
-
-        {metaParts.length > 0 && <p className={styles.charMeta}>{metaParts.join(' · ')}</p>}
-
-        {character.hp != null && character.max_hp != null && (
-          <div className={styles.hpSection}>
-            <div className={styles.hpLabel}>
-              <span>HP</span>
-              <span className={styles.hpNumbers}>
-                {character.hp} / {character.max_hp}
-              </span>
-            </div>
-            <div className={styles.hpTrack}>
-              <div className={styles.hpFill} style={{ width: `${hpPct}%` }} />
-            </div>
-          </div>
-        )}
-
+      <div className={styles.actionsSection}>
         <div className={styles.actions}>
           <Link
             href={`/campaigns/${campaignId}/characters/${character.id}/edit`}
@@ -138,6 +140,19 @@ export function CharacterDetailPage({
           </Link>
           <button type="button" className={styles.btnDelete} onClick={() => setConfirmDelete(true)}>
             ✕ Delete
+          </button>
+          {exportable && (
+            <button type="button" className={styles.btnExport} onClick={handleExport}>
+              ⇩ Export to Fantasy Grounds
+            </button>
+          )}
+          {plainText && (
+            <button type="button" className={styles.btnExport} onClick={handleExportText}>
+              ⇩ Export as Text
+            </button>
+          )}
+          <button type="button" className={styles.btnExport} onClick={handlePrint}>
+            🖶 Print / Save as PDF
           </button>
         </div>
         {deleteError && <p className={styles.deleteError}>{deleteError}</p>}

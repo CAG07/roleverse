@@ -8,7 +8,6 @@ Everything you need to get started with RoleVerse and begin your AI-powered tabl
 
 - [What You Need](#what-you-need)
 - [1. Sign In to RoleVerse](#1-sign-in-to-roleverse)
-- [2. Set Up Fantasy Grounds (Virtual Tabletop)](#2-set-up-fantasy-grounds-virtual-tabletop)
 - [Using RoleVerse](#using-roleverse)
 - [Supported Game Systems](#supported-game-systems)
 - [Troubleshooting](#troubleshooting)
@@ -17,13 +16,12 @@ Everything you need to get started with RoleVerse and begin your AI-powered tabl
 
 ## What You Need
 
-RoleVerse is a web app — there's nothing to install for the core experience. Fantasy Grounds integration requires the FG desktop app and a one-time sync setup.
+RoleVerse is a web app — there's nothing to install. Combat and DM actions are handled in-app; Fantasy Grounds is not required.
 
 | What | Why | Required? |
 |------|-----|-----------|
 | **A Google account** | To sign in to RoleVerse | Yes |
 | **A modern web browser** | Chrome, Firefox, Edge, or Safari | Yes |
-| **Fantasy Grounds Unity** | Virtual tabletop integration (characters, combat, maps) | Optional |
 
 ---
 
@@ -35,22 +33,6 @@ RoleVerse is a web app — there's nothing to install for the core experience. F
 4. You'll be taken to your **Dashboard** — that's it, you're in!
 
 > **Tip:** RoleVerse uses your Google account for sign-in. No separate password to remember.
-
----
-
-## 2. Set Up Fantasy Grounds (Virtual Tabletop)
-
-Fantasy Grounds Unity is a virtual tabletop application. When connected to RoleVerse, your characters, combat state, dice rolls, and battle maps sync automatically to the web app.
-
-### If you don't have Fantasy Grounds yet:
-
-1. Go to [fantasygrounds.com](https://www.fantasygrounds.com).
-2. Purchase and download **Fantasy Grounds Unity**.
-3. Install and launch it.
-
-### Connecting Fantasy Grounds to RoleVerse
-
-The Fantasy Grounds desktop sync is complete. A step-by-step setup guide for the desktop sync agent is coming soon.
 
 ---
 
@@ -76,7 +58,7 @@ After creating a campaign, you'll see its overview page with:
 
 From a campaign's overview page, click **Start Session** to enter the session view:
 
-- **Left sidebar** — Session notes, party status, and Fantasy Grounds connection status.
+- **Left sidebar** — Session notes and party status.
 - **Center** — Chat window for AI game narrative and scene display.
 - **Right** — Character sheet panel (changes based on your game system).
 

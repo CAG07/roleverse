@@ -27,8 +27,6 @@ export interface GameSystem {
   characterSchema: Record<string, unknown>;
   /** System prompt snippet for AI agents to enforce rules */
   rulesPrompt: string;
-  /** Fantasy Grounds ruleset identifier for bridge mapping */
-  fgRulesetId: string;
   /** Whether this system is available for new campaign creation */
   supported: boolean;
   /** RAG ingestion source configuration */

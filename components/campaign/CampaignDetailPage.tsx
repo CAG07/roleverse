@@ -8,6 +8,8 @@ import { createClient } from '@/lib/supabase/client';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import CampaignFilesPanel from './CampaignFilesPanel';
 import CampaignScenesPanel from './CampaignScenesPanel';
+import OracleRefsPanel from './OracleRefsPanel';
+import CsvExportPanel from './CsvExportPanel';
 import type { TranscriptEntry } from '@/lib/types/session';
 
 export interface CampaignCharacter {
@@ -34,10 +36,12 @@ interface CampaignDetailPageProps {
   moduleDescription: string | null;
   systemName: string;
   systemDescription: string;
+  gameSystem: string;
   characters: CampaignCharacter[];
   activeSession: { id: string } | null;
   recentSessions: CampaignSession[];
   sessionCount: number;
+  aiAssistEnabled: boolean;
 }
 
 function pluralize(value: number, unit: string): string {
@@ -88,10 +92,12 @@ export function CampaignDetailPage({
   moduleDescription,
   systemName,
   systemDescription,
+  gameSystem,
   characters,
   activeSession,
   recentSessions,
   sessionCount,
+  aiAssistEnabled,
 }: CampaignDetailPageProps) {
   const router = useRouter();
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -104,6 +110,26 @@ export function CampaignDetailPage({
   const [savedModuleDescription, setSavedModuleDescription] = useState(moduleDescription);
   const [savingModule, setSavingModule] = useState(false);
   const [moduleError, setModuleError] = useState<string | null>(null);
+  const [aiAssist, setAiAssist] = useState(aiAssistEnabled);
+  const [savingAiAssist, setSavingAiAssist] = useState(false);
+  const [aiAssistError, setAiAssistError] = useState<string | null>(null);
+
+  const handleSetAiAssist = async (next: boolean) => {
+    if (next === aiAssist || savingAiAssist) return;
+    setSavingAiAssist(true);
+    setAiAssistError(null);
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('campaigns')
+      .update({ ai_assist_enabled: next })
+      .eq('id', id);
+    if (error) {
+      setAiAssistError(error.message);
+    } else {
+      setAiAssist(next);
+    }
+    setSavingAiAssist(false);
+  };
 
   const handleSaveModuleDescription = async () => {
     setSavingModule(true);
@@ -275,6 +301,74 @@ export function CampaignDetailPage({
             Browse all sessions, transcripts, and AI summaries.
           </p>
         </Link>
+        <Link href={`/campaigns/${id}/studio`} className={styles.actionCard}>
+          <h3 className={styles.actionCardTitle}>Studio</h3>
+          <p className={styles.actionCardBody}>
+            Browse this campaign&apos;s images and videos in one place.
+          </p>
+        </Link>
+      </div>
+
+      <div className={styles.moduleSection}>
+        <div className={styles.moduleSectionHeader}>
+          <span className={styles.moduleSectionLabel}>Module &amp; Campaign Info</span>
+          {!editingModule && (
+            <button
+              type="button"
+              className={styles.btnModuleEdit}
+              onClick={() => {
+                setModuleDraft(savedModuleDescription ?? '');
+                setModuleError(null);
+                setEditingModule(true);
+              }}
+            >
+              {savedModuleDescription ? 'Edit' : '+ Add'}
+            </button>
+          )}
+        </div>
+
+        {editingModule ? (
+          <div className={styles.moduleEditForm}>
+            <p className={styles.moduleHint}>
+              What module or setting are you running? Note any supplements, player kits, or
+              house rules the GM should know about.
+            </p>
+            <textarea
+              className={styles.moduleTextarea}
+              value={moduleDraft}
+              onChange={(e) => setModuleDraft(e.target.value)}
+              placeholder="e.g., Palace of the Silver Princess (B3), using Tasha's expanded options, no multiclassing — or describe your homebrew adventure and house rules"
+              rows={4}
+              disabled={savingModule}
+            />
+            {moduleError && <p className={styles.deleteError}>{moduleError}</p>}
+            <div className={styles.moduleEditActions}>
+              <button
+                type="button"
+                className={styles.btnModuleSave}
+                onClick={() => void handleSaveModuleDescription()}
+                disabled={savingModule}
+              >
+                {savingModule ? 'Saving…' : 'Save'}
+              </button>
+              <button
+                type="button"
+                className={styles.btnCancel}
+                onClick={() => setEditingModule(false)}
+                disabled={savingModule}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : savedModuleDescription ? (
+          <p className={styles.moduleText}>{savedModuleDescription}</p>
+        ) : (
+          <p className={styles.moduleTextPlaceholder}>
+            No module or campaign info set yet — the GM will ask you to describe your adventure
+            as you play.
+          </p>
+        )}
       </div>
 
       <div className={styles.sectionLabel}>
@@ -287,74 +381,12 @@ export function CampaignDetailPage({
         <div className={styles.infoPanel}>
           <h3 className={styles.infoPanelTitle}>Party Members</h3>
 
-          <div className={styles.moduleSection}>
-            <div className={styles.moduleSectionHeader}>
-              <span className={styles.moduleSectionLabel}>Module &amp; Campaign Info</span>
-              {!editingModule && (
-                <button
-                  type="button"
-                  className={styles.btnModuleEdit}
-                  onClick={() => {
-                    setModuleDraft(savedModuleDescription ?? '');
-                    setModuleError(null);
-                    setEditingModule(true);
-                  }}
-                >
-                  {savedModuleDescription ? 'Edit' : '+ Add'}
-                </button>
-              )}
-            </div>
-
-            {editingModule ? (
-              <div className={styles.moduleEditForm}>
-                <p className={styles.moduleHint}>
-                  What module or setting are you running? Note any supplements, player kits, or
-                  house rules the GM should know about.
-                </p>
-                <textarea
-                  className={styles.moduleTextarea}
-                  value={moduleDraft}
-                  onChange={(e) => setModuleDraft(e.target.value)}
-                  placeholder="e.g., Palace of the Silver Princess (B3), using Tasha's expanded options, no multiclassing — or describe your homebrew adventure and house rules"
-                  rows={4}
-                  disabled={savingModule}
-                />
-                {moduleError && <p className={styles.deleteError}>{moduleError}</p>}
-                <div className={styles.moduleEditActions}>
-                  <button
-                    type="button"
-                    className={styles.btnModuleSave}
-                    onClick={() => void handleSaveModuleDescription()}
-                    disabled={savingModule}
-                  >
-                    {savingModule ? 'Saving…' : 'Save'}
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.btnCancel}
-                    onClick={() => setEditingModule(false)}
-                    disabled={savingModule}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : savedModuleDescription ? (
-              <p className={styles.moduleText}>{savedModuleDescription}</p>
-            ) : (
-              <p className={styles.moduleTextPlaceholder}>
-                No module or campaign info set yet — the GM will ask you to describe your adventure
-                as you play.
-              </p>
-            )}
-          </div>
-
           {characters.length > 0 ? (
             <div className={styles.characterList}>
               {characters.map((char) => (
                 <Link
                   key={char.id}
-                  href={`/campaigns/${id}/characters/${char.id}`}
+                  href={`/campaigns/${id}/characters/${char.id}?from=campaign`}
                   className={styles.characterCard}
                 >
                   <div className={styles.characterName}>{char.name}</div>
@@ -437,8 +469,43 @@ export function CampaignDetailPage({
         {/* Modules & Files */}
         <CampaignFilesPanel campaignId={id} />
 
+        {/* AI Assist toggle — off runs the session as a freeform journal instead of an AI chat */}
+        <div className={styles.infoPanel}>
+          <h3 className={styles.infoPanelTitle}>AI Assist</h3>
+          <p className={styles.aiAssistHint}>
+            On: play against the AI Game Master in chat, as usual. Off: the session screen
+            shows a plain journal instead — no AI chat window at all. The Oracle and your
+            character sheet stay available either way.
+          </p>
+          <div className={styles.aiAssistToggleRow}>
+            <button
+              type="button"
+              className={`${styles.aiAssistToggleBtn}${aiAssist ? ` ${styles.aiAssistToggleBtnActive}` : ''}`}
+              onClick={() => void handleSetAiAssist(true)}
+              disabled={savingAiAssist}
+            >
+              On
+            </button>
+            <button
+              type="button"
+              className={`${styles.aiAssistToggleBtn}${!aiAssist ? ` ${styles.aiAssistToggleBtnActive}` : ''}`}
+              onClick={() => void handleSetAiAssist(false)}
+              disabled={savingAiAssist}
+            >
+              Off
+            </button>
+          </div>
+          {aiAssistError && <p className={styles.deleteError}>{aiAssistError}</p>}
+        </div>
+
+        {/* Oracle References (solo-play "bring your own oracle") */}
+        <OracleRefsPanel campaignId={id} />
+
         {/* Scene Library */}
         <CampaignScenesPanel campaignId={id} />
+
+        {/* Kanka-compatible CSV export */}
+        <CsvExportPanel campaignId={id} campaignName={name} gameSystem={gameSystem} />
       </div>
     </div>
   );

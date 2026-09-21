@@ -25,7 +25,8 @@ export function tailExcerpt(entries: TranscriptEntryLike[], maxChars: number): s
     const entry = entries[i];
     if (!entry?.content) continue;
 
-    const prefix = entry.role === 'player' ? 'Player:' : `${entry.agentType ?? 'Agent'}:`;
+    const prefix =
+      entry.role === 'player' ? 'Player:' : entry.role === 'oracle' ? 'Oracle:' : `${entry.agentType ?? 'Agent'}:`;
     const line = `${prefix} ${entry.content}`;
     // Account for the "\n\n" separator that join() will add between lines.
     const separatorCost = lines.length > 0 ? 2 : 0;

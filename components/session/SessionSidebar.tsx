@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { getGameSystem } from '@/lib/game-systems/registry';
 import FGConnectionStatus from './FGConnectionStatus';
 import VoiceStatus from './VoiceStatus';
+import OraclePanel from './OraclePanel';
 import styles from './SessionSidebar.module.css';
 
 interface SessionSidebarProps {
@@ -13,8 +14,10 @@ interface SessionSidebarProps {
   gameSystem: string;
   isDM?: boolean;
   campaignId: string;
+  sessionId: string;
   fontSize: number;
   onFontSizeChange: (size: number) => void;
+  aiAssistEnabled?: boolean;
   // onStopSession removed — sessions are stopped from campaign settings only
 }
 
@@ -46,8 +49,10 @@ export default function SessionSidebar({
   gameSystem,
   isDM = false,
   campaignId,
+  sessionId,
   fontSize,
   onFontSizeChange,
+  aiAssistEnabled = true,
 }: SessionSidebarProps) {
   return (
     <aside className={styles.sessionSidebar}>
@@ -93,6 +98,10 @@ export default function SessionSidebar({
             </a>
           </CollapsibleSection>
         )}
+
+        <CollapsibleSection title="Oracle" defaultOpen={!aiAssistEnabled}>
+          <OraclePanel campaignId={campaignId} sessionId={sessionId} />
+        </CollapsibleSection>
       </div>
 
       {/* Status indicators */}

@@ -31,8 +31,8 @@ export function SignInPage() {
 
       <footer className={styles.signInFooter}>
         <p>
-          Supports AD&amp;D 1E/2E &bull; D&amp;D 3.5/4E/5E &bull; Pathfinder &bull; DCC &bull; The
-          One Ring &bull; Cyberpunk 2020
+          Supports AD&amp;D 1E/2E &bull; D&amp;D 3.5/4E/5E &bull; Pathfinder 2E &bull; DCC &bull; The
+          One Ring 2E &bull; Cyberpunk 2020 &bull; Fallout 2d20
         </p>
       </footer>
     </main>

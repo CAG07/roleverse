@@ -2,6 +2,7 @@
 
 import { X } from 'lucide-react';
 import CharacterSheet from './CharacterSheet';
+import CharacterHeaderBanner from './CharacterHeaderBanner';
 import styles from './CharacterSheetModal.module.css';
 
 interface DCCFunnelMember {
@@ -35,6 +36,12 @@ export default function CharacterSheetModal({
 }: CharacterSheetModalProps) {
   if (!open) return null;
 
+  const metaParts = [
+    characterData.race as string | undefined,
+    characterData.class as string | undefined,
+    characterData.level != null ? `Level ${characterData.level}` : null,
+  ];
+
   return (
     <div className={styles.overlay} role="presentation" onClick={onClose}>
       <div
@@ -59,6 +66,13 @@ export default function CharacterSheetModal({
         </button>
 
         <div className={styles.scrollArea}>
+          <CharacterHeaderBanner
+            name={(characterData.name as string) ?? 'Unknown'}
+            gameSystem={gameSystem}
+            metaParts={metaParts}
+            hp={characterData.hp as number | undefined}
+            maxHp={characterData.maxHp as number | undefined}
+          />
           <CharacterSheet
             characterId={characterId}
             gameSystem={gameSystem}

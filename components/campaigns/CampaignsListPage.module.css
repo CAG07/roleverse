@@ -12,10 +12,14 @@
  * Do NOT convert this file back to styled-jsx or inline styles.
  */
 
+/* Standard menu-page shell, matching CharactersPage, the NPCs page and the
+   Studio picker. Deliberately NOT height-locked: a 100dvh + overflow:hidden
+   root makes correctness depend on the user's viewport height, which is what
+   clipped the bottom row of tiles. Normal document scroll cannot clip. */
 .dashboardRoot {
+  padding: 2rem 1.5rem;
   min-height: 100vh;
   background: var(--void);
-  padding: 2rem 1.5rem;
 }
 
 /* Topbar */
@@ -25,13 +29,14 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .pageTitle {
   font-family: var(--font-heading);
   font-size: 1.5rem;
   font-weight: 600;
+  line-height: 1.2;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ivory);
@@ -41,6 +46,7 @@
 .pageSubtitle {
   font-family: var(--font-body);
   font-size: 0.875rem;
+  line-height: 1.2;
   color: var(--ivory-muted);
   margin: 0.25rem 0 0;
 }
@@ -93,7 +99,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 .sectionLabelText {
   font-family: var(--font-heading);
@@ -110,19 +116,25 @@
   background: linear-gradient(90deg, var(--crimson-dim), transparent);
 }
 
-/* Campaign grid */
+/* Tile sizing and cover ratio: see --cover-tile / --cover-aspect in
+   globals.css. min() guards against overflow when the container is narrower
+   than the track minimum. */
 .campaignGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--cover-tile), 100%), 1fr));
   gap: 1rem;
 }
 
-/* Campaign card */
+/* Campaign card — NO fixed aspect-ratio here (that was the bug: it used to
+   share a fixed total height with .cardBody's footer via flex:1, which left
+   .cardThumb effectively square instead of matching a real cover's shape —
+   see .cardThumb below, which is where the ratio actually belongs). Card
+   height is now intrinsic: ratio-locked thumb + the footer's natural
+   height. */
 .campaignCard {
   position: relative;
   display: flex;
   flex-direction: column;
-  aspect-ratio: 1 / 1;
   background: var(--surface-card);
   border: var(--rule-thin);
   overflow: hidden;
@@ -183,67 +195,84 @@
   border-right: 1px solid var(--gold-dim);
 }
 
-/* Thumbnail region — top ~62% of the square */
+/* Thumbnail region — ratio-locked to the real measured cover shape
+   (globals.css's --cover-aspect), not a share of leftover flex space. No
+   border on this element: box-sizing is border-box globally, so a border
+   on the ratio-locked box itself would throw off the exact ratio by that
+   many pixels — the divider lives on .cardBody's border-top instead. */
 .cardThumb {
   position: relative;
-  flex: 1 1 62%;
-  min-height: 0;
+  flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: var(--cover-aspect);
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--void-surface);
-  border-bottom: var(--rule-thin);
+  overflow: hidden;
 }
 .cardThumbImg {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 .cardThumbPlaceholder {
-  width: 28%;
-  height: 28%;
+  width: 30%;
+  height: auto;
   color: var(--gold-dim);
   opacity: 0.5;
 }
 
-/* Text region — bottom of the square */
+/* Text region — border-top (not a border-bottom on .cardThumb) keeps the
+   ratio-locked thumb box border-free, and the card's height stays intrinsic
+   to this footer's actual content instead of a hardcoded pixel budget. */
 .cardBody {
   flex: 0 0 auto;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.625rem;
+  border-top: var(--rule-thin);
 }
 
 .cardHeader {
-  margin-bottom: 0.375rem;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
 }
 
 .cardName {
   font-family: var(--font-heading);
-  font-size: 1rem;
+  font-size: 0.8125rem;
   font-weight: 600;
+  line-height: 1.25;
+  /* Exactly 2 lines (2 x 1.25em) whether the title actually wraps or not —
+     keeps every card the same height without a magic pixel number. */
+  min-height: 2.5em;
   color: var(--ivory);
-  margin: 0 0 0.375rem;
+  margin: 0 0 0.2rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .cardSystemBadge {
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  line-height: 1.25;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--gold);
   background: var(--gold-tint);
   border: 1px solid var(--gold-dim);
-  padding: 0.2rem 0.5rem;
+  padding: 0.15rem 0.4rem;
   display: inline-block;
 }
 
 .cardDate {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  line-height: 1.25;
   color: var(--ivory-dim);
 }
 

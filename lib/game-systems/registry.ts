@@ -17,11 +17,15 @@ const add1e: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for AD&D 1st Edition. Use THAC0 for attack rolls and descending armor class. Enforce strict class and race restrictions per the 1E PHB and DMG.',
-  fgRulesetId: '1E',
-  supported: false,
+  supported: true,
   ragSource: {
-    type: 'none',
-    notes: 'No machine-readable SRD available for AD&D 1E — agent relies on training knowledge.',
+    type: 'srd_clone',
+    url: 'https://osricwiki.presgas.name/doku.php',
+    notes:
+      'OSRIC (Old School Reference and Index Compilation) is a retro-clone of AD&D 1E/2E rules ' +
+      'released under the OGL. Indexed under ADD1E via the shared data/osric-stub.md — the same ' +
+      'file is also ingested under ADD2E (see lib/rag/fetchers/osric.ts); the "Where 1E and 2E ' +
+      'Diverge" section of that file calls out the handful of mechanics that differ.',
   },
 };
 
@@ -42,16 +46,16 @@ const add2e: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for AD&D 2nd Edition. Use THAC0 for attack rolls, descending armor class, and 2E saving throw categories (Paralyzation/Poison/Death Magic, Rod/Staff/Wand, Petrification/Polymorph, Breath Weapon, Spell). Enforce proficiency slots and kit restrictions.',
-  fgRulesetId: '2E',
   supported: true,
   ragSource: {
     type: 'srd_clone',
     url: 'https://osricwiki.presgas.name/doku.php',
     notes:
       'OSRIC (Old School Reference and Index Compilation) is a retro-clone of AD&D 1E/2E rules ' +
-      'released under the OGL. No clean machine-readable JSON/markdown source was found after ' +
-      'research (see docs/phase-6a-sources.md). Falling back to data/osric-stub.md placeholder. ' +
-      'The Rules Arbiter for ADD2E relies primarily on Claude training knowledge.',
+      'released under the OGL. No clean machine-readable JSON/markdown source was found — ' +
+      'indexed via the hand-authored data/osric-stub.md instead (see .claude/commands/roadmap.md ' +
+      'for the backlog of other systems still needing this treatment). The same file is also ' +
+      'ingested under ADD1E (see lib/rag/fetchers/osric.ts).',
   },
 };
 
@@ -71,11 +75,13 @@ const dnd3_5e: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for D&D 3.5th Edition. Use ascending AC, base attack bonus, and the skills/feats system from the 3.5E SRD.',
-  fgRulesetId: '3.5E',
-  supported: false,
+  supported: true,
   ragSource: {
     type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    notes:
+      'No machine-readable SRD ingestion configured yet — agent relies on training knowledge. ' +
+      'Character sheet support shipped 2026-08-19 (lib/character/sheet-schema/dnd35e.ts); a real ' +
+      'RAG stub (matching data/dcc-stub.md/osric-stub.md) is a separate, larger follow-up.',
   },
 };
 
@@ -93,11 +99,13 @@ const dnd4e: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for D&D 4th Edition. Use at-will, encounter, and daily powers. Apply 4E roles (striker, defender, controller, leader) and the minion/elite/solo monster framework.',
-  fgRulesetId: '4E',
-  supported: false,
+  supported: true,
   ragSource: {
     type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    notes:
+      'No machine-readable SRD ingestion configured yet — agent relies on training knowledge. ' +
+      'Character sheet support shipped 2026-08-19 (lib/character/sheet-schema/dnd4e.ts); a real ' +
+      'RAG stub (matching data/dcc-stub.md/osric-stub.md) is a separate, larger follow-up.',
   },
 };
 
@@ -118,7 +126,6 @@ const dnd5e2014: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for D&D 5th Edition (2014 rules). Use the advantage/disadvantage system, bounded accuracy, and proficiency bonus. Apply 2014 PHB rules for class features, spellcasting, and combat.',
-  fgRulesetId: '5E',
   supported: true,
   ragSource: {
     type: 'api',
@@ -146,7 +153,6 @@ const dnd5e2024: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for D&D 5th Edition (2024 revised rules). Apply the updated 2024 PHB class features, weapon masteries, and spellcasting rules.',
-  fgRulesetId: '5E2024',
   supported: false,
   ragSource: {
     type: 'none',
@@ -170,11 +176,13 @@ const pathfinder1e: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for Pathfinder 1st Edition. Use ascending AC, CMB/CMD, and the Pathfinder SRD rules for classes, skills, and spellcasting.',
-  fgRulesetId: 'PFRPG',
   supported: false,
   ragSource: {
     type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    notes:
+      'No machine-readable SRD ingestion configured — agent relies on training knowledge. ' +
+      'Product decision (2026-08-20): PF2E is this project\'s canonical "Pathfinder" system; ' +
+      'PF1E stays unsupported/undeveloped.',
   },
 };
 
@@ -192,7 +200,6 @@ const pathfinder2e: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for Pathfinder 2nd Edition. Use the three-action economy (Action, Reaction, Free Action), proficiency ranks (Untrained/Trained/Expert/Master/Legendary), and PF2E condition rules.',
-  fgRulesetId: 'PF2',
   supported: true,
   ragSource: {
     type: 'dataset',
@@ -201,7 +208,7 @@ const pathfinder2e: GameSystem = {
       'Foundry VTT PF2E system (MIT-licensed) contains machine-readable compendium data. ' +
       'Compendium packs are stored in LevelDB format (.db files) under packs/. ' +
       'The ingestion fetcher uses the GitHub API to download pack data as JSON via releases. ' +
-      'See docs/phase-6a-sources.md for full sourcing details.',
+      'See lib/rag/fetchers/pf2e.ts for full sourcing details.',
   },
 };
 
@@ -226,7 +233,6 @@ const dcc: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for Dungeon Crawl Classics. Use the DCC dice chain, mighty deeds for warriors, patron bond and spellburn for wizards, and disapproval tables for clerics.',
-  fgRulesetId: 'DCC',
   supported: true,
   ragSource: {
     type: 'srd_clone',
@@ -250,11 +256,13 @@ const tor1e: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for The One Ring 1st Edition. Use the Feat die (d12) and Success dice (d6s), apply the Eye of Sauron result, and track Hope and Shadow for each character.',
-  fgRulesetId: 'TOR',
   supported: false,
   ragSource: {
     type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    notes:
+      'No machine-readable SRD ingestion configured — agent relies on training knowledge. See ' +
+      'tor2e below — TOR2E is this project\'s canonical "The One Ring" system by product decision ' +
+      '(2026-08-20); TOR1E stays unsupported/undeveloped.',
   },
 };
 
@@ -263,7 +271,10 @@ const tor2e: GameSystem = {
   name: 'The One Ring 2nd Edition',
   description: 'Revised Tolkien RPG with streamlined rules and the new Fellowship Phase.',
   primaryDie: 'd12',
-  abilityScores: ['Body', 'Heart', 'Wits'],
+  // Strength, not "Body" — that's the 1st Edition name (see tor1e below, left
+  // unchanged). Confirmed against the real 2nd Edition character sheet
+  // (all four culture variants: Dwarves/Elves/Hobbits/Men).
+  abilityScores: ['Strength', 'Heart', 'Wits'],
   characterSchema: {
     hope: 'number',
     shadow: 'number',
@@ -271,11 +282,15 @@ const tor2e: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for The One Ring 2nd Edition. Apply the revised 2E Fellowship Phase, Feat die (d12) and Success dice, and the Shadow/Hope tracking rules.',
-  fgRulesetId: 'TOR2',
-  supported: false,
+  supported: true,
   ragSource: {
     type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    notes:
+      'No machine-readable SRD ingestion configured yet — agent relies on training knowledge. ' +
+      'Character sheet support shipped 2026-08-20 (lib/character/sheet-schema/tor2e.ts), grounded ' +
+      'in the real Free League 2E character sheet (all four culture variants). TOR1E stays ' +
+      'unsupported/undeveloped by product decision — TOR2E is this project\'s canonical "The One ' +
+      'Ring" system. A real RAG stub is a separate, larger follow-up.',
   },
 };
 
@@ -293,11 +308,40 @@ const cyberpunk2020: GameSystem = {
   },
   rulesPrompt:
     'You are a rules arbiter for Cyberpunk 2020. Use the FNFF (Friday Night Firefight) combat rules, Streetdeal for social encounters, and track Humanity loss for cyberware installation.',
-  fgRulesetId: 'CP2020',
-  supported: false,
+  supported: true,
   ragSource: {
     type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    notes:
+      'No OGL/SRD exists for this proprietary R. Talsorian-licensed game — agent relies on ' +
+      'training knowledge. Character sheet support shipped 2026-08-19 ' +
+      '(lib/character/sheet-schema/cyberpunk2020.ts).',
+  },
+};
+
+const fallout2d20: GameSystem = {
+  id: 'FALLOUT_2D20',
+  name: 'Fallout 2d20',
+  description: 'The post-apocalyptic Wasteland RPG using Modiphius\' 2d20 system, with S.P.E.C.I.A.L. stats.',
+  primaryDie: '2d20',
+  abilityScores: ['Strength', 'Perception', 'Endurance', 'Charisma', 'Intelligence', 'Agility', 'Luck'],
+  characterSchema: {
+    defense: 'number',
+    actionPoints: 'number',
+    luckPoints: 'object',
+    radiation: 'object',
+    damageResistance: 'object',
+    skills: 'object',
+  },
+  rulesPrompt:
+    'You are a rules arbiter for Fallout 2d20. Roll 2d20 against skill target numbers, spend Action Points for combat actions, track Luck Points, Radiation, and damage resistance by type (Normal/Energy/Radiation/Poison).',
+  supported: true,
+  ragSource: {
+    type: 'none',
+    notes:
+      'No OGL/SRD exists for this proprietary Modiphius/Bethesda-licensed game — agent relies on ' +
+      'training knowledge. Added 2026-08-20 as a brand-new system (not part of the original ' +
+      'roadmap 3.10 backlog) at Craig\'s explicit request, including character sheet support ' +
+      '(lib/character/sheet-schema/fallout2d20.ts). A real RAG stub is a separate, larger follow-up.',
   },
 };
 
@@ -315,22 +359,7 @@ const systems: Map<string, GameSystem> = new Map([
   [tor1e.id, tor1e],
   [tor2e.id, tor2e],
   [cyberpunk2020.id, cyberpunk2020],
-]);
-
-/** Fantasy Grounds ruleset ID to game system ID mapping */
-const fgRulesetMap: Map<string, string> = new Map([
-  [add1e.fgRulesetId, add1e.id],
-  [add2e.fgRulesetId, add2e.id],
-  [dnd3_5e.fgRulesetId, dnd3_5e.id],
-  [dnd4e.fgRulesetId, dnd4e.id],
-  [dnd5e2014.fgRulesetId, dnd5e2014.id],
-  [dnd5e2024.fgRulesetId, dnd5e2024.id],
-  [pathfinder1e.fgRulesetId, pathfinder1e.id],
-  [pathfinder2e.fgRulesetId, pathfinder2e.id],
-  [dcc.fgRulesetId, dcc.id],
-  [tor1e.fgRulesetId, tor1e.id],
-  [tor2e.fgRulesetId, tor2e.id],
-  [cyberpunk2020.fgRulesetId, cyberpunk2020.id],
+  [fallout2d20.id, fallout2d20],
 ]);
 
 /** Get a game system configuration by its ID */
@@ -346,14 +375,5 @@ export function getAllGameSystems(): GameSystem[] {
 /** Get all registered game systems, including those not available for new campaigns */
 export function getAllGameSystemsIncludingUnsupported(): GameSystem[] {
   return Array.from(systems.values());
-}
-
-/** Look up a game system by its Fantasy Grounds ruleset identifier */
-export function getSystemByFGRuleset(rulesetId: string): GameSystem | null {
-  const systemId = fgRulesetMap.get(rulesetId);
-  if (!systemId) {
-    return null;
-  }
-  return systems.get(systemId) ?? null;
 }
 

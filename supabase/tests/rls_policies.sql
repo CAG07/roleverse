@@ -4,82 +4,83 @@
 
 BEGIN;
 
-SELECT plan(30);
+SELECT plan(28);
 
 -- ============================================================================
--- 1. Verify RLS is enabled on all tables
+-- 1. Verify RLS is enabled on every table in the public schema
+--
+-- Dynamic, schema-wide check — replaces the old per-table hardcoded list
+-- (13 individual assertions) so a newly added table without RLS fails this
+-- test automatically instead of silently going unchecked.
 -- ============================================================================
 
-SELECT is(
-  (SELECT relrowsecurity FROM pg_class WHERE relname = 'profiles' AND relnamespace = 'public'::regnamespace),
-  true,
-  'RLS is enabled on profiles'
+SELECT is_empty(
+  $$
+    SELECT relname FROM pg_class
+    WHERE relnamespace = 'public'::regnamespace
+      AND relkind IN ('r', 'p')
+      AND relrowsecurity = false
+  $$,
+  'No table in public schema has RLS disabled'
 );
 
-SELECT is(
-  (SELECT relrowsecurity FROM pg_class WHERE relname = 'campaigns' AND relnamespace = 'public'::regnamespace),
-  true,
-  'RLS is enabled on campaigns'
+-- ============================================================================
+-- 1b. pgvector match function config — threshold 0.3, operator(extensions.<=>),
+-- no JOIN to embedding_generations. Guards against silent RAG regressions.
+-- ============================================================================
+
+SELECT ok(
+  (
+    SELECT pg_get_functiondef(p.oid) LIKE '%operator(extensions.<=>)%'
+    FROM pg_proc p
+    WHERE p.proname = 'match_rules_embeddings' AND p.pronamespace = 'public'::regnamespace
+  ),
+  'match_rules_embeddings uses operator(extensions.<=>)'
 );
 
-SELECT is(
-  (SELECT relrowsecurity FROM pg_class WHERE relname = 'characters' AND relnamespace = 'public'::regnamespace),
-  true,
-  'RLS is enabled on characters'
+SELECT ok(
+  (
+    SELECT pg_get_functiondef(p.oid) LIKE '%0.3%'
+    FROM pg_proc p
+    WHERE p.proname = 'match_rules_embeddings' AND p.pronamespace = 'public'::regnamespace
+  ),
+  'match_rules_embeddings default threshold is 0.3'
 );
 
-SELECT is(
-  (SELECT relrowsecurity FROM pg_class WHERE relname = 'sessions' AND relnamespace = 'public'::regnamespace),
-  true,
-  'RLS is enabled on sessions'
+SELECT ok(
+  (
+    SELECT pg_get_functiondef(p.oid) NOT LIKE '%embedding_generations%'
+    FROM pg_proc p
+    WHERE p.proname = 'match_rules_embeddings' AND p.pronamespace = 'public'::regnamespace
+  ),
+  'match_rules_embeddings does not join embedding_generations'
 );
 
-SELECT is(
-  (SELECT relrowsecurity FROM pg_class WHERE relname = 'combat_state' AND relnamespace = 'public'::regnamespace),
-  true,
-  'RLS is enabled on combat_state'
+SELECT ok(
+  (
+    SELECT pg_get_functiondef(p.oid) LIKE '%operator(extensions.<=>)%'
+    FROM pg_proc p
+    WHERE p.proname = 'match_campaign_priority_embeddings' AND p.pronamespace = 'public'::regnamespace
+  ),
+  'match_campaign_priority_embeddings uses operator(extensions.<=>)'
 );
 
-SELECT is(
-  (SELECT relrowsecurity FROM pg_class WHERE relname = 'campaign_embeddings' AND relnamespace = 'public'::regnamespace),
-  true,
-  'RLS is enabled on campaign_embeddings'
+SELECT ok(
+  (
+    SELECT pg_get_functiondef(p.oid) LIKE '%0.3%'
+    FROM pg_proc p
+    WHERE p.proname = 'match_campaign_priority_embeddings' AND p.pronamespace = 'public'::regnamespace
+  ),
+  'match_campaign_priority_embeddings default threshold is 0.3'
 );
 
-SELECT is(
-  (SELECT relrowsecurity FROM pg_class WHERE relname = 'fg_commands' AND relnamespace = 'public'::regnamespace),
-  true,
-  'RLS is enabled on fg_commands'
-);
-
-SELECT is(
-  (SELECT relrowsecurity FROM pg_class WHERE relname = 'campaign_members' AND relnamespace = 'public'::regnamespace),
-  true,
-  'RLS is enabled on campaign_members'
-);
-
-SELECT is(
-  (SELECT relrowsecurity FROM pg_class WHERE relname = 'discord_user_links' AND relnamespace = 'public'::regnamespace),
-  true,
-  'RLS is enabled on discord_user_links'
-);
-
-SELECT is(
-  (SELECT relrowsecurity FROM pg_class WHERE relname = 'discord_server_links' AND relnamespace = 'public'::regnamespace),
-  true,
-  'RLS is enabled on discord_server_links'
-);
-
-SELECT is(
-  (SELECT relrowsecurity FROM pg_class WHERE relname = 'voice_profiles' AND relnamespace = 'public'::regnamespace),
-  true,
-  'RLS is enabled on voice_profiles'
-);
-
-SELECT is(
-  (SELECT relrowsecurity FROM pg_class WHERE relname = 'scene_media' AND relnamespace = 'public'::regnamespace),
-  true,
-  'RLS is enabled on scene_media'
+SELECT ok(
+  (
+    SELECT pg_get_functiondef(p.oid) NOT LIKE '%embedding_generations%'
+    FROM pg_proc p
+    WHERE p.proname = 'match_campaign_priority_embeddings' AND p.pronamespace = 'public'::regnamespace
+  ),
+  'match_campaign_priority_embeddings does not join embedding_generations'
 );
 
 -- ============================================================================
@@ -231,6 +232,37 @@ SELECT ok(
       AND cmd = 'DELETE'
   ),
   'scene_media has DELETE policy (owner only)'
+);
+
+-- workshop_resources / workshop_submissions policies
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'workshop_resources'
+      AND policyname = 'Anyone can view workshop resources'
+      AND cmd = 'SELECT'
+  ),
+  'workshop_resources has public SELECT policy'
+);
+
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'workshop_submissions'
+      AND policyname = 'Users can view own submissions'
+      AND cmd = 'SELECT'
+  ),
+  'workshop_submissions has SELECT policy (own rows only)'
+);
+
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'workshop_submissions'
+      AND policyname = 'Users can create own submissions'
+      AND cmd = 'INSERT'
+  ),
+  'workshop_submissions has INSERT policy (own rows only)'
 );
 
 -- ============================================================================

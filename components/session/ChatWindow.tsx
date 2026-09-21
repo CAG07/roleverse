@@ -12,9 +12,11 @@ import {
 import { Send, Mic, Keyboard, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import D20Icon from '@/components/icons/D20Icon';
 import styles from './ChatWindow.module.css';
-import type { ChatMessage, SceneMedia, AgentType, TranscriptEntry } from '@/lib/types/session';
+import type { ChatMessage, SceneMedia, AgentType, TranscriptEntry, FlaggedHpChange } from '@/lib/types/session';
 import type { AgentMessage, AgentSceneMedia } from '@/lib/mcp/types';
 import type { FlaggedNpc } from '@/lib/types/npc';
+import { updateCharacterHp } from '@/lib/characters/character-updates';
+import { transcriptToMessages } from '@/lib/sessions/transcript-to-messages';
 
 // Agent color/label mapping — matches design spec
 const AGENT_CONFIG: Record<string, { accent: string; label: string }> = {
@@ -87,11 +89,14 @@ function parseSSEEvent(raw: string): { event: string; data: unknown } | null {
   }
 }
 
+type FlaggedHpChangeWithKey = FlaggedHpChange & { key: string };
+
 interface StreamingMsg {
   id: string;
   agentType: AgentType;
   content: string;
   flaggedNpcs?: FlaggedNpc[];
+  flaggedHpChanges?: FlaggedHpChangeWithKey[];
 }
 
 /** How close to the bottom (px) counts as "at bottom" for auto-scroll / button visibility */
@@ -102,36 +107,6 @@ interface ChatWindowProps {
   sessionId: string;
   campaignId: string;
   initialTranscript?: TranscriptEntry[];
-}
-
-function transcriptToMessages(entries: TranscriptEntry[]): ChatMessage[] {
-  return entries.map((entry, i) => {
-    const parsedTimestamp = entry.timestamp ? new Date(entry.timestamp) : null;
-    const timestamp =
-      parsedTimestamp && !Number.isNaN(parsedTimestamp.getTime()) ? parsedTimestamp : new Date();
-    if (entry.role === 'player') {
-      return {
-        id: `hist-${i}`,
-        role: 'player' as const,
-        playerName: 'You',
-        content: entry.content ?? '',
-        source: 'typed' as const,
-        timestamp,
-      };
-    }
-    return {
-      id: `hist-${i}`,
-      role: 'agent' as const,
-      agentType:
-        entry.agentType === 'game_master' ||
-        entry.agentType === 'rules_arbiter' ||
-        entry.agentType === 'lore_keeper'
-          ? (entry.agentType as AgentType)
-          : undefined,
-      content: entry.content ?? '',
-      timestamp,
-    };
-  });
 }
 
 export default function ChatWindow({
@@ -150,11 +125,13 @@ export default function ChatWindow({
   /** NPC names already added or dismissed this session — suppresses repeat prompts. */
   const resolvedNpcNamesRef = useRef<Set<string>>(new Set());
   const [npcActionState, setNpcActionState] = useState<Record<string, 'adding' | 'resolved' | 'error'>>({});
+  const [hpChangeActionState, setHpChangeActionState] = useState<Record<string, 'applying' | 'resolved' | 'error'>>({});
 
   const feedRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef(messages);
   const streamingMsgRef = useRef<StreamingMsg | null>(null);
   const scrollRafRef = useRef<number | null>(null);
+  const tokenRafRef = useRef<number | null>(null);
   const isInitialRender = useRef(true);
 
   useEffect(() => {
@@ -209,6 +186,7 @@ export default function ChatWindow({
   useEffect(() => {
     return () => {
       if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current);
+      if (tokenRafRef.current !== null) cancelAnimationFrame(tokenRafRef.current);
     };
   }, []);
 
@@ -220,6 +198,10 @@ export default function ChatWindow({
   }, []);
 
   const finalizeStream = useCallback(() => {
+    if (tokenRafRef.current !== null) {
+      cancelAnimationFrame(tokenRafRef.current);
+      tokenRafRef.current = null;
+    }
     const sm = streamingMsgRef.current;
     if (!sm) return;
     setMessages((prev) => [
@@ -230,6 +212,7 @@ export default function ChatWindow({
         agentType: sm.agentType,
         content: sm.content,
         flaggedNpcs: sm.flaggedNpcs,
+        flaggedHpChanges: sm.flaggedHpChanges,
         timestamp: new Date(),
       },
     ]);
@@ -271,6 +254,21 @@ export default function ChatWindow({
     },
     [campaignId, sessionId]
   );
+
+  const handleHpChangeAction = useCallback(async (change: FlaggedHpChangeWithKey, action: 'apply' | 'dismiss') => {
+    if (action === 'dismiss') {
+      setHpChangeActionState((prev) => ({ ...prev, [change.key]: 'resolved' }));
+      return;
+    }
+
+    setHpChangeActionState((prev) => ({ ...prev, [change.key]: 'applying' }));
+    try {
+      await updateCharacterHp(change.characterId, change.newHp);
+      setHpChangeActionState((prev) => ({ ...prev, [change.key]: 'resolved' }));
+    } catch {
+      setHpChangeActionState((prev) => ({ ...prev, [change.key]: 'error' }));
+    }
+  }, []);
 
   const handleSend = useCallback(async (overrideText?: string) => {
     const text = (overrideText ?? input).trim();
@@ -347,12 +345,22 @@ export default function ChatWindow({
             case 'token': {
               const chunk = (parsed.data as { text: string }).text;
               if (streamingMsgRef.current) {
-                const updated = {
+                // Accumulate synchronously on the ref (so content is always
+                // correct for finalizeStream/scroll math), but only flush to
+                // state once per animation frame — firing setState per token
+                // caused a render storm on long responses that manifested as
+                // a frozen-looking chat window and a scroll position that
+                // never caught up to the bottom.
+                streamingMsgRef.current = {
                   ...streamingMsgRef.current,
                   content: streamingMsgRef.current.content + chunk,
                 };
-                streamingMsgRef.current = updated;
-                setStreamingMessage(updated);
+                if (tokenRafRef.current === null) {
+                  tokenRafRef.current = requestAnimationFrame(() => {
+                    tokenRafRef.current = null;
+                    if (streamingMsgRef.current) setStreamingMessage(streamingMsgRef.current);
+                  });
+                }
               }
               break;
             }
@@ -363,6 +371,20 @@ export default function ChatWindow({
                 const updated = {
                   ...prev,
                   flaggedNpcs: [...(prev.flaggedNpcs ?? []), npc],
+                };
+                streamingMsgRef.current = updated;
+                setStreamingMessage(updated);
+              }
+              break;
+            }
+            case 'hp_flag': {
+              const change = (parsed.data as { change: FlaggedHpChange }).change;
+              if (streamingMsgRef.current) {
+                const key = `${change.characterId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                const prev = streamingMsgRef.current;
+                const updated = {
+                  ...prev,
+                  flaggedHpChanges: [...(prev.flaggedHpChanges ?? []), { ...change, key }],
                 };
                 streamingMsgRef.current = updated;
                 setStreamingMessage(updated);
@@ -527,7 +549,54 @@ export default function ChatWindow({
                           )}
                         </div>
                       ))}
+                    {msg.flaggedHpChanges
+                      ?.filter((change) => hpChangeActionState[change.key] !== 'resolved')
+                      .map((change) => (
+                        <div key={change.key} className={styles.npcFlagCard}>
+                          <div className={styles.npcFlagHeader}>
+                            <span className={styles.npcFlagName}>{change.characterName}</span>
+                            <span className={styles.npcFlagMeta}>
+                              {change.delta > 0 ? '+' : ''}
+                              {change.delta} HP → {change.newHp}
+                            </span>
+                          </div>
+                          {change.reason && (
+                            <p className={styles.npcFlagDescription}>{change.reason}</p>
+                          )}
+                          <div className={styles.npcFlagActions}>
+                            <button
+                              type="button"
+                              className={styles.npcFlagAdd}
+                              disabled={hpChangeActionState[change.key] === 'applying'}
+                              onClick={() => void handleHpChangeAction(change, 'apply')}
+                            >
+                              {hpChangeActionState[change.key] === 'applying' ? 'Applying…' : 'Apply'}
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.npcFlagDismiss}
+                              disabled={hpChangeActionState[change.key] === 'applying'}
+                              onClick={() => void handleHpChangeAction(change, 'dismiss')}
+                            >
+                              Dismiss
+                            </button>
+                          </div>
+                          {hpChangeActionState[change.key] === 'error' && (
+                            <p className={styles.npcFlagError}>Couldn&apos;t apply — try again.</p>
+                          )}
+                        </div>
+                      ))}
                   </div>
+                  <span className={styles.msgTimestamp}>{relativeTime(msg.timestamp)}</span>
+                </div>
+              );
+            }
+
+            if (msg.role === 'oracle') {
+              return (
+                <div key={msg.id} className={styles.msgOracle}>
+                  <span className={styles.oracleLabel}>Oracle</span>
+                  <div className={styles.oracleBubble}>{renderMarkdown(msg.content)}</div>
                   <span className={styles.msgTimestamp}>{relativeTime(msg.timestamp)}</span>
                 </div>
               );

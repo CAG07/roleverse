@@ -1,0 +1,37 @@
+.wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.btnExport {
+  padding: 0.4rem 0.75rem;
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+.btnExport:hover:not(:disabled) {
+  background: var(--gold-tint);
+  border-color: var(--gold);
+}
+.btnExport:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.errorMsg {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--crimson-bright);
+  margin: 0;
+}

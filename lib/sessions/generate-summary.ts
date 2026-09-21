@@ -17,9 +17,10 @@ function getHaikuModel(): string {
 
 function formatTranscript(entries: TranscriptEntry[]): string {
   return entries
-    .filter((e) => e.role === 'player' || e.role === 'agent')
+    .filter((e) => e.role === 'player' || e.role === 'agent' || e.role === 'oracle')
     .map((e) => {
       if (e.role === 'player') return `Player: ${e.content ?? ''}`;
+      if (e.role === 'oracle') return `Oracle: ${e.content ?? ''}`;
       const label = e.agentType ?? 'narrator';
       return `${label}: ${e.content ?? ''}`;
     })

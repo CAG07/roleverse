@@ -15,6 +15,22 @@ const schema: SystemSheetSchema = {
     { key: 'hitDice', label: 'Hit Dice', column: 'combat', kind: 'string' },
     { key: 'inspiration', label: 'Inspiration', column: 'combat', kind: 'string' },
     { key: 'experiencePoints', label: 'Experience Points', column: 'stats', kind: 'number' },
+    { key: 'alignment', label: 'Alignment', column: 'stats', kind: 'string' },
+    { key: 'background', label: 'Background', column: 'stats', kind: 'string' },
+    { key: 'age', label: 'Age', column: 'stats', kind: 'string' },
+    { key: 'height', label: 'Height', column: 'stats', kind: 'string' },
+    { key: 'weight', label: 'Weight', column: 'stats', kind: 'string' },
+    { key: 'eyes', label: 'Eyes', column: 'stats', kind: 'string' },
+    { key: 'skin', label: 'Skin', column: 'stats', kind: 'string' },
+    { key: 'hair', label: 'Hair', column: 'stats', kind: 'string' },
+    {
+      key: 'currency',
+      label: 'Currency',
+      column: 'stats',
+      kind: 'record-fixed',
+      keys: ['cp', 'sp', 'ep', 'gp', 'pp'],
+      labels: { cp: 'Copper', sp: 'Silver', ep: 'Electrum', gp: 'Gold', pp: 'Platinum' },
+    },
     {
       // Actual per-save bonus, keyed by ability abbreviation — the older
       // savingThrowProficiencies field below only records which saves are
@@ -93,6 +109,15 @@ const schema: SystemSheetSchema = {
       kind: 'string-list',
     },
     {
+      // Official sheet's "Proficiencies & Languages" box covers armor, weapons,
+      // and tools here — skillProficiencies above only covers skills.
+      key: 'equipmentProficiencies',
+      label: 'Armor, Weapon & Tool Proficiencies',
+      column: 'skills',
+      kind: 'string-list',
+    },
+    { key: 'languages', label: 'Languages', column: 'skills', kind: 'string-list' },
+    {
       key: 'deathSaves',
       label: 'Death Saves',
       column: 'combat',
@@ -110,11 +135,23 @@ const schema: SystemSheetSchema = {
       column: 'stats',
       kind: 'record-open',
     },
-    { key: 'features', label: 'Features & Traits', column: 'stats', kind: 'string-list' },
+    {
+      // Not `features` — that key collides with AssembledCharacterData.features
+      // (the Feature[] from game_data_abilities, always spread in after stats by
+      // assembleCharacterData), which silently clobbers this field on display.
+      // Legacy data saved under the old `features` key before this rename is
+      // recovered via a read-only fallback in assembleCharacterData.ts and the
+      // character edit route — nothing under the old key is ever deleted.
+      key: 'featuresTraits',
+      label: 'Features & Traits',
+      column: 'stats',
+      kind: 'string-list',
+    },
     { key: 'personalityTraits', label: 'Personality Traits', column: 'stats', kind: 'string' },
     { key: 'ideals', label: 'Ideals', column: 'stats', kind: 'string' },
     { key: 'bonds', label: 'Bonds', column: 'stats', kind: 'string' },
     { key: 'flaws', label: 'Flaws', column: 'stats', kind: 'string' },
+    { key: 'spellcastingAbility', label: 'Spellcasting Ability', column: 'combat', kind: 'string' },
     { key: 'spellSaveDC', label: 'Spell Save DC', column: 'combat', kind: 'number' },
     { key: 'spellAttackModifier', label: 'Spell Attack Modifier', column: 'combat', kind: 'number' },
     {
@@ -124,6 +161,24 @@ const schema: SystemSheetSchema = {
       kind: 'spell-slots',
       levels: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
     },
+    {
+      // The official sheet's "Spells Known"/Cantrips boxes — an actual named
+      // spell list per level with a prepared marker, distinct from spellSlots
+      // above (which only tracks how many slots exist per level).
+      key: 'knownSpells',
+      label: 'Known Spells',
+      column: 'combat',
+      kind: 'table',
+      columns: [
+        { key: 'level', label: 'Level', type: 'number' },
+        { key: 'name', label: 'Spell Name', type: 'text' },
+        { key: 'prepared', label: 'Prepared', type: 'text' },
+      ],
+    },
+    { key: 'characterAppearance', label: 'Character Appearance', column: 'stats', kind: 'text' },
+    { key: 'characterBackstory', label: 'Character Backstory', column: 'stats', kind: 'text' },
+    { key: 'alliesOrganizations', label: 'Allies & Organizations', column: 'stats', kind: 'text' },
+    { key: 'treasureNotes', label: 'Treasure', column: 'stats', kind: 'text' },
   ],
 };
 

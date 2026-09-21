@@ -78,7 +78,7 @@
   <circle cx="28" cy="874" r="14" fill="#5a1111" stroke="#8b1a1a" stroke-width="1"/>
   <text x="28" y="879" fill="#e4dfd0" font-size="9" font-weight="700" text-anchor="middle">DM</text>
   <!-- User name -->
-  <text x="50" y="870" fill="#e4dfd0" font-size="10" font-weight="600" letter-spacing="0.5">Craig Arenz</text>
+  <text x="50" y="870" fill="#e4dfd0" font-size="10" font-weight="600" letter-spacing="0.5">Alex Rivera</text>
   <text x="50" y="883" fill="#6a6560" font-size="9">Dungeon Master</text>
   <!-- Sign out icon -->
   <path d="M205 868 L210 868 L210 880 L205 880" fill="none" stroke="#6a6560" stroke-width="1.5"/>

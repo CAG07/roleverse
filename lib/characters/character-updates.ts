@@ -6,10 +6,15 @@
 
 import { createClient } from '@/lib/supabase/client';
 
+/** Throws on failure so callers that need to know (e.g. a confirm/retry UI) can
+ *  react — fire-and-forget callers that don't care should still catch it themselves. */
 export async function updateCharacterHp(characterId: string, hp: number): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase.from('characters').update({ hp }).eq('id', characterId);
-  if (error) console.error('Failed to update character HP', error);
+  if (error) {
+    console.error('Failed to update character HP', error);
+    throw error;
+  }
 }
 
 export type GameDataColumn =

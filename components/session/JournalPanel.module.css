@@ -1,0 +1,134 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ *
+ * This is a 'use client' component rendered inside a server layout.
+ * styled-jsx styles in client components are injected at runtime after JS hydration,
+ * causing a Flash of Unstyled Content (FOUC) — components briefly appear
+ * unstyled before styles are applied.
+ *
+ * CSS Modules are statically extracted at build time and injected as a <link> tag
+ * in the <head>, guaranteeing styles are present before the first paint.
+ *
+ * Do NOT convert this file back to styled-jsx or inline styles.
+ */
+
+.journalPanel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--void-surface);
+  border: var(--rule-thin);
+  min-height: 0;
+  height: 100%;
+}
+
+.feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+}
+
+.emptyText {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--ivory-dim);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.entryContent {
+  background: var(--void-raised);
+  padding: 0.75rem 0.875rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--ivory);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.entryTimestamp {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  color: var(--ivory-dim);
+}
+
+.inputBar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-top: var(--rule-thin);
+  background: var(--void-mid);
+}
+
+.inputTextarea {
+  resize: vertical;
+  background: var(--void-surface);
+  border: var(--rule-thin);
+  color: var(--ivory);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: 0.625rem 0.75rem;
+  outline: none;
+  transition: border-color 0.2s;
+  line-height: 1.5;
+}
+.inputTextarea::placeholder {
+  color: var(--ivory-dim);
+  font-style: italic;
+}
+.inputTextarea:focus {
+  border-color: var(--crimson-dim);
+}
+
+.inputFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.errorText {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--crimson-bright);
+  margin: 0;
+  margin-right: auto;
+}
+
+.saveBtn {
+  padding: 0.5rem 1.25rem;
+  background: var(--crimson);
+  border: 1px solid var(--crimson-bright);
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    box-shadow 0.15s;
+}
+.saveBtn:hover:not(:disabled) {
+  background: var(--crimson-bright);
+  box-shadow: 0 0 10px var(--crimson-glow);
+}
+.saveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

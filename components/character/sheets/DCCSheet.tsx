@@ -47,9 +47,6 @@ export default function DCCSheet({
   const startingLuck = (data.startingLuck as number) ?? 10;
 
   const mercurialMagic = (data.mercurialMagic as DCCMercurialSpell[] | undefined) ?? [];
-  const weapons =
-    (data.weapons as { name: string; attackMod: number; damage: string; notes?: string }[] | undefined) ??
-    [];
 
   const handleSaveLuck = (newLuck: number) => {
     void updateCharacterGameDataColumn(characterId, 'game_data_stats', {
@@ -135,20 +132,6 @@ export default function DCCSheet({
             </div>
           )}
 
-          {weapons.length > 0 && (
-            <div>
-              <div className={styles.sectionLabel}>Weapons</div>
-              <ul className={styles.plainList}>
-                {weapons.map((w, i) => (
-                  <li key={i} className={styles.plainListItem}>
-                    <span className={styles.spellName}>{w.name}:</span>{' '}
-                    {w.attackMod >= 0 ? `+${w.attackMod}` : w.attackMod} to hit, {w.damage}
-                    {w.notes ? ` (${w.notes})` : ''}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </>
       }
     />
