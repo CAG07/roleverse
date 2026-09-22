@@ -2,6 +2,7 @@
 
 import styles from './CharacterDetailPage.module.css';
 import { useState } from 'react';
+import type { ChangeEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -10,8 +11,35 @@ import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
 import { buildFantasyGroundsExport } from '@/lib/character/export/fantasy-grounds';
 import { buildPlainTextSheet } from '@/lib/character/export/plain-text';
 import { downloadFile, slugify } from '@/lib/export/download-file';
+import { FG_XML_IMPORT_SUPPORTED_SYSTEMS, parseFantasyGroundsCharacterXml } from '@/lib/character/import/fantasy-grounds';
+import { parsePlainTextCharacterSheet } from '@/lib/character/import/plain-text';
+import { buildImportDiff, buildImportUpdatePayload } from '@/lib/character/import/diff';
+import type { ImportPreview } from '@/lib/character/import/diff';
+import type { ParsedCharacterImport } from '@/lib/character/import/types';
+import { ImportReviewModal } from './ImportReviewModal';
 import CharacterSheet from './CharacterSheet';
 import CharacterHeaderBanner from './CharacterHeaderBanner';
+
+const FG_IMPORT_CAVEATS_5E = [
+  "Currency, spellcasting ability/DC/attack modifier, known spells, and appearance/backstory/allies/treasure text live only in the file's freeform notes, not dedicated fields — copied into this character's Notes instead of split apart.",
+];
+const FG_IMPORT_CAVEATS_PF2E = [
+  "This importer's field mapping is based on a single third-party sample, not a real Fantasy Grounds PF2E export — double-check every value after importing.",
+  "Currency, AC/shield breakdowns, strikes, spell details, and personal/campaign-notes text live only in the file's freeform notes — copied into this character's Notes instead of split apart.",
+];
+const FG_IMPORT_CAVEATS_ADD = [
+  'The weapon vs. non-weapon proficiency list (<proficiencylist>) is not imported — Fantasy Grounds’ own meaning for that tag is still unconfirmed in our own export mapping.',
+  'Detailed AC breakdown and most ability-score adjustment sub-fields are not imported — edit them manually if needed.',
+];
+const FG_IMPORT_CAVEATS: Record<string, string[]> = {
+  '5E_2014': FG_IMPORT_CAVEATS_5E,
+  PATHFINDER_2E: FG_IMPORT_CAVEATS_PF2E,
+  ADD1E: FG_IMPORT_CAVEATS_ADD,
+  ADD2E: FG_IMPORT_CAVEATS_ADD,
+};
+const TEXT_IMPORT_CAVEATS = [
+  'If the Race / Class line in the file has only one of those two values (not both), neither is updated — it’s ambiguous which one it is.',
+];
 
 interface DCCFunnelMember {
   id: string;
@@ -66,6 +94,15 @@ export function CharacterDetailPage({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
+  const [pendingImport, setPendingImport] = useState<{
+    sourceLabel: string;
+    parsed: ParsedCharacterImport;
+    preview: ImportPreview;
+    caveats: string[];
+  } | null>(null);
 
   const metaParts = [
     character.race,
@@ -76,6 +113,63 @@ export function CharacterDetailPage({
   const sheetData = assembleCharacterData(character);
   const exportable = buildFantasyGroundsExport(character.game_system, sheetData, character.equipment ?? []);
   const plainText = buildPlainTextSheet(character.game_system, sheetData, character.equipment ?? []);
+  const fgImportSupported = FG_XML_IMPORT_SUPPORTED_SYSTEMS.has(character.game_system);
+
+  const openImportReview = (sourceLabel: string, parsed: ParsedCharacterImport, caveats: string[]) => {
+    const preview = buildImportDiff(character.game_system, character, sheetData, parsed);
+    setPendingImport({ sourceLabel, parsed, preview, caveats });
+  };
+
+  const handleFgFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setImportError(null);
+    const text = await file.text();
+    const parsed = parseFantasyGroundsCharacterXml(character.game_system, text);
+    if ('error' in parsed) {
+      setImportError(parsed.error);
+      return;
+    }
+    openImportReview('Fantasy Grounds', parsed, FG_IMPORT_CAVEATS[character.game_system] ?? []);
+  };
+
+  const handleTextFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setImportError(null);
+    const text = await file.text();
+    const parsed = parsePlainTextCharacterSheet(character.game_system, text);
+    if ('error' in parsed) {
+      setImportError(parsed.error);
+      return;
+    }
+    openImportReview('Text File', parsed, TEXT_IMPORT_CAVEATS);
+  };
+
+  const handleApplyImport = async () => {
+    if (!pendingImport) return;
+    setApplying(true);
+    setApplyError(null);
+    const supabase = createClient();
+    const payload = buildImportUpdatePayload(character, pendingImport.parsed);
+    const { error } = await supabase.from('characters').update(payload).eq('id', character.id);
+    if (error) {
+      setApplyError(error.message);
+      setApplying(false);
+      return;
+    }
+    setApplying(false);
+    setPendingImport(null);
+    router.refresh();
+  };
+
+  const handleCancelImport = () => {
+    if (applying) return;
+    setPendingImport(null);
+    setApplyError(null);
+  };
 
   const handleExport = () => {
     if (!exportable) return;
@@ -141,6 +235,34 @@ export function CharacterDetailPage({
           <button type="button" className={styles.btnDelete} onClick={() => setConfirmDelete(true)}>
             ✕ Delete
           </button>
+          {fgImportSupported && (
+            <>
+              <input
+                type="file"
+                accept=".xml,text/xml,application/xml"
+                id="fgImportInput"
+                className={styles.fileInputHidden}
+                onChange={(e) => void handleFgFileChange(e)}
+              />
+              <label htmlFor="fgImportInput" className={styles.btnExport}>
+                ⇧ Import from Fantasy Grounds
+              </label>
+            </>
+          )}
+          {plainText && (
+            <>
+              <input
+                type="file"
+                accept=".txt,text/plain"
+                id="textImportInput"
+                className={styles.fileInputHidden}
+                onChange={(e) => void handleTextFileChange(e)}
+              />
+              <label htmlFor="textImportInput" className={styles.btnExport}>
+                ⇧ Import as Text
+              </label>
+            </>
+          )}
           {exportable && (
             <button type="button" className={styles.btnExport} onClick={handleExport}>
               ⇩ Export to Fantasy Grounds
@@ -156,7 +278,19 @@ export function CharacterDetailPage({
           </button>
         </div>
         {deleteError && <p className={styles.deleteError}>{deleteError}</p>}
+        {importError && <p className={styles.deleteError}>{importError}</p>}
       </div>
+
+      <ImportReviewModal
+        open={pendingImport != null}
+        sourceLabel={pendingImport?.sourceLabel ?? ''}
+        rows={pendingImport?.preview.rows ?? []}
+        caveats={pendingImport?.caveats ?? []}
+        busy={applying}
+        error={applyError}
+        onApply={() => void handleApplyImport()}
+        onCancel={handleCancelImport}
+      />
 
       {character.notes && (
         <div className={styles.notesSection}>

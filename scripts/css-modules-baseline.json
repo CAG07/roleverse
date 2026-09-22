@@ -60,6 +60,42 @@
     "reason": "missing sibling .module.css"
   },
   {
+    "file": "app/(app)/guide/campaigns/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/guide/characters/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/guide/exporting-importing-characters/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/guide/getting-started/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/guide/npc-roster/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/guide/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/guide/playing-a-session/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/guide/studio/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
+    "file": "app/(app)/guide/workshop/page.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
     "file": "app/(app)/image-studio/page.tsx",
     "reason": "missing sibling .module.css"
   },

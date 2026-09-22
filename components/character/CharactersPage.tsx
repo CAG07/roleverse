@@ -2,7 +2,6 @@
 
 import styles from './CharactersPage.module.css';
 import Link from 'next/link';
-import { getGameSystem } from '@/lib/game-systems/registry';
 
 export interface CharacterSummary {
   id: string;
@@ -72,9 +71,6 @@ export function CharactersPage({ campaignId, campaignName, characters }: Charact
             >
               <div className={styles.cardTop}>
                 <span className={styles.characterName}>{char.name}</span>
-                <span className={styles.systemBadge}>
-                  {getGameSystem(char.game_system)?.name ?? char.game_system}
-                </span>
               </div>
               {([char.race, char.class].some(Boolean) || char.level != null) && (
                 <div className={styles.characterMeta}>

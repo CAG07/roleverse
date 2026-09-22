@@ -1,0 +1,169 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ * See CharactersPage.module.css for the full rationale. Do NOT convert this
+ * file back to styled-jsx or inline styles.
+ */
+
+.root {
+  padding: 2rem 1.5rem 4rem;
+  min-height: 100vh;
+  background: var(--void);
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory-muted);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: color 0.15s;
+}
+.backLink:hover {
+  color: var(--gold);
+}
+
+.header {
+  max-width: 720px;
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.eyebrowText {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.eyebrowLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--crimson-dim), transparent);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ivory);
+  margin: 0 0 0.5rem;
+}
+
+.dek {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--ivory-muted);
+  margin: 0;
+}
+
+.prose {
+  max-width: 720px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--ivory-dim);
+}
+
+.prose h2 {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 2.25rem 0 0.9rem;
+  padding-bottom: 0.4rem;
+  border-bottom: var(--rule-thin);
+}
+.prose h2:first-child {
+  margin-top: 0;
+}
+
+.prose p {
+  margin: 0 0 1rem;
+}
+
+.prose ol,
+.prose ul {
+  margin: 0 0 1.1rem;
+  padding-left: 1.4rem;
+}
+
+.prose li {
+  margin-bottom: 0.55rem;
+}
+.prose li:last-child {
+  margin-bottom: 0;
+}
+
+.prose strong {
+  color: var(--ivory);
+  font-weight: 600;
+}
+
+.prose a {
+  color: var(--gold);
+}
+
+.note {
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  border-left: 2px solid var(--crimson-dim);
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.25rem;
+  font-size: 0.875rem;
+  color: var(--ivory-muted);
+}
+.note strong {
+  color: var(--ivory);
+}
+
+.footerNav {
+  max-width: 720px;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: var(--rule-thin);
+}
+
+.footerNavLink {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-family: var(--font-body);
+  text-decoration: none;
+  max-width: 45%;
+}
+.footerNavLink:last-child {
+  text-align: right;
+  align-items: flex-end;
+}
+.footerNavDirection {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ivory-dim);
+}
+.footerNavTitle {
+  font-size: 0.9rem;
+  color: var(--gold);
+  transition: color 0.15s;
+}
+.footerNavLink:hover .footerNavTitle {
+  color: var(--crimson-bright);
+}

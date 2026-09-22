@@ -14,6 +14,8 @@
 // mapped is preserved by copying <notes> verbatim into RoleVerse's own notes
 // field, so nothing is silently dropped even if not structurally mapped.
 
+import { child, childNumber, childText, idListChildren, parseFGCharacterElement } from './xml-helpers';
+
 const ABILITIES: { full: string; tag: string }[] = [
   { full: 'Strength', tag: 'strength' },
   { full: 'Dexterity', tag: 'dexterity' },
@@ -88,30 +90,6 @@ const THIEF_SKILL_LABEL_TO_KEY: Record<string, string> = Object.fromEntries(
 
 const COIN_NAME_TO_TREASURE_KEY: Record<string, string> = { PP: 'platinum', GP: 'gold', SP: 'silver' };
 
-function child(parent: Element | null, tag: string): Element | null {
-  if (!parent) return null;
-  for (const c of Array.from(parent.children)) {
-    if (c.tagName === tag) return c;
-  }
-  return null;
-}
-
-function childText(parent: Element | null, tag: string): string {
-  return child(parent, tag)?.textContent?.trim() ?? '';
-}
-
-function childNumber(parent: Element | null, tag: string): number | undefined {
-  const t = childText(parent, tag);
-  if (t === '') return undefined;
-  const n = Number(t);
-  return Number.isFinite(n) ? n : undefined;
-}
-
-function idListChildren(parent: Element | null): Element[] {
-  if (!parent) return [];
-  return Array.from(parent.children).filter((c) => /^id-\d+$/.test(c.tagName));
-}
-
 export interface ParsedFGCharacter {
   name: string;
   race: string;
@@ -131,20 +109,8 @@ export interface ParsedFGCharacter {
 }
 
 export function parseFGAddCharacterXml(xmlText: string): ParsedFGCharacter | { error: string } {
-  let doc: Document;
-  try {
-    doc = new DOMParser().parseFromString(xmlText, 'text/xml');
-  } catch {
-    return { error: 'Could not parse this file as XML.' };
-  }
-  if (doc.querySelector('parsererror')) {
-    return { error: 'Could not parse this file as XML — it may be corrupted or not a valid export.' };
-  }
-
-  const charEl = doc.querySelector('character');
-  if (!charEl) {
-    return { error: 'This does not look like a Fantasy Grounds character export (no <character> element found).' };
-  }
+  const charEl = parseFGCharacterElement(xmlText);
+  if ('error' in charEl) return charEl;
 
   const stats: Record<string, unknown> = {};
   const combat: Record<string, unknown> = {};

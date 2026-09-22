@@ -22,9 +22,13 @@ const navItems = [
 ] as const;
 
 const footerNavItems = [
-  { href: '/help', label: 'Help Center' },
+  { href: '/guide', label: 'User Guide' },
   { href: '/updates', label: 'Updates' },
-  { href: '/bug', label: 'Bug Report' },
+  {
+    href: 'https://github.com/CAG07/roleverse/issues',
+    label: 'Submit an Issue',
+    external: true,
+  },
 ] as const;
 
 export function Sidebar({ userName, userInitials, userRole }: SidebarProps) {

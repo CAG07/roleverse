@@ -111,6 +111,15 @@
   border-color: var(--gold);
 }
 
+.fileInputHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 .deleteError {
   font-family: var(--font-body);
   font-size: 0.875rem;
