@@ -1,0 +1,112 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ * See CharactersPage.module.css for the full rationale. Do NOT convert this
+ * file back to styled-jsx or inline styles.
+ */
+
+.root {
+  padding: 2rem 1.5rem;
+  min-height: 100vh;
+  background: var(--void);
+}
+
+.header {
+  margin-bottom: 2rem;
+  max-width: 640px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ivory);
+  margin: 0 0 0.5rem;
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--ivory-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.sectionLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.sectionLabelText {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.sectionLabelLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--crimson-dim), transparent);
+}
+
+.topicGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.topicCard {
+  position: relative;
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.topicCard:hover {
+  background: var(--surface-hover);
+  border-color: var(--crimson-dim);
+  box-shadow: 0 0 20px var(--crimson-glow);
+}
+.topicCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--crimson), transparent);
+}
+
+.topicNumber {
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--crimson-bright);
+}
+
+.topicTitle {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ivory);
+}
+
+.topicDescription {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--ivory-muted);
+  line-height: 1.5;
+}
