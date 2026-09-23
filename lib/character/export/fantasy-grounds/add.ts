@@ -57,6 +57,19 @@
 //     wrong VALUES here (as opposed to an unrecognized tag) risks showing a
 //     visibly incorrect AC breakdown on the sheet, which is worse than
 //     omitting it — stays in <notes> pending a populated armored sample.
+//
+// 2026-09-22: real bug found via a live import test (Craig exported "Raybay",
+// an ADD1E thief, imported into FGU, and every ability showed as 9 in the UI
+// regardless of the real score). The exported XML itself was correct
+// (<score>/<total> matched the real 13/18/16/14/9/9) — WIS and CHA are
+// genuinely 9 for this character, which is why 2 of 6 "looked right" and
+// masked the bug at first glance. Root cause: the Adran Holimion sample
+// (confirmed above) shows every real ability node also carries a <base> leaf
+// alongside <score>/<total> — the same base/score/total shape every OTHER
+// stat block here already uses (hp, ac, speed, saves) — but abilitiesXml was
+// the one block that never wrote it. FG's sheet reads the score off <base>,
+// and silently falls back to CoreRPG's un-set-score default (9) when it's
+// absent. Fixed by adding the missing <base> leaf.
 import type { AssembledCharacterData } from '@/lib/types/character';
 import { characterDocument, diceLeaf, group, idList, leaf } from './xml';
 
@@ -187,7 +200,10 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
           return leaf(field.fgTag, field.fgType, field.fgType === 'string' ? String(value) : value);
         })
         .join('');
-      return group(tag, [leaf('score', 'number', score), leaf('total', 'number', score), adjustmentLeaves].join(''));
+      return group(
+        tag,
+        [leaf('base', 'number', score), leaf('score', 'number', score), leaf('total', 'number', score), adjustmentLeaves].join('')
+      );
     }).join('')
   );
 
