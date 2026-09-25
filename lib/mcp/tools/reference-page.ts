@@ -18,6 +18,10 @@ export interface ReferencePageInput {
 export interface ReferencePageChunk {
   content: string;
   category: string; // 'module' | 'map_layout'
+  /** Source filename (metadata.title) — surfaced so a multi-document campaign's
+   *  page-number collision (see the `note` below) is actually resolvable by the
+   *  caller instead of just flagged. */
+  title?: string;
 }
 
 export interface ReferencePageOutput {
@@ -66,6 +70,7 @@ export async function executeReferencePage(
     chunks: rows.map((r) => ({
       content: r.content,
       category: (r.metadata?.category as string | undefined) ?? 'module',
+      title: r.metadata?.title as string | undefined,
     })),
     ...(note ? { note } : {}),
   };
