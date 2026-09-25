@@ -246,8 +246,9 @@ export default function BaseSheet({
               <InlineNumberEditor
                 value={hp}
                 onSave={(newHp) => {
-                  void updateCharacterHp(characterId, newHp).catch(() => {});
-                  onHpChange?.(characterId, newHp);
+                  void updateCharacterHp(characterId, newHp)
+                    .then(() => onHpChange?.(characterId, newHp))
+                    .catch(() => {});
                 }}
                 ariaLabel="Current HP"
               />
