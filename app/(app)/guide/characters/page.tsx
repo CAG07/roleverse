@@ -40,7 +40,9 @@ export default function CharactersGuide() {
       <p>
         Select any character from the Characters list to open their full sheet. From there
         you can edit any field, adjust current hit points directly on the sheet during play,
-        and delete the character if you need to. See{' '}
+        and delete the character if you need to. Experience points work the same way — a
+        plain field on the sheet, entered manually since the Game Master calls out XP awards
+        in narration but doesn&apos;t save them for you. See{' '}
         <strong>Exporting &amp; Importing Characters</strong> for printing a sheet, exporting
         it to Fantasy Grounds, or bringing in updates from a file later on.
       </p>

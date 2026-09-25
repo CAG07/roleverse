@@ -3,6 +3,7 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { assertWithinQuota, getUsedBytes } from '@/lib/storage/check-quota';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import styles from './OracleRefsPanel.module.css';
 
 const FILE_MAX_BYTES = 20 * 1024 * 1024; // 20MB per file
@@ -41,6 +42,8 @@ export default function OracleRefsPanel({ campaignId }: { campaignId: string }) 
   const [error, setError] = useState('');
   const [folderPath, setFolderPath] = useState<string | null>(null);
   const [usedBytes, setUsedBytes] = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<FileEntry | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -196,6 +199,14 @@ export default function OracleRefsPanel({ campaignId }: { campaignId: string }) 
     }).catch(() => {});
   };
 
+  const handleConfirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    await handleDelete(pendingDelete.name);
+    setDeleting(false);
+    setPendingDelete(null);
+  };
+
   return (
     <div className={styles.infoPanel}>
       <h3 className={styles.infoPanelTitle}>Oracle References</h3>
@@ -240,7 +251,7 @@ export default function OracleRefsPanel({ campaignId }: { campaignId: string }) 
                 <button
                   type="button"
                   className={styles.btnDelete}
-                  onClick={() => void handleDelete(f.name)}
+                  onClick={() => setPendingDelete(f)}
                   aria-label={`Delete ${f.displayName}`}
                 >
                   ×
@@ -283,6 +294,16 @@ export default function OracleRefsPanel({ campaignId }: { campaignId: string }) 
       </div>
 
       {error && <p className={styles.errorMsg}>{error}</p>}
+
+      <ConfirmModal
+        open={pendingDelete !== null}
+        title="Delete Reference"
+        message={`Delete "${pendingDelete?.displayName ?? ''}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        busy={deleting}
+        onConfirm={() => void handleConfirmDelete()}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

@@ -223,9 +223,29 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
   const combatXml = group('combat', group('thaco', leaf('score', 'number', baseThac0)));
 
   const ac = (data.ac as number) ?? 10;
+  // 2026-09-23: same class of bug as the ability <base> fix above, found via
+  // the same live import test — Raybay's AC 4 imported as 0. The confirmed
+  // real shape (Adran Holimion sample, file header) is 5 sibling fields —
+  // armor/base/misc/shield/total — but this only ever emitted 2 of them
+  // (base/total). FG's AC calc apparently needs armor/misc/shield present to
+  // compute a total at all; missing them silently produced 0 rather than
+  // falling back to base/total like abilities did. RoleVerse doesn't track
+  // armor/shield/misc as separate AC components (only the final number), so
+  // they're emitted as 0 here — a safe scaffold value, not a guessed
+  // decomposition of the real AC (that remains the "STILL UNCONFIRMED" risk
+  // noted in the file header, and stays out of scope here).
   const defensesXml = group(
     'defenses',
-    group('ac', [leaf('base', 'number', ac), leaf('total', 'number', ac)].join(''))
+    group(
+      'ac',
+      [
+        leaf('armor', 'number', 0),
+        leaf('base', 'number', ac),
+        leaf('misc', 'number', 0),
+        leaf('shield', 'number', 0),
+        leaf('total', 'number', ac),
+      ].join('')
+    )
   );
 
   const hpXml =

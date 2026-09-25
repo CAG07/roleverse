@@ -17,6 +17,7 @@ import { buildImportDiff, buildImportUpdatePayload } from '@/lib/character/impor
 import type { ImportPreview } from '@/lib/character/import/diff';
 import type { ParsedCharacterImport } from '@/lib/character/import/types';
 import { ImportReviewModal } from './ImportReviewModal';
+import { HpUpdateContext } from '@/lib/characters/hp-update-context';
 import CharacterSheet from './CharacterSheet';
 import CharacterHeaderBanner from './CharacterHeaderBanner';
 
@@ -303,14 +304,16 @@ export function CharacterDetailPage({
         <p className={styles.sectionLabel} style={{ marginBottom: '0.5rem' }}>
           Character Sheet · {campaignName}
         </p>
-        <CharacterSheet
-          characterId={character.id}
-          gameSystem={character.game_system}
-          characterData={sheetData}
-          equipment={character.equipment ?? []}
-          rawGameDataStats={character.game_data_stats ?? {}}
-          funnelParty={funnelParty}
-        />
+        <HpUpdateContext.Provider value={() => router.refresh()}>
+          <CharacterSheet
+            characterId={character.id}
+            gameSystem={character.game_system}
+            characterData={sheetData}
+            equipment={character.equipment ?? []}
+            rawGameDataStats={character.game_data_stats ?? {}}
+            funnelParty={funnelParty}
+          />
+        </HpUpdateContext.Provider>
       </div>
     </div>
   );
