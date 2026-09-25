@@ -170,17 +170,19 @@ const FLAG_HP_CHANGE_TOOL: Anthropic.Messages.Tool = {
 const REFERENCE_PAGE_TOOL: Anthropic.Messages.Tool = {
   name: 'referencePage',
   description:
-    'Call this when a player or DM explicitly names a specific page or section number from ' +
-    'the uploaded module (e.g. "reference page 33", "check section 4B") and you need that ' +
-    "exact content rather than whatever your normal retrieval surfaced. Returns the page's " +
-    'indexed content directly, not a similarity search — treat it as authoritative for this ' +
-    'turn. Never mention this tool or the page number to the player.',
+    'Call this when a player or DM explicitly names a specific numeric page from the ' +
+    'uploaded module (e.g. "reference page 33") and you need that exact content rather than ' +
+    "whatever your normal retrieval surfaced. Returns the page's indexed content directly, " +
+    'not a similarity search — treat it as authoritative for this turn. Only page numbers are ' +
+    'supported — if a player names a section, heading, or other non-numeric label instead ' +
+    '(e.g. "section 4B"), do not guess a page number for it; ask which page it\'s on, or fall ' +
+    'back to your normal retrieval. Never mention this tool or the page number to the player.',
   input_schema: {
     type: 'object' as const,
     properties: {
       page_number: {
         type: 'integer',
-        description: 'The page number named by the player or DM',
+        description: 'The numeric page number named by the player or DM',
       },
     },
     required: ['page_number'],
@@ -476,10 +478,12 @@ function buildSystemPrompt(
     '  onto a sheet later, e.g. "Aria: +150 XP (goblin ambush), Bram: +150 XP (goblin ambush),',
     '  +50 XP each (trap disarmed)." Keep it short and numeric; do not attach it to every',
     '  single roll or minor action — only genuine milestones.',
-    '- If a player or DM explicitly names a specific page or section number from the module,',
-    '  call the referencePage tool with that number and ground your narration in what it',
-    '  returns — this is exact content, not your normal retrieval. Never mention the tool or',
-    '  state the page number back to the player.',
+    '- If a player or DM explicitly names a specific numeric page from the module, call the',
+    '  referencePage tool with that number and ground your narration in what it returns — this',
+    '  is exact content, not your normal retrieval. If they name a section, heading, or other',
+    "  non-numeric reference instead, don't guess a page number for it — ask which page it's",
+    '  on, or fall back to your normal retrieval. Never mention the tool or state the page',
+    '  number back to the player.',
     '- When the party moves to a genuinely new area, call the updateLocation tool once with a',
     '  short label for where they now are, composed in your own words. Use its returned content',
     '  — confirmed map layout, module excerpts, or a generated location seed (terrain/features/',
