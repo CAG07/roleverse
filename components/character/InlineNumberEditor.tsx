@@ -26,14 +26,20 @@ export default function InlineNumberEditor({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(value));
   const [prevValue, setPrevValue] = useState(value);
+  // The rendered number when not editing. Decoupled from `value` so a just-committed
+  // save shows immediately instead of visibly reverting until `value` round-trips back
+  // down through the parent (which may never happen, e.g. session panel previously had
+  // no refetch path at all).
+  const [displayValue, setDisplayValue] = useState(value);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Resync the draft when `value` changes externally (e.g. another client's write),
-  // but only while not actively editing. This runs during render, not an effect,
-  // per React's "adjusting state when props change" pattern.
+  // Resync the draft (and display) when `value` changes externally (e.g. another
+  // client's write), but only while not actively editing. This runs during render,
+  // not an effect, per React's "adjusting state when props change" pattern.
   if (value !== prevValue && !editing) {
     setPrevValue(value);
     setDraft(String(value));
+    setDisplayValue(value);
   }
 
   useEffect(
@@ -55,7 +61,10 @@ export default function InlineNumberEditor({
     setEditing(false);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     const parsed = parseInt(draft, 10);
-    if (!Number.isNaN(parsed) && parsed !== value) onSave(parsed);
+    if (!Number.isNaN(parsed) && parsed !== value) {
+      setDisplayValue(parsed); // stick immediately; no revert flash while the write is in flight
+      onSave(parsed);
+    }
   };
 
   if (!editing) {
@@ -66,7 +75,7 @@ export default function InlineNumberEditor({
         onClick={() => setEditing(true)}
         aria-label={ariaLabel}
       >
-        {value}
+        {displayValue}
       </button>
     );
   }

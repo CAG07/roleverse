@@ -311,6 +311,9 @@
   outline: none;
   transition: border-color 0.2s;
   line-height: 1.4;
+  min-height: 2.25rem;
+  max-height: 12rem; /* ~192px, ~2in cap — kept in sync with MAX_TEXTAREA_HEIGHT_PX in ChatWindow.tsx */
+  overflow-y: auto;
 }
 .inputTextarea::placeholder {
   color: var(--ivory-dim);
