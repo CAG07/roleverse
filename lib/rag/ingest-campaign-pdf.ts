@@ -19,7 +19,7 @@
 // retrieval side needs to change.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import pdfParse from 'pdf-parse-fork';
+import { getDocumentProxy, extractText } from 'unpdf';
 import { chunkText } from './chunk';
 import { embedBatch } from './embed';
 import { extractYoutubeVideoId } from '@/lib/scenes/youtube';
@@ -52,7 +52,7 @@ export interface IngestCampaignPdfResult {
   mapPagesFound: number;
 }
 
-/** Plain text and Markdown need no parsing — only .pdf goes through pdfParse. */
+/** Plain text and Markdown need no parsing — only .pdf goes through per-page extraction. */
 function isPlainTextFile(fileName: string): boolean {
   const lower = fileName.toLowerCase();
   return lower.endsWith('.txt') || lower.endsWith('.md');
@@ -64,15 +64,23 @@ export async function ingestCampaignPdf(
   const { supabase, campaignId, userId, gameSystem, fileName, fileBuffer } = options;
   const isPdf = !isPlainTextFile(fileName);
 
-  let text: string;
-  let pages = 1;
+  // Extracted per-page (not as one flattened string) so each resulting chunk can
+  // carry a real page number in its metadata — the same unpdf per-page extraction
+  // already used by pdf-pages.ts's map-candidate detection, reused here instead of
+  // a second PDF-parsing approach. Plain .txt/.md has no page concept, so it's
+  // treated as a single "page" with no page number attached to its chunks.
+  let pageTexts: string[];
+  let pages: number;
   if (isPdf) {
-    const parsed = await pdfParse(fileBuffer);
-    text = parsed.text.trim();
-    pages = parsed.numpages;
+    const pdf = await getDocumentProxy(new Uint8Array(fileBuffer));
+    const { text: perPage } = await extractText(pdf, { mergePages: false });
+    pageTexts = perPage.map((t) => t.trim());
+    pages = pageTexts.length;
   } else {
-    text = fileBuffer.toString('utf-8').trim();
+    pageTexts = [fileBuffer.toString('utf-8').trim()];
+    pages = 1;
   }
+  const text = pageTexts.join('\n\n').trim();
   if (!text) {
     throw new Error(
       'No extractable text found in this file (a PDF may be a scanned image without OCR).'
@@ -88,26 +96,39 @@ export async function ingestCampaignPdf(
   // below, same idea as the youtubeVideoId detection.
   const sceneFilenames = await listCampaignSceneFilenames(supabase, userId, campaignId);
 
-  const chunks = chunkText(text);
+  // Chunked per page rather than on the flattened document, so a chunk never
+  // spans a page boundary — the trade-off is that content that used to be
+  // joined into one chunk right at a boundary now splits into two (each still
+  // gets its own overlapChars overlap, just not across pages). That's an
+  // acceptable cost: a chunk spanning two pages couldn't be given one accurate
+  // page number anyway, and precise page attribution is the whole point here.
+  const pageChunks: { content: string; pageNumber?: number }[] = pageTexts.flatMap(
+    (pageText, i) =>
+      chunkText(pageText).map((content) => ({
+        content,
+        ...(isPdf ? { pageNumber: i + 1 } : {}),
+      }))
+  );
   let chunksIndexed = 0;
 
-  for (let i = 0; i < chunks.length; i += UPSERT_BATCH_SIZE) {
-    const batch = chunks.slice(i, i + UPSERT_BATCH_SIZE);
-    const embeddings = await embedBatch(batch);
+  for (let i = 0; i < pageChunks.length; i += UPSERT_BATCH_SIZE) {
+    const batch = pageChunks.slice(i, i + UPSERT_BATCH_SIZE);
+    const embeddings = await embedBatch(batch.map((c) => c.content));
 
-    const rows = batch.map((content, j) => {
+    const rows = batch.map((chunk, j) => {
       // A player can write a YouTube link directly into their own uploaded
       // document (e.g. "when the party reaches the chapel: youtu.be/xyz") —
       // tag whichever chunk contains it so the Game Master can auto-attach it
       // as scene media when narration matches that same chunk. Same idea for
       // a Scene Library image referenced by filename.
-      const youtubeVideoId = extractYoutubeVideoId(content);
-      const imageRef = extractImageRef(content, sceneFilenames);
+      const youtubeVideoId = extractYoutubeVideoId(chunk.content);
+      const imageRef = extractImageRef(chunk.content, sceneFilenames);
       const metadata: ChunkMetadata = {
         gameSystem,
         source: 'user_pdf',
         category: 'module',
         title: fileName,
+        ...(chunk.pageNumber != null ? { pageNumber: chunk.pageNumber } : {}),
         ...(youtubeVideoId ? { youtubeVideoId } : {}),
         ...(imageRef ? { imageRef } : {}),
       };
@@ -116,7 +137,7 @@ export async function ingestCampaignPdf(
         campaign_id: campaignId,
         user_id: userId,
         game_system: gameSystem,
-        content,
+        content: chunk.content,
         embedding: embeddings[j],
         metadata,
         source_type: 'user_pdf' as const,

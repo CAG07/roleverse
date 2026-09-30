@@ -86,6 +86,19 @@ export default function PlayingASessionGuide() {
         follow you to a different device, and clearing your browser data will clear them too.
       </GuideNote>
 
+      <h2>Experience Points</h2>
+      <p>
+        The Game Master calls out experience point awards in narration — after a fight, when
+        treasure is recovered, or when a session wraps up — but doesn&apos;t save them
+        anywhere itself. Jot the numbers down when the Game Master states them, and enter
+        them yourself in the <strong>Experience Points</strong> field on your character sheet
+        before your next session.
+      </p>
+      <GuideNote>
+        There&apos;s no persistent memory between sessions, so recorded XP totals live only on
+        your character sheet, not in the chat history.
+      </GuideNote>
+
       <h2>Session History</h2>
       <p>
         Select <strong>Session History</strong> from the session sidebar to browse every past

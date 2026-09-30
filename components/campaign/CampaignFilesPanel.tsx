@@ -3,6 +3,7 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { assertWithinQuota, getUsedBytes } from '@/lib/storage/check-quota';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import styles from './CampaignFilesPanel.module.css';
 
 const FILE_MAX_BYTES = 20 * 1024 * 1024; // 20MB per file
@@ -49,6 +50,8 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
    * quota indicator so a player can see how much room is left before picking
    * a file, rather than only finding out when an upload is rejected. */
   const [usedBytes, setUsedBytes] = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<FileEntry | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -230,6 +233,14 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
     }).catch(() => {});
   };
 
+  const handleConfirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    await handleDelete(pendingDelete.name);
+    setDeleting(false);
+    setPendingDelete(null);
+  };
+
   return (
     <div className={styles.infoPanel}>
       <h3 className={styles.infoPanelTitle}>Modules &amp; Files</h3>
@@ -274,7 +285,7 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
                 <button
                   type="button"
                   className={styles.btnDelete}
-                  onClick={() => void handleDelete(f.name)}
+                  onClick={() => setPendingDelete(f)}
                   aria-label={`Delete ${f.displayName}`}
                 >
                   ×
@@ -317,6 +328,16 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
       </div>
 
       {error && <p className={styles.errorMsg}>{error}</p>}
+
+      <ConfirmModal
+        open={pendingDelete !== null}
+        title="Delete File"
+        message={`Delete "${pendingDelete?.displayName ?? ''}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        busy={deleting}
+        onConfirm={() => void handleConfirmDelete()}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

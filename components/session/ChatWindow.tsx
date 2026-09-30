@@ -16,7 +16,11 @@ import type { ChatMessage, SceneMedia, AgentType, TranscriptEntry, FlaggedHpChan
 import type { AgentMessage, AgentSceneMedia } from '@/lib/mcp/types';
 import type { FlaggedNpc } from '@/lib/types/npc';
 import { updateCharacterHp } from '@/lib/characters/character-updates';
+import { useHpUpdate } from '@/lib/characters/hp-update-context';
 import { transcriptToMessages } from '@/lib/sessions/transcript-to-messages';
+
+/** Kept in sync with ChatWindow.module.css's `.inputTextarea` max-height (~2in cap). */
+const MAX_TEXTAREA_HEIGHT_PX = 192;
 
 // Agent color/label mapping — matches design spec
 const AGENT_CONFIG: Record<string, { accent: string; label: string }> = {
@@ -127,7 +131,10 @@ export default function ChatWindow({
   const [npcActionState, setNpcActionState] = useState<Record<string, 'adding' | 'resolved' | 'error'>>({});
   const [hpChangeActionState, setHpChangeActionState] = useState<Record<string, 'applying' | 'resolved' | 'error'>>({});
 
+  const onHpChange = useHpUpdate();
+
   const feedRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef(messages);
   const streamingMsgRef = useRef<StreamingMsg | null>(null);
   const scrollRafRef = useRef<number | null>(null);
@@ -197,6 +204,20 @@ export default function ChatWindow({
     setShowScrollButton(false);
   }, []);
 
+  // Grows the compose box as the player types multi-line messages, up to the ~2in
+  // cap in ChatWindow.module.css, then scrolls internally. Collapses back to one
+  // row once `input` clears (e.g. after send).
+  const autoResizeTextarea = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, MAX_TEXTAREA_HEIGHT_PX)}px`;
+  }, []);
+
+  useEffect(() => {
+    autoResizeTextarea();
+  }, [input, autoResizeTextarea]);
+
   const finalizeStream = useCallback(() => {
     if (tokenRafRef.current !== null) {
       cancelAnimationFrame(tokenRafRef.current);
@@ -264,11 +285,12 @@ export default function ChatWindow({
     setHpChangeActionState((prev) => ({ ...prev, [change.key]: 'applying' }));
     try {
       await updateCharacterHp(change.characterId, change.newHp);
+      onHpChange?.(change.characterId, change.newHp);
       setHpChangeActionState((prev) => ({ ...prev, [change.key]: 'resolved' }));
     } catch {
       setHpChangeActionState((prev) => ({ ...prev, [change.key]: 'error' }));
     }
-  }, []);
+  }, [onHpChange]);
 
   const handleSend = useCallback(async (overrideText?: string) => {
     const text = (overrideText ?? input).trim();
@@ -668,6 +690,7 @@ export default function ChatWindow({
       {/* Input bar */}
       <div className={styles.inputBar}>
         <textarea
+          ref={textareaRef}
           className={styles.inputTextarea}
           value={input}
           onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}

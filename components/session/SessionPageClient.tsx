@@ -13,6 +13,7 @@ import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
 import { createClient } from '@/lib/supabase/client';
 import PartyStatus from '@/components/session/PartyStatus';
 import SessionNotes from '@/components/session/SessionNotes';
+import { HpUpdateContext } from '@/lib/characters/hp-update-context';
 import type { SceneMedia, Character, TranscriptEntry } from '@/lib/types/session';
 import styles from './SessionPageClient.module.css';
 
@@ -54,7 +55,7 @@ export default function SessionPageClient({
   campaignId,
   campaignName,
   gameSystem,
-  characters,
+  characters: initialCharacters,
   initialTranscript = [],
   initialSceneMedia = null,
   aiAssistEnabled = true,
@@ -69,6 +70,10 @@ export default function SessionPageClient({
   aiAssistEnabled?: boolean;
 }) {
   const router = useRouter();
+  const [characters, setCharacters] = useState<Character[]>(initialCharacters);
+  const handleCharacterHpChange = useCallback((characterId: string, hp: number) => {
+    setCharacters((prev) => prev.map((c) => (c.id === characterId ? { ...c, hp } : c)));
+  }, []);
   const [sceneMedia, setSceneMedia] = useState<SceneMedia | null>(initialSceneMedia);
   // Skip the first persistence write — sceneMedia already matches the DB
   // value it was hydrated from, so there's nothing to save on mount.
@@ -174,6 +179,7 @@ export default function SessionPageClient({
       : undefined;
 
   return (
+    <HpUpdateContext.Provider value={handleCharacterHpChange}>
     <div className={styles.sessionRoot}>
       {/* Confirm Stop Session dialog */}
       {confirmStop && (
@@ -376,5 +382,6 @@ export default function SessionPageClient({
         </div>
       </div>
     </div>
+    </HpUpdateContext.Provider>
   );
 }

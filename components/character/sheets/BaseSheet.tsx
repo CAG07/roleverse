@@ -7,6 +7,7 @@ import InlineNumberEditor from '../InlineNumberEditor';
 import EquipmentList from '../EquipmentList';
 import CustomFieldsSection from '../CustomFieldsSection';
 import { updateCharacterHp } from '@/lib/characters/character-updates';
+import { useHpUpdate } from '@/lib/characters/hp-update-context';
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { abilityAbbreviation } from '@/lib/character/sheet-schema';
 import type { SheetField, SystemSheetSchema } from '@/lib/character/sheet-schema/types';
@@ -182,6 +183,7 @@ export default function BaseSheet({
   const name = (data.name as string) ?? 'Unknown';
   const hp = (data.hp as number) ?? 0;
   const maxHp = (data.maxHp as number) ?? 0;
+  const onHpChange = useHpUpdate();
 
   const abilityScoreNames = getGameSystem(gameSystem)?.abilityScores ?? [];
   const abilityScores = (data.abilityScores as Record<string, number> | undefined) ?? {};
@@ -243,7 +245,11 @@ export default function BaseSheet({
             <span className={`${styles.combatValue} ${styles.hp}`}>
               <InlineNumberEditor
                 value={hp}
-                onSave={(newHp) => void updateCharacterHp(characterId, newHp).catch(() => {})}
+                onSave={(newHp) => {
+                  void updateCharacterHp(characterId, newHp)
+                    .then(() => onHpChange?.(characterId, newHp))
+                    .catch(() => {});
+                }}
                 ariaLabel="Current HP"
               />
               /{maxHp}
