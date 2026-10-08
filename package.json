@@ -55,7 +55,7 @@
     "tailwind-merge": "^3.6.0",
     "tar": "7.5.21",
     "unpdf": "^1.8.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
