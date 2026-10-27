@@ -6,8 +6,8 @@ import { assertWithinQuota, getUsedBytes } from '@/lib/storage/check-quota';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import styles from './CampaignFilesPanel.module.css';
 
-const FILE_MAX_BYTES = 20 * 1024 * 1024; // 20MB per file
-const CAMPAIGN_QUOTA_BYTES = 25 * 1024 * 1024; // 25MB per campaign (half of the 50MB combined ceiling)
+const FILE_MAX_BYTES = 50 * 1024 * 1024; // 50MB per file (Supabase Free plan per-upload cap)
+const CAMPAIGN_QUOTA_BYTES = 100 * 1024 * 1024; // 100MB per campaign
 const BUCKET = 'campaign-pdfs';
 const ACCEPTED_EXTENSIONS = ['.pdf', '.txt', '.md'];
 const ACCEPTED_MIME_TYPES = ['application/pdf', 'text/plain', 'text/markdown'];
@@ -262,7 +262,7 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
       <p className={styles.explainer}>
         PDF, plain text, or Markdown files are indexed automatically after upload so the Rules
         Arbiter can search their contents during play — this only helps with rules questions.
-        A PDF needs an actual text layer (not a scanned image). Up to 20MB per file, 25MB total
+        A PDF needs an actual text layer (not a scanned image). Up to 50MB per file, 100MB total
         per campaign.
       </p>
 

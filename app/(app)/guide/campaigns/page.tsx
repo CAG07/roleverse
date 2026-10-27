@@ -37,13 +37,13 @@ export default function CampaignsGuide() {
       <h2>Uploading Source Material</h2>
       <p>
         Once a campaign exists, open its settings and look for the files panel. You can upload
-        the actual module you&apos;re running — a PDF, plain text, or Markdown file, up to 20MB
+        the actual module you&apos;re running — a PDF, plain text, or Markdown file, up to 50MB
         per file — and the Game Master will reference it directly while narrating your
         sessions, instead of relying only on general knowledge of the system. The same panel
         works for house-rule documents: upload one and it gets the same treatment as a module.
       </p>
       <p>
-        Each campaign has 25MB of upload room in total. A newly uploaded file takes a short
+        Each campaign has 100MB of upload room in total. A newly uploaded file takes a short
         moment to finish being read in before the Game Master can use it — you&apos;ll see its
         status change once it&apos;s ready.
       </p>
