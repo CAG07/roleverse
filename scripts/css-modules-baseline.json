@@ -200,6 +200,10 @@
     "reason": "missing sibling .module.css"
   },
   {
+    "file": "components/character/sheets/DND5E2024Sheet.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
     "file": "components/character/sheets/Fallout2D20Sheet.tsx",
     "reason": "missing sibling .module.css"
   },

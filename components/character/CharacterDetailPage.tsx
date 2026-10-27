@@ -24,6 +24,10 @@ import CharacterHeaderBanner from './CharacterHeaderBanner';
 const FG_IMPORT_CAVEATS_5E = [
   "Currency, spellcasting ability/DC/attack modifier, known spells, and appearance/backstory/allies/treasure text live only in the file's freeform notes, not dedicated fields — copied into this character's Notes instead of split apart.",
 ];
+const FG_IMPORT_CAVEATS_5E_2024 = [
+  ...FG_IMPORT_CAVEATS_5E,
+  'Background ability score increases, Origin feat, size, exhaustion level, weapon masteries, and feats also live only in the notes on export, so they are copied into Notes rather than back into their own fields.',
+];
 const FG_IMPORT_CAVEATS_PF2E = [
   "This importer's field mapping is based on a single third-party sample, not a real Fantasy Grounds PF2E export — double-check every value after importing.",
   "Currency, AC/shield breakdowns, strikes, spell details, and personal/campaign-notes text live only in the file's freeform notes — copied into this character's Notes instead of split apart.",
@@ -34,6 +38,7 @@ const FG_IMPORT_CAVEATS_ADD = [
 ];
 const FG_IMPORT_CAVEATS: Record<string, string[]> = {
   '5E_2014': FG_IMPORT_CAVEATS_5E,
+  '5E_2024': FG_IMPORT_CAVEATS_5E_2024,
   PATHFINDER_2E: FG_IMPORT_CAVEATS_PF2E,
   ADD1E: FG_IMPORT_CAVEATS_ADD,
   ADD2E: FG_IMPORT_CAVEATS_ADD,

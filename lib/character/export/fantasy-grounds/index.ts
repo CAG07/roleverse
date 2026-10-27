@@ -38,6 +38,10 @@ export function buildFantasyGroundsExport(
   switch (gameSystem) {
     case '5E_2014':
       return { filename: `${slug}-5e.xml`, content: exportDnd5e(data, equipment), mimeType: 'application/xml' };
+    case '5E_2024':
+      // Same mapper as 2014: the 2024 sheet keeps every shared field's key, and
+      // Fantasy Grounds runs both rule sets on its one 5E ruleset.
+      return { filename: `${slug}-5e-2024.xml`, content: exportDnd5e(data, equipment), mimeType: 'application/xml' };
     case 'PATHFINDER_2E':
       return { filename: `${slug}-pf2e.xml`, content: exportPf2e(data, equipment), mimeType: 'application/xml' };
     case 'ADD1E':

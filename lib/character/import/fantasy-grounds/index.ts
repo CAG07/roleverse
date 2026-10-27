@@ -10,7 +10,7 @@ import { parseFGDnd5eCharacterXml } from './parse-dnd5e';
 import { parseFGPf2eCharacterXml } from './parse-pf2e';
 import type { ParsedCharacterImport } from '../types';
 
-export const FG_XML_IMPORT_SUPPORTED_SYSTEMS = new Set(['5E_2014', 'PATHFINDER_2E', 'ADD1E', 'ADD2E']);
+export const FG_XML_IMPORT_SUPPORTED_SYSTEMS = new Set(['5E_2014', '5E_2024', 'PATHFINDER_2E', 'ADD1E', 'ADD2E']);
 
 export function parseFantasyGroundsCharacterXml(
   gameSystem: string,
@@ -18,6 +18,7 @@ export function parseFantasyGroundsCharacterXml(
 ): ParsedCharacterImport | { error: string } {
   switch (gameSystem) {
     case '5E_2014':
+    case '5E_2024':
       return parseFGDnd5eCharacterXml(xmlText);
     case 'PATHFINDER_2E':
       return parseFGPf2eCharacterXml(xmlText);
