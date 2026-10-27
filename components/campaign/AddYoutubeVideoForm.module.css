@@ -1,0 +1,68 @@
+/*
+ * CSS Module (not styled-jsx) — see CampaignScenesPanel.module.css for why.
+ * Matches the Scene Library's existing upload button and hint styling.
+ */
+
+.form {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.label {
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+}
+
+.input {
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  background: var(--void);
+  border: 1px solid var(--void-border);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--gold-dim);
+}
+.input::placeholder {
+  color: var(--ivory-dim);
+}
+
+.btnAdd {
+  justify-self: start;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+.btnAdd:hover:not(:disabled) {
+  background: var(--gold-tint);
+  border-color: var(--gold);
+}
+.btnAdd:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.errorMsg {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--crimson-bright);
+  margin: 0;
+}

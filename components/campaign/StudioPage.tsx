@@ -148,8 +148,9 @@ export function StudioPage({ campaignId, campaignName, coverImageUrl, characters
             )
           ) : videos.length === 0 ? (
             <p className={styles.placeholder}>
-              No videos yet — a YouTube link written into an uploaded document (house rules,
-              module notes) will show up here once indexed.
+              No videos yet. Add a YouTube link from the campaign&apos;s Scene Library or the
+              scene picker during a session. Links written into an uploaded document (house
+              rules, module notes) also show up here once indexed.
             </p>
           ) : (
             <div className={styles.videoGrid}>

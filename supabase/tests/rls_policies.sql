@@ -4,7 +4,7 @@
 
 BEGIN;
 
-SELECT plan(28);
+SELECT plan(31);
 
 -- ============================================================================
 -- 1. Verify RLS is enabled on every table in the public schema
@@ -287,6 +287,38 @@ SELECT ok(
       AND policyname = 'scene_media_select_member'
   ),
   'scene_media SELECT policy references owner_id (DM access)'
+);
+
+-- ============================================================================
+-- 4b. campaign_videos — owner-scoped SELECT, INSERT gated on campaign
+-- ownership, and an explicit DELETE policy (without one, .delete() silently
+-- removes nothing under RLS).
+-- ============================================================================
+
+SELECT ok(
+  (
+    SELECT qual::text LIKE '%owner_id%'
+    FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'campaign_videos' AND cmd = 'SELECT'
+  ),
+  'campaign_videos SELECT policy is scoped to owner_id'
+);
+
+SELECT ok(
+  (
+    SELECT with_check::text LIKE '%campaigns%'
+    FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'campaign_videos' AND cmd = 'INSERT'
+  ),
+  'campaign_videos INSERT policy checks campaign ownership'
+);
+
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'campaign_videos' AND cmd = 'DELETE'
+  ),
+  'campaign_videos has a DELETE policy'
 );
 
 -- ============================================================================
