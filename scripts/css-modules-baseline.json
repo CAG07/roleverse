@@ -92,10 +92,6 @@
     "reason": "missing sibling .module.css"
   },
   {
-    "file": "app/(app)/guide/workshop/page.tsx",
-    "reason": "missing sibling .module.css"
-  },
-  {
     "file": "app/(app)/image-studio/page.tsx",
     "reason": "missing sibling .module.css"
   },
@@ -114,10 +110,6 @@
   {
     "file": "app/(app)/loading.tsx",
     "reason": "uses inline style={{ }}"
-  },
-  {
-    "file": "app/(app)/workshop/page.tsx",
-    "reason": "missing sibling .module.css"
   },
   {
     "file": "app/layout.tsx",
