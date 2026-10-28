@@ -10,6 +10,13 @@ import {
   type SceneAsset,
 } from '@/lib/campaigns/scene-assets';
 import { getUsedBytes } from '@/lib/storage/check-quota';
+import {
+  listCampaignVideos,
+  deleteCampaignVideo,
+  youtubeThumbnailUrl,
+  type CampaignVideo,
+} from '@/lib/campaigns/campaign-videos';
+import AddYoutubeVideoForm from './AddYoutubeVideoForm';
 import styles from './CampaignScenesPanel.module.css';
 
 function formatSize(bytes: number): string {
@@ -27,12 +34,17 @@ export default function CampaignScenesPanel({ campaignId }: { campaignId: string
    * quota indicator so a player can see how much room is left before picking
    * a file, rather than only finding out when an upload is rejected. */
   const [usedBytes, setUsedBytes] = useState<number | null>(null);
+  /** YouTube links added by hand — stored as rows, not files, so they don't count toward the quota. */
+  const [videos, setVideos] = useState<CampaignVideo[]>([]);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
-      const result = await listCampaignScenes(campaignId);
+      const [result, videoResult] = await Promise.all([
+        listCampaignScenes(campaignId),
+        listCampaignVideos(campaignId),
+      ]);
       if (cancelled) return;
 
       setFolderPath(result.folderPath);
@@ -40,6 +52,11 @@ export default function CampaignScenesPanel({ campaignId }: { campaignId: string
         setError(result.error);
       } else {
         setAssets(result.assets);
+      }
+      if (videoResult.error) {
+        setError(videoResult.error);
+      } else {
+        setVideos(videoResult.videos);
       }
 
       if (result.folderPath) {
@@ -87,6 +104,15 @@ export default function CampaignScenesPanel({ campaignId }: { campaignId: string
     // than trying to subtract a delta we don't have.
     const used = await getUsedBytes(supabase, SCENE_BUCKET, folderPath);
     setUsedBytes(used);
+  };
+
+  const handleDeleteVideo = async (video: CampaignVideo) => {
+    const { error: deleteError } = await deleteCampaignVideo(video.id);
+    if (deleteError) {
+      setError(deleteError);
+      return;
+    }
+    setVideos((prev) => prev.filter((v) => v.id !== video.id));
   };
 
   return (
@@ -149,6 +175,36 @@ export default function CampaignScenesPanel({ campaignId }: { campaignId: string
           Images up to 5MB, 25MB total per campaign.
         </p>
       </div>
+
+      {!loading && videos.length > 0 && (
+        <div className={styles.videoGrid}>
+          {videos.map((v) => {
+            const label = v.title ?? 'YouTube video';
+            return (
+              <div key={v.id} className={styles.videoTile}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={youtubeThumbnailUrl(v.videoId)} alt={label} className={styles.assetThumb} />
+                <span className={styles.videoBadge} aria-hidden="true">▶</span>
+                <span className={styles.videoTitle}>{label}</span>
+                <button
+                  type="button"
+                  className={styles.btnDelete}
+                  onClick={() => void handleDeleteVideo(v)}
+                  aria-label={`Delete ${label}`}
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <AddYoutubeVideoForm
+        campaignId={campaignId}
+        idPrefix="campaignScenes"
+        onAdded={(video) => setVideos((prev) => [...prev, video])}
+      />
 
       {error && <p className={styles.errorMsg}>{error}</p>}
     </div>

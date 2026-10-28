@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
 import { X } from 'lucide-react';
 import { listCampaignScenes, uploadCampaignScene, type SceneAsset } from '@/lib/campaigns/scene-assets';
+import { listCampaignVideos, youtubeThumbnailUrl, type CampaignVideo } from '@/lib/campaigns/campaign-videos';
+import AddYoutubeVideoForm from '@/components/campaign/AddYoutubeVideoForm';
 import type { SceneMedia } from '@/lib/types/session';
 import styles from './ScenePickerModal.module.css';
 
@@ -15,8 +17,10 @@ interface ScenePickerModalProps {
 
 export default function ScenePickerModal({ open, campaignId, onClose, onSelect }: ScenePickerModalProps) {
   const [assets, setAssets] = useState<SceneAsset[]>([]);
+  const [videos, setVideos] = useState<CampaignVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState('');
+  const [videoListError, setVideoListError] = useState('');
   const [uploadError, setUploadError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [prevOpen, setPrevOpen] = useState(open);
@@ -29,6 +33,7 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
     if (open) {
       setLoading(true);
       setListError('');
+      setVideoListError('');
       setUploadError('');
     }
   }
@@ -36,12 +41,16 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    void listCampaignScenes(campaignId).then((result) => {
-      if (cancelled) return;
-      if (result.error) setListError(result.error);
-      setAssets(result.assets);
-      setLoading(false);
-    });
+    void Promise.all([listCampaignScenes(campaignId), listCampaignVideos(campaignId)]).then(
+      ([result, videoResult]) => {
+        if (cancelled) return;
+        setListError(result.error ?? '');
+        setVideoListError(videoResult.error ?? '');
+        setAssets(result.assets);
+        setVideos(videoResult.videos);
+        setLoading(false);
+      }
+    );
     return () => {
       cancelled = true;
     };
@@ -73,6 +82,21 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
         type: asset.type,
         url: asset.url,
         caption: asset.displayName,
+        source: 'campaign_asset',
+        timestamp: new Date(),
+      });
+      onClose();
+    },
+    [onSelect, onClose]
+  );
+
+  const handlePickVideo = useCallback(
+    (video: CampaignVideo) => {
+      onSelect({
+        id: `scene-${Date.now()}`,
+        type: 'youtube',
+        videoId: video.videoId,
+        caption: video.title ?? undefined,
         source: 'campaign_asset',
         timestamp: new Date(),
       });
@@ -137,6 +161,38 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
           <p className={styles.placeholder}>
             No scene photos yet — upload some from the campaign&apos;s Scene Library first.
           </p>
+        )}
+
+        {!loading && videoListError && <p className={styles.errorMsg}>{videoListError}</p>}
+
+        {!loading && videos.length > 0 && (
+          <div className={styles.videoGrid}>
+            {videos.map((v) => {
+              const label = v.title ?? 'YouTube video';
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  className={styles.videoTile}
+                  onClick={() => handlePickVideo(v)}
+                  title={label}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={youtubeThumbnailUrl(v.videoId)} alt={label} className={styles.assetThumb} />
+                  <span className={styles.videoBadge} aria-hidden="true">▶</span>
+                  <span className={styles.videoTitle}>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {!loading && (
+          <AddYoutubeVideoForm
+            campaignId={campaignId}
+            idPrefix="scenePicker"
+            onAdded={(video) => setVideos((prev) => [...prev, video])}
+          />
         )}
       </div>
     </div>
