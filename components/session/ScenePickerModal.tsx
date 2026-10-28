@@ -187,11 +187,13 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
           </div>
         )}
 
-        <AddYoutubeVideoForm
-          campaignId={campaignId}
-          idPrefix="scenePicker"
-          onAdded={(video) => setVideos((prev) => [...prev, video])}
-        />
+        {!loading && (
+          <AddYoutubeVideoForm
+            campaignId={campaignId}
+            idPrefix="scenePicker"
+            onAdded={(video) => setVideos((prev) => [...prev, video])}
+          />
+        )}
       </div>
     </div>
   );
