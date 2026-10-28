@@ -20,6 +20,7 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
   const [videos, setVideos] = useState<CampaignVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState('');
+  const [videoListError, setVideoListError] = useState('');
   const [uploadError, setUploadError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [prevOpen, setPrevOpen] = useState(open);
@@ -32,6 +33,7 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
     if (open) {
       setLoading(true);
       setListError('');
+      setVideoListError('');
       setUploadError('');
     }
   }
@@ -42,7 +44,8 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
     void Promise.all([listCampaignScenes(campaignId), listCampaignVideos(campaignId)]).then(
       ([result, videoResult]) => {
         if (cancelled) return;
-        if (result.error || videoResult.error) setListError(result.error ?? videoResult.error ?? '');
+        setListError(result.error ?? '');
+        setVideoListError(videoResult.error ?? '');
         setAssets(result.assets);
         setVideos(videoResult.videos);
         setLoading(false);
@@ -159,6 +162,8 @@ export default function ScenePickerModal({ open, campaignId, onClose, onSelect }
             No scene photos yet — upload some from the campaign&apos;s Scene Library first.
           </p>
         )}
+
+        {!loading && videoListError && <p className={styles.errorMsg}>{videoListError}</p>}
 
         {!loading && videos.length > 0 && (
           <div className={styles.videoGrid}>
