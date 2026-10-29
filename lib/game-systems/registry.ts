@@ -152,8 +152,11 @@ const dnd5e2024: GameSystem = {
     spellSlots: 'object',
   },
   rulesPrompt:
-    'You are a rules arbiter for D&D 5th Edition (2024 revised rules). Apply the updated 2024 PHB class features, weapon masteries, and spellcasting rules.',
-  supported: false,
+    'You are a rules arbiter for D&D 5th Edition (2024 revised rules). Apply the 2024 Player\'s Handbook, not the 2014 rules: ' +
+    'species instead of race, backgrounds that grant the ability score increases and an Origin feat, weapon mastery properties, ' +
+    'Heroic Inspiration, the revised conditions (Exhaustion is a cumulative -2 per level to d20 tests, death at level 6), ' +
+    'and the revised class features and spellcasting. When a 2024 rule differs from 2014, say so and use the 2024 version.',
+  supported: true,
   ragSource: {
     type: 'none',
     notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',

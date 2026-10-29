@@ -8,6 +8,7 @@ import type { FieldDraft, KeyedDraft, OpenDraft, SheetField, SystemSheetSchema, 
 import add1e from './add1e';
 import add2e from './add2e';
 import dnd5e from './dnd5e';
+import dnd5e2024 from './dnd5e2024';
 import pf2e from './pf2e';
 import dcc from './dcc';
 import dnd35e from './dnd35e';
@@ -20,6 +21,7 @@ const schemas: Record<string, SystemSheetSchema> = {
   [add1e.gameSystem]: add1e,
   [add2e.gameSystem]: add2e,
   [dnd5e.gameSystem]: dnd5e,
+  [dnd5e2024.gameSystem]: dnd5e2024,
   [pf2e.gameSystem]: pf2e,
   [dcc.gameSystem]: dcc,
   [dnd35e.gameSystem]: dnd35e,

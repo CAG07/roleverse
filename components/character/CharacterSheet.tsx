@@ -3,6 +3,7 @@
 import ADD1ESheet from './sheets/ADD1ESheet';
 import ADD2ESheet from './sheets/ADD2ESheet';
 import DND5ESheet from './sheets/DND5ESheet';
+import DND5E2024Sheet from './sheets/DND5E2024Sheet';
 import PF2ESheet from './sheets/PF2ESheet';
 import DCCSheet from './sheets/DCCSheet';
 import DND35ESheet from './sheets/DND35ESheet';
@@ -54,6 +55,10 @@ export default function CharacterSheet({
     case '5E_2014':
       return (
         <DND5ESheet characterId={characterId} data={characterData} equipment={equipment} compact={compact} />
+      );
+    case '5E_2024':
+      return (
+        <DND5E2024Sheet characterId={characterId} data={characterData} equipment={equipment} compact={compact} />
       );
     case 'PATHFINDER_2E':
       return (

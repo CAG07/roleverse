@@ -1,5 +1,5 @@
 // lib/character/export/fantasy-grounds/dnd5e.ts
-// Maps a 5E_2014 AssembledCharacterData onto Fantasy Grounds' single-character
+// Maps a 5E_2014 or 5E_2024 AssembledCharacterData onto Fantasy Grounds' single-character
 // XML export shape. Verified against a real exported character sample
 // (JDCain/FG5eXmlToPdf, FG5eXmlToPdf.Tests/XML/rita.xml) rather than official
 // docs — FG publishes no formal schema for this format. Import in FG via the
@@ -175,6 +175,20 @@ export function exportDnd5e(data: AssembledCharacterData, equipment: unknown[]):
       ? [`Allies & Organizations: ${data.alliesOrganizations}`]
       : []),
     ...((data.treasureNotes as string) ? [`Treasure: ${data.treasureNotes}`] : []),
+    // 5E 2024-only fields (lib/character/sheet-schema/dnd5e2024.ts). No real FG
+    // 2024 export has been checked for dedicated tags, so they go to notes.
+    ...((data.backgroundAbilityIncreases as string)
+      ? [`Background Ability Score Increases: ${data.backgroundAbilityIncreases}`]
+      : []),
+    ...((data.originFeat as string) ? [`Origin Feat: ${data.originFeat}`] : []),
+    ...((data.size as string) ? [`Size: ${data.size}`] : []),
+    ...(data.exhaustion != null ? [`Exhaustion Level: ${data.exhaustion}`] : []),
+    ...(Array.isArray(data.weaponMasteries) && data.weaponMasteries.length > 0
+      ? [`Weapon Masteries: ${(data.weaponMasteries as string[]).join(', ')}`]
+      : []),
+    ...(Array.isArray(data.feats) && data.feats.length > 0
+      ? [`Feats: ${(data.feats as string[]).join(', ')}`]
+      : []),
   ];
   const notesXml = notesParts.length > 0 ? leaf('notes', 'string', notesParts.join('\n')) : '';
 
