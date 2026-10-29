@@ -6,8 +6,8 @@ import { assertWithinQuota, getUsedBytes } from '@/lib/storage/check-quota';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import styles from './OracleRefsPanel.module.css';
 
-const FILE_MAX_BYTES = 20 * 1024 * 1024; // 20MB per file
-const CAMPAIGN_QUOTA_BYTES = 25 * 1024 * 1024; // 25MB per campaign, same ceiling as CampaignFilesPanel
+const FILE_MAX_BYTES = 50 * 1024 * 1024; // 50MB per file (Supabase Free plan per-upload cap)
+const CAMPAIGN_QUOTA_BYTES = 100 * 1024 * 1024; // 100MB per campaign, same ceiling as CampaignFilesPanel
 const BUCKET = 'campaign-oracle-refs';
 const ACCEPTED_EXTENSIONS = ['.pdf', '.txt', '.md'];
 const ACCEPTED_MIME_TYPES = ['application/pdf', 'text/plain', 'text/markdown'];
@@ -229,7 +229,7 @@ export default function OracleRefsPanel({ campaignId }: { campaignId: string }) 
         Bring your own oracle. Upload the reference for whichever solo-play oracle system you own —
         Mythic is the most popular, battle-tested choice, but any system (or your own homebrew)
         works. RoleVerse reads only your own upload; a PDF needs an actual text layer (not a
-        scanned image). Up to 20MB per file, 25MB total per campaign.
+        scanned image). Up to 50MB per file, 100MB total per campaign.
       </p>
 
       {loading ? (

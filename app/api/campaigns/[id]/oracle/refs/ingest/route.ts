@@ -15,6 +15,10 @@ type RouteParams = { params: Promise<{ id: string }> };
 
 const BUCKET = 'campaign-oracle-refs';
 
+// Parsing, chunking and embedding a file near the 50MB upload cap can exceed
+// the default serverless timeout — same budget as the module ingest route.
+export const maxDuration = 60;
+
 async function authAndCampaign(campaignId: string) {
   const supabase = await createClient();
   const {
