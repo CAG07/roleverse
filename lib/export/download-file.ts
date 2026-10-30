@@ -4,7 +4,12 @@
 // CharacterDetailPage.tsx, now shared with the CSV and session-Markdown
 // exporters so there's one implementation instead of three.
 
-export function downloadFile(content: string, filename: string, mimeType: string): void {
+/** `content` is a string (written as UTF-8) or raw bytes, e.g. Latin-1 Fantasy Grounds XML. */
+export function downloadFile(
+  content: string | Uint8Array<ArrayBuffer>,
+  filename: string,
+  mimeType: string
+): void {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

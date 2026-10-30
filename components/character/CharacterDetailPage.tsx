@@ -11,6 +11,7 @@ import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
 import { buildFantasyGroundsExport } from '@/lib/character/export/fantasy-grounds';
 import { buildPlainTextSheet } from '@/lib/character/export/plain-text';
 import { downloadFile, slugify } from '@/lib/export/download-file';
+import { decodeXmlBytes, encodeLatin1 } from '@/lib/character/fantasy-grounds-encoding';
 import { FG_XML_IMPORT_SUPPORTED_SYSTEMS, parseFantasyGroundsCharacterXml } from '@/lib/character/import/fantasy-grounds';
 import { parsePlainTextCharacterSheet } from '@/lib/character/import/plain-text';
 import { buildImportDiff, buildImportUpdatePayload } from '@/lib/character/import/diff';
@@ -131,7 +132,7 @@ export function CharacterDetailPage({
     e.target.value = '';
     if (!file) return;
     setImportError(null);
-    const text = await file.text();
+    const text = decodeXmlBytes(await file.arrayBuffer());
     const parsed = parseFantasyGroundsCharacterXml(character.game_system, text);
     if ('error' in parsed) {
       setImportError(parsed.error);
@@ -179,7 +180,8 @@ export function CharacterDetailPage({
 
   const handleExport = () => {
     if (!exportable) return;
-    downloadFile(exportable.content, exportable.filename, exportable.mimeType);
+    // FG files are Latin-1 (their prolog says so); a string Blob would be UTF-8.
+    downloadFile(encodeLatin1(exportable.content), exportable.filename, exportable.mimeType);
   };
 
   const handleExportText = () => {
