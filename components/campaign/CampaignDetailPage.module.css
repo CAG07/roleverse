@@ -166,7 +166,7 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ivory);
+  color: var(--on-accent);
   text-decoration: none;
   transition:
     background-color 0.2s,
@@ -190,7 +190,7 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ivory);
+  color: var(--on-accent);
   cursor: pointer;
   transition:
     background-color 0.2s,
@@ -450,8 +450,9 @@
     background-color 0.15s;
 }
 .btnModuleSave:hover:not(:disabled) {
-  background: var(--gold-dim);
+  background: var(--gold);
   border-color: var(--gold);
+  color: var(--on-accent);
 }
 .btnModuleSave:disabled {
   opacity: 0.5;

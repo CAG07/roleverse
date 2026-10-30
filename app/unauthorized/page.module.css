@@ -122,6 +122,7 @@
   background: var(--crimson);
   border-color: var(--crimson-bright);
   box-shadow: 0 0 16px var(--crimson-glow);
+  color: var(--on-accent);
 }
 
 .returnLink {

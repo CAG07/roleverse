@@ -24,8 +24,8 @@ const MAX_TEXTAREA_HEIGHT_PX = 192;
 
 // Agent color/label mapping — matches design spec
 const AGENT_CONFIG: Record<string, { accent: string; label: string }> = {
-  game_master: { accent: '#b8882a', label: 'Game Master' },
-  rules_arbiter: { accent: '#7a8a9a', label: 'Rules Arbiter' },
+  game_master: { accent: '#2c5d8f', label: 'Game Master' },
+  rules_arbiter: { accent: '#4f6070', label: 'Rules Arbiter' },
   lore_keeper: { accent: '#6a3a8a', label: 'Lore Keeper' },
 };
 const DEFAULT_AGENT = AGENT_CONFIG.game_master;

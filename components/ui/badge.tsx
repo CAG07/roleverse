@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils';
 const badgeVariants = {
   default: 'bg-[var(--crimson-dim)] text-[var(--ivory)] border border-[var(--crimson)]',
   secondary: 'bg-[var(--void-raised)] text-[var(--ivory-muted)] border border-[var(--void-border)]',
-  destructive: 'bg-[var(--crimson-bright)] text-[var(--ivory)] border border-[var(--crimson-bright)]',
+  destructive: 'bg-[var(--crimson-bright)] text-[var(--on-accent)] border border-[var(--crimson-bright)]',
   outline: 'border border-[var(--crimson-dim)] text-[var(--ivory)] bg-transparent',
-  teal: 'bg-[rgba(42,122,74,0.15)] text-[#4a9a5a] border border-[#2a4a32]',
+  teal: 'bg-[rgba(42,122,74,0.15)] text-[var(--status-healthy)] border border-[var(--status-healthy)]',
   gold: 'bg-[var(--gold-glow)] text-[var(--gold)] border border-[var(--gold-dim)]',
 };
 

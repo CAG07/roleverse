@@ -57,8 +57,8 @@
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #4a9a5a;
-  border: 1px solid #4a9a5a;
+  color: var(--status-healthy);
+  border: 1px solid var(--status-healthy);
   padding: 0.15rem 0.5rem;
 }
 
@@ -124,7 +124,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 0.15rem 0.5rem;
-  background: rgb(0 0 0 / 30%);
+  background: var(--gold-tint);
   border: 1px solid;
 }
 
