@@ -15,6 +15,10 @@ on:
           - PATHFINDER_2E
           - DCC
           - 3_5E
+          - 4E
+          - TOR2E
+          - CYBERPUNK_2020
+          - FALLOUT_2D20
 
 jobs:
   ingest:

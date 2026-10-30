@@ -23,12 +23,12 @@ const PF2E_REPO = 'foundryvtt/pf2e';
 const COMMIT = '675d2b7d613a80572b0330364ce84659068abe66';
 
 /**
- * Compendium packs to ingest. Spells only: rules text comes from rulebooks
- * players upload to their own campaigns, so the shared baseline index holds just
- * this lookup data. formatCreature and the other category mappings stay so a
+ * Compendium packs to ingest: spells, plus conditions as a small rules fallback.
+ * Full rules text comes from rulebooks players upload to their own campaigns,
+ * which take priority. formatCreature and the other category mappings stay so a
  * pack can be added back here without other changes.
  */
-const TARGET_PACKS = ['spells'] as const;
+const TARGET_PACKS = ['spells', 'conditions'] as const;
 
 const OPEN_LICENSES = new Set(['ORC', 'OGL']);
 

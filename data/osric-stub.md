@@ -21,13 +21,16 @@ Arbiter grounding, not a replacement for the published rulebooks.
    systems use this one hand-authored markdown baseline instead.
 3. Because OSRIC is explicitly a retro-clone of *both* editions, this single
    file is ingested twice — once tagged `ADD1E`, once tagged `ADD2E` (see
-   `lib/rag/fetchers/osric.ts`) — rather than maintaining two nearly-identical
+   `REFERENCE_DOCUMENTS` in `lib/rag/ingest.ts`) — rather than maintaining two nearly-identical
    documents. The "Where 1E and 2E Diverge" section near the end exists
    precisely so a Rules Arbiter reading this shared content for either edition
    knows which mechanics belong only to the other one.
 
 ## What the Rules Arbiter should do
 
+- This document is a fallback. If the campaign has an uploaded rulebook (Player's
+  Handbook, Dungeon Masters Guide, and so on), prefer it: uploads get a guaranteed
+  priority slot in retrieval.
 - Ground answers in the indexed sections below whenever the question matches
   one of these topics: ability scores, class and race restrictions, THAC0 and
   combat resolution, initiative, saving throws, spellcasting, turning undead,
@@ -549,3 +552,107 @@ a specific spell's full text, a specific monster's stat block, or a precise
 page reference, say so plainly and offer the best training-knowledge answer
 available rather than presenting an invented specific number as if it came
 from this indexed reference.
+
+---
+
+## Glossary
+
+- AC: Armor Class. Descending: 10 is unarmored, lower is better, and magic can push
+  it below 0.
+- THAC0: "To Hit Armor Class 0", the d20 roll needed to hit AC 0. The roll needed to
+  hit any AC is THAC0 minus that AC.
+- HD: Hit Dice, a monster's level and the number of dice rolled for its hit points.
+- hp: hit points.
+- XP: experience points.
+- Prime requisite: a class's key ability score. A high score can give an XP bonus.
+- Exceptional Strength: the percentile roll (18/01 to 18/00) a Fighter-type gets
+  with Strength 18.
+- Saving throw categories: Paralyzation/Poison/Death Magic, Rod/Staff/Wand,
+  Petrification/Polymorph, Breath Weapon, Spell. Roll equal to or above the number
+  on a d20.
+- Segment, round, turn: 1E time units. A round is 1 minute (10 segments) and a turn
+  is 10 minutes (10 rounds).
+- Weapon Speed Factor (WSF): a 1E initiative modifier for weapon size and weight.
+- Weapon proficiency / nonweapon proficiency (NWP): trained weapons (both editions)
+  and 2E's skill system.
+- Demi-human: dwarves, elves, gnomes, halflings, and half-elves; races with class
+  and level limits.
+- Multi-class / dual-class: advancing two or more classes at once (demi-humans) or
+  switching class once (humans).
+- Henchmen / hirelings: loyal followers vs paid help.
+- Morale: an NPC or monster check to see whether it flees or surrenders.
+- Kit: a 2E-only class customization package.
+- Turn Undead: a cleric's or paladin's ability to drive off or destroy undead.
+- Wandering monster check: a periodic roll (often 1 in 6) for a random encounter.
+
+## RoleVerse Character Sheet Fields
+
+What each field on RoleVerse's AD&D 1E and 2E character sheets holds (the two sheets
+are the same except that only 2E has Non-Weapon Proficiencies):
+
+- THAC0, AC, # of Attacks: base THAC0 from class and level, current Armor Class, and
+  attacks per round.
+- Experience Points, Experience Needed for Next Level.
+- Alignment, Player's Name, Sex, Height, Weight, Age, Homeland, Clan, Liege, Deity:
+  identity details.
+- Saving Throws: the target number for each of the five categories (roll equal to or
+  above on a d20).
+- Non-Weapon Proficiencies (2E only): the character's NWPs.
+- Strength, Intelligence, Wisdom, Dexterity, Constitution, and Charisma Adjustments:
+  the modifiers each ability score grants (to hit and damage, chance to learn
+  spells, magic defense, missile and AC adjustment, hit point bonus and system
+  shock, henchmen and loyalty).
+- Armor Class Breakdown: base AC, without shield, rear AC, and without the Dexterity
+  bonus (for surprise and attacks from behind).
+- Movement Rates: base and encumbered movement, and fly, swim, and climb speeds.
+- Total Encumbrance (Coins), Encounter Speed: carried weight in coin-weight units
+  (10 coins to the pound) and movement in combat.
+- Weapons: one row per weapon with proficiency, attack rate, THAC0 with that
+  weapon, damage, range, and special abilities.
+- Animal Companions: henchman animals and mounts with their own statistics.
+- Turn Undead: the cleric's result against each undead type.
+- Class & Racial Abilities: special abilities such as infravision or backstab.
+- Thief Skills (%): Pick Pockets, Open Locks, Find/Remove Traps, Move Silently, Hide
+  in Shadows, Hear Noise, Climb Walls, and Read Languages.
+- Treasure (Platinum, Gold, Silver), Languages, Spell Slots per spell level.
+
+## GM Quick Reference
+
+- Building a fight: compare monster Hit Dice with the party's levels. Monsters of
+  roughly the party's average level in Hit Dice, numbering about the same as the
+  party, make a standard fight. Large groups of low-HD monsters threaten low-level
+  parties because of their many attacks.
+- Wandering monsters: check every few turns in a dungeon (traditionally 1 in 6), and
+  less often in safe areas. Wandering monsters drain resources, which is what makes
+  the time spent matter.
+- Morale: monsters don't fight to the death. Check morale when they lose their
+  leader or take heavy losses, and let them flee, surrender, or parley.
+- Reaction rolls: roll 2d6 for how intelligent monsters and NPCs react before
+  combat. Not every encounter has to be a fight.
+- Ability checks: when no rule fits, roll a d20 at or under the relevant ability
+  score.
+- Rewards: in 1E, treasure is the main source of XP (traditionally 1 XP per gold
+  piece) and monsters give a smaller share. 2E makes treasure XP optional and adds
+  class-based and story awards. Decide which your campaign uses and tell the
+  players.
+- Training: in 1E, characters need training time and gold to level up. 2E makes
+  this optional.
+
+## Commonly Confused Rules
+
+- Lower Armor Class is better. To find what a character needs to hit, subtract the
+  target's AC from THAC0 (a THAC0 of 15 needs a 15 against AC 0 and a 20 against
+  AC -5).
+- Saving throws are rolled equal to or above the number on the sheet, not under.
+- A round is a full minute, not a few seconds, so one "attack" covers several blows.
+- In 1E, initiative is a d6 per side and the higher roll acts first. In 2E, it's a
+  d10 and the lower roll acts first.
+- In 1E, Weapon Speed Factor breaks ties and some simultaneous actions. 2E uses
+  weapon speed only as an optional rule.
+- A natural 20 isn't an automatic hit in the core rules of either edition, although
+  many tables play it that way. Confirm the table's house rules.
+- Demi-humans have level limits by class. Humans don't.
+- Ability adjustments come from tables by score, not from a single formula like
+  later editions.
+- Spellcasters must memorize spells in advance and lose them when cast. Being hit
+  while casting ruins the spell.

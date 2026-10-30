@@ -22,10 +22,10 @@ const add1e: GameSystem = {
     type: 'srd_clone',
     url: 'https://osricwiki.presgas.name/doku.php',
     notes:
-      'OSRIC (Old School Reference and Index Compilation) is a retro-clone of AD&D 1E/2E rules ' +
-      'released under the OGL. Indexed under ADD1E via the shared data/osric-stub.md — the same ' +
-      'file is also ingested under ADD2E (see lib/rag/fetchers/osric.ts); the "Where 1E and 2E ' +
-      'Diverge" section of that file calls out the handful of mechanics that differ.',
+      'OSRIC is an OGL retro-clone of AD&D 1E/2E. data/osric-stub.md is an original, hand-written ' +
+      'rules fallback ingested under both ADD1E and ADD2E (REFERENCE_DOCUMENTS in ' +
+      'lib/rag/ingest.ts); its "Where 1E and 2E Diverge" section covers the differences. ' +
+      'Rulebooks players upload to their campaigns take priority.',
   },
 };
 
@@ -51,11 +51,10 @@ const add2e: GameSystem = {
     type: 'srd_clone',
     url: 'https://osricwiki.presgas.name/doku.php',
     notes:
-      'OSRIC (Old School Reference and Index Compilation) is a retro-clone of AD&D 1E/2E rules ' +
-      'released under the OGL. No clean machine-readable JSON/markdown source was found — ' +
-      'indexed via the hand-authored data/osric-stub.md instead (see .claude/commands/roadmap.md ' +
-      'for the backlog of other systems still needing this treatment). The same file is also ' +
-      'ingested under ADD1E (see lib/rag/fetchers/osric.ts).',
+      'OSRIC is an OGL retro-clone of AD&D 1E/2E. data/osric-stub.md is an original, hand-written ' +
+      'rules fallback ingested under both ADD1E and ADD2E (REFERENCE_DOCUMENTS in ' +
+      'lib/rag/ingest.ts); its "Where 1E and 2E Diverge" section covers the differences. ' +
+      'Rulebooks players upload to their campaigns take priority.',
   },
 };
 
@@ -80,9 +79,9 @@ const dnd3_5e: GameSystem = {
     type: 'srd_clone',
     url: 'https://github.com/olimot/srd-v3.5-md',
     notes:
-      'Spells and class spell lists from the D&D 3.5 SRD (Open Game Content, OGL 1.0a) as ' +
-      'markdown, pinned to one commit. Rules come from rulebooks players upload to their ' +
-      'campaigns. See lib/rag/fetchers/srd35.ts.',
+      'Spells, class spell lists, and a rules fallback (the combat and conditions chapters) from ' +
+      'the D&D 3.5 SRD (Open Game Content, OGL 1.0a) as markdown, pinned to one commit. ' +
+      'Rulebooks players upload to their campaigns take priority. See lib/rag/fetchers/srd35.ts.',
   },
 };
 
@@ -102,10 +101,11 @@ const dnd4e: GameSystem = {
     'You are a rules arbiter for D&D 4th Edition. Use at-will, encounter, and daily powers. Apply 4E roles (striker, defender, controller, leader) and the minion/elite/solo monster framework.',
   supported: true,
   ragSource: {
-    type: 'none',
+    type: 'srd_clone',
     notes:
-      'No open, machine-readable source of spells or other lookup data exists, so there is no ' +
-      'shared baseline index. Rules come from rulebooks players upload to their campaigns.',
+      'No open, machine-readable rules source exists, so this indexes data/dnd4e-stub.md: an ' +
+      'original, hand-written rules fallback (no rulebook text). Rulebooks players upload to ' +
+      'their campaigns take priority.',
   },
 };
 
@@ -162,8 +162,9 @@ const dnd5e2024: GameSystem = {
     url: 'https://api.open5e.com/v2/',
     notes:
       'Open5e v2 API, document srd-2024 (System Reference Document 5.2, CC-BY-4.0, attribution ' +
-      'stored on every chunk). Spells and monsters only (monsters feed the encounter builder); ' +
-      'rules come from rulebooks players upload. See lib/rag/fetchers/open5e-v2.ts.',
+      'stored on every chunk): spells, monsters (they feed the encounter builder), and the core ' +
+      'rules sections, plus data/dnd5e2024-conditions.md. Rulebooks players upload to their ' +
+      'campaigns take priority. See lib/rag/fetchers/open5e-v2.ts.',
   },
 };
 
@@ -214,8 +215,8 @@ const pathfinder2e: GameSystem = {
     notes:
       'Foundry VTT PF2E system repository. Compendium entries are plain JSON under ' +
       'packs/pf2e/<pack>/; the fetcher streams the tarball for one pinned commit and keeps only ' +
-      'remastered spells published under the ORC or OGL license. Rules come from rulebooks ' +
-      'players upload. See lib/rag/fetchers/pf2e.ts.',
+      'remastered spells and conditions published under the ORC or OGL license. Rulebooks ' +
+      'players upload to their campaigns take priority. See lib/rag/fetchers/pf2e.ts.',
   },
 };
 
@@ -244,9 +245,9 @@ const dcc: GameSystem = {
   ragSource: {
     type: 'srd_clone',
     notes:
-      'DCC RPG core mechanics are covered under the Fifth Edition Foes / DCC SRD-equivalent OGL ' +
-      'release. No clean machine-readable JSON/markdown source was found; falling back to ' +
-      'data/dcc-stub.md placeholder. The Rules Arbiter for DCC relies primarily on Claude training knowledge.',
+      'No open, machine-readable rules source exists, so this indexes data/dcc-stub.md: an ' +
+      'original, hand-written rules fallback (no rulebook text). Rulebooks players upload to ' +
+      'their campaigns take priority.',
   },
 };
 
@@ -291,11 +292,12 @@ const tor2e: GameSystem = {
     'You are a rules arbiter for The One Ring 2nd Edition. Apply the revised 2E Fellowship Phase, Feat die (d12) and Success dice, and the Shadow/Hope tracking rules.',
   supported: true,
   ragSource: {
-    type: 'none',
+    type: 'srd_clone',
     notes:
-      'No open license or SRD exists, so there is no shared baseline index. Rules come from ' +
-      'rulebooks players upload to their campaigns. TOR1E stays unsupported by product ' +
-      'decision; TOR2E is the canonical "The One Ring" system.',
+      'No open license or SRD exists, so this indexes data/tor2e-stub.md: an original, ' +
+      'hand-written rules fallback (no rulebook text). Rulebooks players upload to their ' +
+      'campaigns take priority. TOR1E stays unsupported by product decision; TOR2E is the ' +
+      'canonical "The One Ring" system.',
   },
 };
 
@@ -315,10 +317,11 @@ const cyberpunk2020: GameSystem = {
     'You are a rules arbiter for Cyberpunk 2020. Use the FNFF (Friday Night Firefight) combat rules, Streetdeal for social encounters, and track Humanity loss for cyberware installation.',
   supported: true,
   ragSource: {
-    type: 'none',
+    type: 'srd_clone',
     notes:
-      'No open, machine-readable source of spells or other lookup data exists, so there is no ' +
-      'shared baseline index. Rules come from rulebooks players upload to their campaigns.',
+      'No open, machine-readable rules source exists, so this indexes data/cyberpunk2020-stub.md: an ' +
+      'original, hand-written rules fallback (no rulebook text). Rulebooks players upload to ' +
+      'their campaigns take priority.',
   },
 };
 
@@ -340,10 +343,11 @@ const fallout2d20: GameSystem = {
     'You are a rules arbiter for Fallout 2d20. Roll 2d20 against skill target numbers, spend Action Points for combat actions, track Luck Points, Radiation, and damage resistance by type (Normal/Energy/Radiation/Poison).',
   supported: true,
   ragSource: {
-    type: 'none',
+    type: 'srd_clone',
     notes:
-      'No open, machine-readable source of spells or other lookup data exists, so there is no ' +
-      'shared baseline index. Rules come from rulebooks players upload to their campaigns.',
+      'No open, machine-readable rules source exists, so this indexes data/fallout2d20-stub.md: an ' +
+      'original, hand-written rules fallback (no rulebook text). Rulebooks players upload to ' +
+      'their campaigns take priority.',
   },
 };
 

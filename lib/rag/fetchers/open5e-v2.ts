@@ -7,9 +7,11 @@
 // Source: https://api.open5e.com/v2/ filtered with document__key__in=srd-2024.
 // Use the `__in` form: plain `document__key=` does not filter every endpoint.
 //
-// Scope: spells and monsters only. Rules text comes from rulebooks players
-// upload to their own campaigns, so the shared baseline index holds just the
-// lookup data, and monsters are what build-encounter.ts selects from.
+// Scope: spells, monsters (build-encounter.ts selects from them), and the SRD's
+// core rules sections as a small rules fallback. Full rules text comes from
+// rulebooks players upload to their own campaigns, which take priority. The
+// 2024 conditions aren't in Open5e's srd-2024 document, so ingest.ts adds them
+// from data/dnd5e2024-conditions.md.
 //
 // License: SRD 5.2 is released by Wizards of the Coast under CC-BY-4.0, which
 // requires attribution — carried on every chunk via metadata.attribution.
@@ -39,6 +41,7 @@ interface V2Endpoint {
 }
 
 const ENDPOINTS: V2Endpoint[] = [
+  { path: 'rules', category: 'rule', format: formatRule },
   { path: 'spells', category: 'spell', format: formatSpell },
   { path: 'creatures', category: 'monster', format: formatCreature },
 ];
@@ -87,6 +90,10 @@ export async function* fetchOpen5eV2Chunks(onProgress?: ProgressCallback): Async
 // ---------------------------------------------------------------------------
 // Formatters — one readable text block per record
 // ---------------------------------------------------------------------------
+
+function formatRule(r: Rec): string {
+  return [`## ${text(r.name)}`, text(r.desc)].join('\n\n');
+}
 
 function formatSpell(r: Rec): string {
   const level = Number(r.level ?? 0);

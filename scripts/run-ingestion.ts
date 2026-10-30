@@ -10,6 +10,10 @@ const VALID_SYSTEMS: IngestableSystem[] = [
   'PATHFINDER_2E',
   'DCC',
   '3_5E',
+  '4E',
+  'TOR2E',
+  'CYBERPUNK_2020',
+  'FALLOUT_2D20',
 ];
 
 const SOURCE_LABELS: Record<IngestableSystem, string> = {
@@ -20,6 +24,10 @@ const SOURCE_LABELS: Record<IngestableSystem, string> = {
   PATHFINDER_2E: 'pf2e-foundry',
   DCC: 'dcc-stub',
   '3_5E': 'srd35',
+  '4E': 'dnd4e-stub',
+  TOR2E: 'tor2e-stub',
+  CYBERPUNK_2020: 'cyberpunk2020-stub',
+  FALLOUT_2D20: 'fallout2d20-stub',
 };
 
 async function main() {
