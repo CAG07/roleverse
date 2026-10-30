@@ -1,4 +1,4 @@
-import { GuideTopic } from '@/components/guide/GuideTopic';
+import { GuideSection, GuideTopic } from '@/components/guide/GuideTopic';
 
 export default function CharactersGuide() {
   return (
@@ -7,7 +7,7 @@ export default function CharactersGuide() {
       title="Creating Characters"
       dek="Build a character sheet by hand, generate one, or import from Fantasy Grounds."
     >
-      <h2>Adding a Character</h2>
+      <GuideSection topic="characters" id="adding-a-character" />
       <p>
         Inside a campaign, open <strong>Characters</strong> and select{' '}
         <strong>New Character</strong>. The form you see is built specifically for that
@@ -16,7 +16,7 @@ export default function CharactersGuide() {
         character sheet would.
       </p>
 
-      <h2>Three Ways to Fill It In</h2>
+      <GuideSection topic="characters" id="three-ways-to-fill-it-in" />
       <ul>
         <li>
           <strong>Fill it in by hand.</strong> Name, race, class, level, and every
@@ -36,7 +36,7 @@ export default function CharactersGuide() {
         </li>
       </ul>
 
-      <h2>Viewing and Editing a Sheet</h2>
+      <GuideSection topic="characters" id="viewing-and-editing-a-sheet" />
       <p>
         Select any character from the Characters list to open their full sheet. From there
         you can edit any field, adjust current hit points directly on the sheet during play,

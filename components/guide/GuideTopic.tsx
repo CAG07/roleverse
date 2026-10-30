@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import styles from './GuideTopic.module.css';
-import { getAdjacentTopics } from '@/lib/guide/topics';
+import { getAdjacentTopics, getSectionTitle } from '@/lib/guide/topics';
 
 interface GuideTopicProps {
   slug: string;
@@ -14,15 +14,23 @@ export function GuideNote({ children }: { children: ReactNode }) {
   return <p className={styles.note}>{children}</p>;
 }
 
+/**
+ * A topic's section heading. The title comes from that section's entry in
+ * lib/guide/topics.ts, which also drives the wiki sidebar's anchor links.
+ */
+export function GuideSection({ topic, id }: { topic: string; id: string }) {
+  return (
+    <h2 id={id} className={styles.sectionHeading}>
+      {getSectionTitle(topic, id)}
+    </h2>
+  );
+}
+
 export function GuideTopic({ slug, title, dek, children }: GuideTopicProps) {
   const { prev, next } = getAdjacentTopics(slug);
 
   return (
-    <div className={styles.root}>
-      <Link href="/guide" className={styles.backLink}>
-        ← Back to User Guide
-      </Link>
-
+    <article className={styles.root}>
       <div className={styles.header}>
         <div className={styles.eyebrow}>
           <span className={styles.eyebrowText}>User Guide</span>
@@ -35,7 +43,7 @@ export function GuideTopic({ slug, title, dek, children }: GuideTopicProps) {
       <div className={styles.prose}>{children}</div>
 
       {(prev || next) && (
-        <div className={styles.footerNav}>
+        <nav className={styles.footerNav} aria-label="Previous and next articles">
           {prev ? (
             <Link href={`/guide/${prev.slug}`} className={styles.footerNavLink}>
               <span className={styles.footerNavDirection}>← Previous</span>
@@ -52,8 +60,8 @@ export function GuideTopic({ slug, title, dek, children }: GuideTopicProps) {
           ) : (
             <span />
           )}
-        </div>
+        </nav>
       )}
-    </div>
+    </article>
   );
 }

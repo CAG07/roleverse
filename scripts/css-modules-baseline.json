@@ -72,6 +72,10 @@
     "reason": "missing sibling .module.css"
   },
   {
+    "file": "app/(app)/guide/layout.tsx",
+    "reason": "missing sibling .module.css"
+  },
+  {
     "file": "app/(app)/guide/getting-started/page.tsx",
     "reason": "missing sibling .module.css"
   },

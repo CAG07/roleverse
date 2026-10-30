@@ -5,24 +5,7 @@
  */
 
 .root {
-  padding: 2rem 1.5rem 4rem;
-  min-height: 100vh;
-  background: var(--void);
-}
-
-.backLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-family: var(--font-body);
-  font-size: 0.875rem;
-  color: var(--ivory-muted);
-  text-decoration: none;
-  margin-bottom: 1.5rem;
-  transition: color 0.15s;
-}
-.backLink:hover {
-  color: var(--gold);
+  min-width: 0;
 }
 
 .header {
@@ -73,6 +56,10 @@
   font-size: 0.95rem;
   line-height: 1.75;
   color: var(--ivory-dim);
+}
+
+.sectionHeading {
+  scroll-margin-top: 1.5rem;
 }
 
 .prose h2 {
