@@ -1,6 +1,8 @@
 // app/api/sessions/[sessionId]/end/route.ts
 // POST /api/sessions/[sessionId]/end — mark a session as ended, then generate a summary.
 // ended_at is set first so the session ends even if summary generation fails.
+// Every session this call ends gets a summary (normally just one; more only if
+// duplicates were open, e.g. from two tabs), so none is left without a recap.
 
 import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -27,7 +29,7 @@ export async function POST(
   // Load session and campaign in one pass
   const { data: session } = await supabase
     .from('sessions')
-    .select('campaign_id, transcript')
+    .select('campaign_id')
     .eq('id', sessionId)
     .eq('user_id', user.id)
     .single();
@@ -42,13 +44,16 @@ export async function POST(
     .eq('id', session.campaign_id)
     .single();
 
-  // Step 1: end all active sessions for this campaign (handles duplicates cleanly)
-  const { error: endError } = await supabase
+  // Step 1: end all active sessions for this campaign (handles duplicates cleanly).
+  // Returns the rows it ended, so an already-ended session (a double click) isn't
+  // summarized twice.
+  const { data: endedSessions, error: endError } = await supabase
     .from('sessions')
     .update({ ended_at: new Date().toISOString() })
     .eq('campaign_id', session.campaign_id)
     .eq('user_id', user.id)
-    .is('ended_at', null);
+    .is('ended_at', null)
+    .select('id, transcript');
 
   if (endError) {
     return NextResponse.json({ error: endError.message }, { status: 500 });
@@ -64,25 +69,28 @@ export async function POST(
   // sent to Claude on their behalf — that's the whole point of turning AI Assist
   // off, not just hiding the chat window.
   const aiAssistEnabled = (campaign?.ai_assist_enabled as boolean | null) ?? true;
-  if (aiAssistEnabled) {
+  if (aiAssistEnabled && endedSessions && endedSessions.length > 0) {
     after(async () => {
-      const transcript: TranscriptEntry[] = Array.isArray(session.transcript)
-        ? (session.transcript as TranscriptEntry[])
-        : [];
-
       const systemId = (campaign?.game_system as string | undefined) ?? '';
       const gameSystemName = getGameSystem(systemId)?.name ?? systemId;
 
-      try {
-        const summary = await generateSessionSummary(transcript, gameSystemName);
+      for (const ended of endedSessions) {
+        const transcript: TranscriptEntry[] = Array.isArray(ended.transcript)
+          ? (ended.transcript as TranscriptEntry[])
+          : [];
 
-        await supabase
-          .from('sessions')
-          .update({ summary, summary_generated_at: new Date().toISOString() })
-          .eq('id', sessionId);
-      } catch (err) {
-        // Summary is a nice-to-have. Log and continue — session already ended above.
-        console.error('[session-end] Summary generation failed:', err);
+        try {
+          const summary = await generateSessionSummary(transcript, gameSystemName);
+
+          await supabase
+            .from('sessions')
+            .update({ summary, summary_generated_at: new Date().toISOString() })
+            .eq('id', ended.id);
+        } catch (err) {
+          // Summary is a nice-to-have. Log and continue — session already ended above.
+          // The Game Master falls back to this session's transcript when it has no summary.
+          console.error(`[session-end] Summary generation failed for ${ended.id}:`, err);
+        }
       }
     });
   }
