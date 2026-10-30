@@ -4,7 +4,7 @@
 
 BEGIN;
 
-SELECT plan(31);
+SELECT plan(32);
 
 -- ============================================================================
 -- 1. Verify RLS is enabled on every table in the public schema
@@ -319,6 +319,22 @@ SELECT ok(
     WHERE schemaname = 'public' AND tablename = 'campaign_videos' AND cmd = 'DELETE'
   ),
   'campaign_videos has a DELETE policy'
+);
+
+-- ============================================================================
+-- 4c. sessions DELETE — owner only, ended sessions only, campaign ownership
+-- checked (the live session can't be deleted out from under the chat).
+-- ============================================================================
+
+SELECT ok(
+  (
+    SELECT qual::text LIKE '%user_id%'
+       AND qual::text LIKE '%ended_at IS NOT NULL%'
+       AND qual::text LIKE '%campaigns%'
+    FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'sessions' AND cmd = 'DELETE'
+  ),
+  'sessions DELETE policy is owner-scoped, ended-only, and checks campaign ownership'
 );
 
 -- ============================================================================
