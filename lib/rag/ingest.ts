@@ -17,7 +17,14 @@ import type { RagChunk } from './types';
 const UPSERT_BATCH_SIZE = 50;
 
 /** Supported game systems for baseline ingestion */
-export type IngestableSystem = '5E_2014' | 'PATHFINDER_2E' | 'ADD1E' | 'ADD2E' | 'DCC';
+export type IngestableSystem =
+  | '5E_2014'
+  | '5E_2024'
+  | 'PATHFINDER_2E'
+  | 'ADD1E'
+  | 'ADD2E'
+  | 'DCC'
+  | '3_5E';
 
 export interface IngestOptions {
   /** Game system to ingest */
@@ -200,11 +207,21 @@ async function flushBuffer(
 }
 
 /** Return an async generator of raw chunks for the given game system */
-async function* streamChunksForSystem(gameSystem: IngestableSystem): AsyncGenerator<RagChunk> {
+export async function* streamChunksForSystem(gameSystem: IngestableSystem): AsyncGenerator<RagChunk> {
   switch (gameSystem) {
     case '5E_2014': {
       const { fetchOpen5eChunks } = await import('./fetchers/open5e');
       yield* fetchOpen5eChunks();
+      break;
+    }
+    case '5E_2024': {
+      const { fetchOpen5eV2Chunks } = await import('./fetchers/open5e-v2');
+      yield* fetchOpen5eV2Chunks();
+      break;
+    }
+    case '3_5E': {
+      const { fetchSrd35Chunks } = await import('./fetchers/srd35');
+      yield* fetchSrd35Chunks();
       break;
     }
     case 'PATHFINDER_2E': {

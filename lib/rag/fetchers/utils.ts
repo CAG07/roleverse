@@ -7,21 +7,23 @@
  * on non-OK HTTP responses — those indicate a real problem (404, 403, 500)
  * that retrying will not fix, and the caller should handle them.
  *
- * Total worst case: TIMEOUT_MS * MAX_ATTEMPTS + sum(backoffs) ≈ 3 minutes.
+ * Total worst case: timeoutMs * MAX_ATTEMPTS + sum(backoffs) ≈ 3 minutes at the
+ * default. The timeout also covers reading the response body, so pass a longer
+ * one for large downloads (the PF2E tarball takes a couple of minutes).
  */
 export async function fetchWithRetry(
   url: string,
-  init: RequestInit = {}
+  init: RequestInit = {},
+  timeoutMs = 60_000
 ): Promise<Response> {
   const MAX_ATTEMPTS = 3;
-  const TIMEOUT_MS = 60_000;
 
   let lastError: unknown;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       const response = await fetch(url, {
         ...init,
-        signal: AbortSignal.timeout(TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs),
       });
       return response;
     } catch (err) {

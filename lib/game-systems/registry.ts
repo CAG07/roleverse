@@ -77,11 +77,12 @@ const dnd3_5e: GameSystem = {
     'You are a rules arbiter for D&D 3.5th Edition. Use ascending AC, base attack bonus, and the skills/feats system from the 3.5E SRD.',
   supported: true,
   ragSource: {
-    type: 'none',
+    type: 'srd_clone',
+    url: 'https://github.com/olimot/srd-v3.5-md',
     notes:
-      'No machine-readable SRD ingestion configured yet — agent relies on training knowledge. ' +
-      'Character sheet support shipped 2026-08-19 (lib/character/sheet-schema/dnd35e.ts); a real ' +
-      'RAG stub (matching data/dcc-stub.md/osric-stub.md) is a separate, larger follow-up.',
+      'Spells and class spell lists from the D&D 3.5 SRD (Open Game Content, OGL 1.0a) as ' +
+      'markdown, pinned to one commit. Rules come from rulebooks players upload to their ' +
+      'campaigns. See lib/rag/fetchers/srd35.ts.',
   },
 };
 
@@ -103,9 +104,8 @@ const dnd4e: GameSystem = {
   ragSource: {
     type: 'none',
     notes:
-      'No machine-readable SRD ingestion configured yet — agent relies on training knowledge. ' +
-      'Character sheet support shipped 2026-08-19 (lib/character/sheet-schema/dnd4e.ts); a real ' +
-      'RAG stub (matching data/dcc-stub.md/osric-stub.md) is a separate, larger follow-up.',
+      'No open, machine-readable source of spells or other lookup data exists, so there is no ' +
+      'shared baseline index. Rules come from rulebooks players upload to their campaigns.',
   },
 };
 
@@ -158,8 +158,12 @@ const dnd5e2024: GameSystem = {
     'and the revised class features and spellcasting. When a 2024 rule differs from 2014, say so and use the 2024 version.',
   supported: true,
   ragSource: {
-    type: 'none',
-    notes: 'No machine-readable SRD ingestion configured — agent relies on training knowledge.',
+    type: 'api',
+    url: 'https://api.open5e.com/v2/',
+    notes:
+      'Open5e v2 API, document srd-2024 (System Reference Document 5.2, CC-BY-4.0, attribution ' +
+      'stored on every chunk). Spells and monsters only (monsters feed the encounter builder); ' +
+      'rules come from rulebooks players upload. See lib/rag/fetchers/open5e-v2.ts.',
   },
 };
 
@@ -208,10 +212,10 @@ const pathfinder2e: GameSystem = {
     type: 'dataset',
     url: 'https://github.com/foundryvtt/pf2e',
     notes:
-      'Foundry VTT PF2E system (MIT-licensed) contains machine-readable compendium data. ' +
-      'Compendium packs are stored in LevelDB format (.db files) under packs/. ' +
-      'The ingestion fetcher uses the GitHub API to download pack data as JSON via releases. ' +
-      'See lib/rag/fetchers/pf2e.ts for full sourcing details.',
+      'Foundry VTT PF2E system repository. Compendium entries are plain JSON under ' +
+      'packs/pf2e/<pack>/; the fetcher streams the tarball for one pinned commit and keeps only ' +
+      'remastered spells published under the ORC or OGL license. Rules come from rulebooks ' +
+      'players upload. See lib/rag/fetchers/pf2e.ts.',
   },
 };
 
@@ -289,11 +293,9 @@ const tor2e: GameSystem = {
   ragSource: {
     type: 'none',
     notes:
-      'No machine-readable SRD ingestion configured yet — agent relies on training knowledge. ' +
-      'Character sheet support shipped 2026-08-20 (lib/character/sheet-schema/tor2e.ts), grounded ' +
-      'in the real Free League 2E character sheet (all four culture variants). TOR1E stays ' +
-      'unsupported/undeveloped by product decision — TOR2E is this project\'s canonical "The One ' +
-      'Ring" system. A real RAG stub is a separate, larger follow-up.',
+      'No open license or SRD exists, so there is no shared baseline index. Rules come from ' +
+      'rulebooks players upload to their campaigns. TOR1E stays unsupported by product ' +
+      'decision; TOR2E is the canonical "The One Ring" system.',
   },
 };
 
@@ -315,9 +317,8 @@ const cyberpunk2020: GameSystem = {
   ragSource: {
     type: 'none',
     notes:
-      'No OGL/SRD exists for this proprietary R. Talsorian-licensed game — agent relies on ' +
-      'training knowledge. Character sheet support shipped 2026-08-19 ' +
-      '(lib/character/sheet-schema/cyberpunk2020.ts).',
+      'No open, machine-readable source of spells or other lookup data exists, so there is no ' +
+      'shared baseline index. Rules come from rulebooks players upload to their campaigns.',
   },
 };
 
@@ -341,10 +342,8 @@ const fallout2d20: GameSystem = {
   ragSource: {
     type: 'none',
     notes:
-      'No OGL/SRD exists for this proprietary Modiphius/Bethesda-licensed game — agent relies on ' +
-      'training knowledge. Added 2026-08-20 as a brand-new system (not part of the original ' +
-      'roadmap 3.10 backlog) at Craig\'s explicit request, including character sheet support ' +
-      '(lib/character/sheet-schema/fallout2d20.ts). A real RAG stub is a separate, larger follow-up.',
+      'No open, machine-readable source of spells or other lookup data exists, so there is no ' +
+      'shared baseline index. Rules come from rulebooks players upload to their campaigns.',
   },
 };
 
