@@ -23,13 +23,13 @@ interface SessionTranscriptPageRow {
 }
 
 const agentLabels: Record<string, { label: string; accent: string }> = {
-  game_master:   { label: 'Game Master',   accent: '#b8882a' },
-  rules_arbiter: { label: 'Rules Arbiter', accent: '#7a8a9a' },
+  game_master:   { label: 'Game Master',   accent: '#2c5d8f' },
+  rules_arbiter: { label: 'Rules Arbiter', accent: '#4f6070' },
   lore_keeper:   { label: 'Lore Keeper',   accent: '#6a3a8a' },
   // Legacy aliases — old transcripts may carry these agentType values
-  narrator:          { label: 'Narrator',          accent: '#b8882a' },
+  narrator:          { label: 'Narrator',          accent: '#2c5d8f' },
   npc_dialogue:      { label: 'NPC Dialogue',       accent: '#2a7a4a' },
-  encounter_builder: { label: 'Encounter Builder',  accent: '#8a6a3a' },
+  encounter_builder: { label: 'Encounter Builder',  accent: '#7a5a2a' },
 };
 
 const PAGE_SIZE = 50;
@@ -163,7 +163,7 @@ export default async function SessionLogPage({ params, searchParams }: Props) {
                 <div key={i} className={styles.entryAgent}>
                   <span
                     className={styles.entryAgentLabel}
-                    style={{ color: '#8a6a3a', borderColor: '#8a6a3a40' }}
+                    style={{ color: '#7a5a2a', borderColor: '#7a5a2a40' }}
                   >
                     Oracle
                   </span>

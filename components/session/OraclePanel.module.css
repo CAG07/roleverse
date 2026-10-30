@@ -47,13 +47,13 @@
     color 0.15s;
 }
 .tabBtn:hover {
-  border-color: #4a9a8a;
+  border-color: var(--oracle);
   color: var(--ivory);
 }
 .tabBtnActive {
-  border-color: #4a9a8a;
-  color: #4a9a8a;
-  background: rgba(74, 154, 138, 0.1);
+  border-color: var(--oracle);
+  color: var(--oracle);
+  background: var(--oracle-tint);
 }
 
 .tabBody {
@@ -84,8 +84,8 @@
   color: var(--ivory);
 }
 .subModeBtnActive {
-  border-color: #4a9a8a;
-  color: #4a9a8a;
+  border-color: var(--oracle);
+  color: var(--oracle);
 }
 
 .presetList {
@@ -115,7 +115,7 @@
   transition: border-color 0.15s;
 }
 .presetBtn:hover {
-  border-color: #4a9a8a;
+  border-color: var(--oracle);
 }
 .presetLikelihood {
   font-family: var(--font-heading);
@@ -161,7 +161,7 @@
   color: var(--ivory-dim);
 }
 .presetInput:focus {
-  border-color: #4a9a8a;
+  border-color: var(--oracle);
 }
 .savePresetBtn {
   padding: 0.3rem 0.6rem;
@@ -179,8 +179,8 @@
     color 0.15s;
 }
 .savePresetBtn:hover:not(:disabled) {
-  border-color: #4a9a8a;
-  color: #4a9a8a;
+  border-color: var(--oracle);
+  color: var(--oracle);
 }
 .savePresetBtn:disabled {
   opacity: 0.5;
@@ -216,8 +216,8 @@
   color: var(--ivory);
 }
 .likelihoodBtnActive {
-  border-color: #4a9a8a;
-  color: #4a9a8a;
+  border-color: var(--oracle);
+  color: var(--oracle);
 }
 
 .fluxRow {
@@ -235,14 +235,14 @@
 }
 .fluxSlider {
   width: 100%;
-  accent-color: #4a9a8a;
+  accent-color: var(--oracle);
 }
 
 .askBtn {
   padding: 0.4rem 0.75rem;
   background: transparent;
-  border: 1px solid #4a9a8a;
-  color: #4a9a8a;
+  border: 1px solid var(--oracle);
+  color: var(--oracle);
   font-family: var(--font-heading);
   font-size: 0.7rem;
   font-weight: 600;
@@ -254,7 +254,7 @@
     color 0.15s;
 }
 .askBtn:hover:not(:disabled) {
-  background: rgba(74, 154, 138, 0.15);
+  background: var(--oracle-glow);
 }
 .askBtn:disabled {
   opacity: 0.5;
@@ -267,7 +267,7 @@
   gap: 0.15rem;
   padding: 0.5rem 0.625rem;
   background: var(--void-raised);
-  border-left: 2px solid #4a9a8a;
+  border-left: 2px solid var(--oracle);
 }
 .resultAnswer {
   font-family: var(--font-heading);
@@ -311,7 +311,7 @@
 }
 .stateInput:focus,
 .questionInput:focus {
-  border-color: #4a9a8a;
+  border-color: var(--oracle);
 }
 
 .myAnswer {
@@ -320,7 +320,7 @@
   color: var(--ivory);
   line-height: 1.5;
   background: var(--void-raised);
-  border-left: 2px solid #4a9a8a;
+  border-left: 2px solid var(--oracle);
   padding: 0.5rem 0.625rem;
   margin: 0;
   white-space: pre-wrap;

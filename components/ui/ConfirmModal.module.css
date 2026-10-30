@@ -124,7 +124,7 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ivory);
+  color: var(--on-accent);
   background: var(--crimson-bright);
   border: 1px solid var(--crimson-bright);
   padding: 0.5rem 1rem;

@@ -106,7 +106,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 0.15rem 0.5rem;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--gold-tint);
   border: 1px solid;
 }
 .agentBubble {
@@ -205,7 +205,7 @@
 .npcFlagAdd {
   background: var(--crimson);
   border: 1px solid var(--crimson-bright);
-  color: var(--ivory);
+  color: var(--on-accent);
 }
 .npcFlagAdd:hover:not(:disabled) {
   background: var(--crimson-bright);
@@ -245,14 +245,14 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 0.15rem 0.5rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid #4a9a8a;
-  color: #4a9a8a;
+  background: var(--gold-tint);
+  border: 1px solid var(--oracle);
+  color: var(--oracle);
 }
 .oracleBubble {
   max-width: 85%;
   background: var(--surface-card);
-  border-left: 2px solid #4a9a8a;
+  border-left: 2px solid var(--oracle);
   padding: 0.625rem 0.75rem;
   font-family: var(--font-body);
   font-size: var(--chat-font-size, 14px);
@@ -330,7 +330,7 @@
   height: 36px;
   background: var(--crimson);
   border: 1px solid var(--crimson-bright);
-  color: var(--ivory);
+  color: var(--on-accent);
   cursor: pointer;
   transition:
     background-color 0.15s,

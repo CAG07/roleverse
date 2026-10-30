@@ -1,39 +1,60 @@
 @import 'tailwindcss';
 
 /* ── Design Tokens ──────────────────────────────────────────────── */
+/* "Classic Module" palette: paper pages, ink text, a map-blue accent, and
+   oxblood for the main action, after classic TSR modules and their blue
+   dungeon maps. The token NAMES are historical (from the earlier dark theme)
+   and kept so no component CSS had to change:
+     --void*    = paper surfaces (page, sidebar, panels, raised cards)
+     --ivory*   = ink text (body, muted, faint)
+     --crimson* = oxblood (main action, danger, warm rule lines)
+     --gold*    = map blue (labels, headings accents, links, focus)
+   Text pairs are WCAG AA (4.5:1+) on every paper surface. Text on a filled
+   accent uses --on-accent, never --ivory. The Resume (green) and Stop (red)
+   session buttons keep their own fills in CampaignDetailPage.module.css. */
 :root {
+  color-scheme: light;
+
   /* Surfaces */
-  --void: #08090b;
-  --void-mid: #0f1114;
-  --void-surface: #161820;
-  --void-raised: #1e2028;
-  --void-border: #2a2d38;
+  --void: #f3eee3;
+  --void-mid: #e9e2d3;
+  --void-surface: #fbf8f1;
+  --void-raised: #ffffff;
+  --void-border: #cfc4ae;
 
-  /* Crimson */
-  --crimson: #8b1a1a;
-  --crimson-bright: #b02020;
-  --crimson-dim: #5a1111;
-  --crimson-glow: rgba(139, 26, 26, 0.15);
+  /* Oxblood (named crimson) */
+  --crimson: #8a2a22;
+  --crimson-bright: #a3322a;
+  --crimson-dim: #d3c3ad;
+  --crimson-glow: rgba(138, 42, 34, 0.1);
 
-  /* Gold */
-  --gold: #b8882a;
-  --gold-light: #d4a843;
-  --gold-dim: #7a5a1a;
-  --gold-glow: rgba(184, 136, 42, 0.12);
-  --gold-tint: rgba(184, 136, 42, 0.1);
-  --gold-subtle: rgba(184, 136, 42, 0.08);
+  /* Map blue (named gold) */
+  --gold: #2c5d8f;
+  --gold-light: #24507c;
+  --gold-dim: #a9bcd0;
+  --gold-glow: rgba(44, 93, 143, 0.14);
+  --gold-tint: rgba(44, 93, 143, 0.08);
+  --gold-subtle: rgba(44, 93, 143, 0.05);
 
-  /* Text */
-  --ivory: #e4dfd0;
-  --ivory-muted: #a09b8e;
-  --ivory-dim: #6a6560;
+  /* Ink (named ivory) */
+  --ivory: #1e1b16;
+  --ivory-muted: #554d40;
+  --ivory-dim: #665d4e;
+
+  /* Text on a filled accent (buttons, photo overlays) */
+  --on-accent: #fffaf2;
 
   /* Status */
-  --status-healthy: #4a9a5a;
+  --status-healthy: #3e6b3a;
+
+  /* Oracle tools */
+  --oracle: #2f6f63;
+  --oracle-tint: rgba(47, 111, 99, 0.08);
+  --oracle-glow: rgba(47, 111, 99, 0.14);
 
   /* Cards */
-  --surface-card: #14161d;
-  --surface-hover: #1c1f2a;
+  --surface-card: #fbf8f1;
+  --surface-hover: #f5efe3;
 
   /* Borders */
   --rule-thin: 1px solid var(--crimson-dim);
@@ -71,11 +92,11 @@
 }
 
 /* ── Print overrides ─────────────────────────────────────────────── */
-/* Same dark-module theme everywhere on screen; print swaps the design tokens
-   to a light/dark-text palette so "Print / Save as PDF" doesn't waste a page
-   of ink on a near-black background. Component CSS keeps using var(--void)/
-   var(--ivory)/etc. as normal — only the token values change here, so no
-   per-component print rules are needed just to fix colors. --sidebar-width
+/* Print swaps the paper tints for pure white and the ink for near-black, so
+   "Print / Save as PDF" uses no ink on backgrounds and stays crisp in
+   grayscale. Component CSS keeps using var(--void)/var(--ivory)/etc. as
+   normal — only the token values change here, so no per-component print rules
+   are needed just to fix colors. --sidebar-width
    collapsing to 0 removes the persistent nav's reserved margin automatically,
    since app/(app)/layout.tsx's main element reads that same variable inline. */
 @media print {
@@ -93,8 +114,8 @@
     --crimson-dim: #a8a49c;
     --crimson-glow: transparent;
 
-    --gold: #5a4315;
-    --gold-light: #5a4315;
+    --gold: #1f4a75;
+    --gold-light: #1f4a75;
     --gold-dim: #a8a49c;
     --gold-glow: transparent;
     --gold-tint: transparent;
@@ -104,7 +125,13 @@
     --ivory-muted: #333333;
     --ivory-dim: #555555;
 
+    --on-accent: #ffffff;
+
     --status-healthy: #1a5c2a;
+
+    --oracle: #1f5a50;
+    --oracle-tint: transparent;
+    --oracle-glow: transparent;
 
     --surface-card: #ffffff;
     --surface-hover: #ffffff;
@@ -141,7 +168,7 @@
     line-height: 1.6;
   }
 
-  /* Noise texture overlay */
+  /* Paper-grain texture overlay (kept faint so it reads as grain, not dirt) */
   body::before {
     content: '';
     position: fixed;
@@ -149,7 +176,7 @@
     pointer-events: none;
     z-index: 9999;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.35'/%3E%3C/svg%3E");
-    opacity: 0.35;
+    opacity: 0.18;
   }
 
   a {

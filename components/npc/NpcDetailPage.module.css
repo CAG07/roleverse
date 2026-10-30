@@ -303,7 +303,7 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ivory);
+  color: var(--on-accent);
   cursor: pointer;
   transition: background-color 0.2s;
 }

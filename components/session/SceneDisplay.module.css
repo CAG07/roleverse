@@ -188,7 +188,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 0.2rem 0.5rem;
-  color: var(--ivory-muted);
+  color: var(--on-accent);
   z-index: 1;
 }
 
@@ -208,18 +208,18 @@
   height: 28px;
   background: rgba(0, 0, 0, 0.7);
   border: var(--rule-thin);
-  color: var(--ivory-muted);
+  color: var(--on-accent);
   cursor: pointer;
   transition:
     color 0.15s,
     border-color 0.15s;
 }
 .ctrlBtn:hover {
-  color: var(--gold);
-  border-color: var(--gold-dim);
+  color: var(--on-accent);
+  border-color: var(--on-accent);
 }
 .ctrlBtn.close:hover {
-  color: var(--crimson-bright);
+  color: var(--on-accent);
   border-color: var(--crimson-dim);
 }
 
@@ -276,6 +276,7 @@
 .lightboxClose:hover {
   background: var(--crimson);
   border-color: var(--crimson-bright);
+  color: var(--on-accent);
 }
 .lightboxImg {
   max-height: 85vh;
@@ -296,5 +297,5 @@
   font-family: var(--font-body);
   font-size: 0.875rem;
   font-style: italic;
-  color: var(--ivory-muted);
+  color: var(--on-accent);
 }

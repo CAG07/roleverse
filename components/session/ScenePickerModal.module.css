@@ -183,7 +183,7 @@
   height: 1.75rem;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.65);
-  color: var(--ivory);
+  color: var(--on-accent);
   font-size: 0.7rem;
   pointer-events: none;
 }
@@ -197,7 +197,7 @@
   background: rgba(0, 0, 0, 0.65);
   font-family: var(--font-body);
   font-size: 0.7rem;
-  color: var(--ivory);
+  color: var(--on-accent);
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
