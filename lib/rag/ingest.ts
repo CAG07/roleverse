@@ -17,7 +17,18 @@ import type { RagChunk } from './types';
 const UPSERT_BATCH_SIZE = 50;
 
 /** Supported game systems for baseline ingestion */
-export type IngestableSystem = '5E_2014' | 'PATHFINDER_2E' | 'ADD1E' | 'ADD2E' | 'DCC';
+export type IngestableSystem =
+  | '5E_2014'
+  | '5E_2024'
+  | 'PATHFINDER_2E'
+  | 'ADD1E'
+  | 'ADD2E'
+  | 'DCC'
+  | '3_5E'
+  | '4E'
+  | 'TOR2E'
+  | 'CYBERPUNK_2020'
+  | 'FALLOUT_2D20';
 
 export interface IngestOptions {
   /** Game system to ingest */
@@ -200,11 +211,30 @@ async function flushBuffer(
 }
 
 /** Return an async generator of raw chunks for the given game system */
-async function* streamChunksForSystem(gameSystem: IngestableSystem): AsyncGenerator<RagChunk> {
+export async function* streamChunksForSystem(gameSystem: IngestableSystem): AsyncGenerator<RagChunk> {
   switch (gameSystem) {
     case '5E_2014': {
       const { fetchOpen5eChunks } = await import('./fetchers/open5e');
       yield* fetchOpen5eChunks();
+      break;
+    }
+    case '5E_2024': {
+      const { fetchOpen5eV2Chunks, SRD_52_ATTRIBUTION } = await import('./fetchers/open5e-v2');
+      const { fetchStubChunks } = await import('./fetchers/stub');
+      yield* fetchOpen5eV2Chunks();
+      // Open5e's srd-2024 document has no conditions, so they come from a local file.
+      yield* fetchStubChunks({
+        file: 'dnd5e2024-conditions.md',
+        gameSystem: '5E_2024',
+        source: 'srd-5.2-conditions',
+        title: 'D&D 5E 2024 Conditions',
+        attribution: SRD_52_ATTRIBUTION,
+      });
+      break;
+    }
+    case '3_5E': {
+      const { fetchSrd35Chunks } = await import('./fetchers/srd35');
+      yield* fetchSrd35Chunks();
       break;
     }
     case 'PATHFINDER_2E': {
@@ -212,19 +242,15 @@ async function* streamChunksForSystem(gameSystem: IngestableSystem): AsyncGenera
       yield* fetchPf2eChunks();
       break;
     }
-    case 'ADD1E': {
-      const { fetchOsricChunks } = await import('./fetchers/osric');
-      yield* fetchOsricChunks('ADD1E');
-      break;
-    }
-    case 'ADD2E': {
-      const { fetchOsricChunks } = await import('./fetchers/osric');
-      yield* fetchOsricChunks('ADD2E');
-      break;
-    }
-    case 'DCC': {
-      const { fetchDccChunks } = await import('./fetchers/dcc');
-      yield* fetchDccChunks();
+    case 'ADD1E':
+    case 'ADD2E':
+    case 'DCC':
+    case '4E':
+    case 'TOR2E':
+    case 'CYBERPUNK_2020':
+    case 'FALLOUT_2D20': {
+      const { fetchStubChunks } = await import('./fetchers/stub');
+      yield* fetchStubChunks(REFERENCE_DOCUMENTS[gameSystem]);
       break;
     }
     default: {
@@ -233,6 +259,31 @@ async function* streamChunksForSystem(gameSystem: IngestableSystem): AsyncGenera
     }
   }
 }
+
+/**
+ * Hand-written reference documents (data/*.md): the small rules fallback for
+ * systems with no open, machine-readable rules source. OSRIC covers both AD&D
+ * editions, so the same file is ingested under ADD1E and ADD2E.
+ */
+const REFERENCE_DOCUMENTS = {
+  ADD1E: { file: 'osric-stub.md', gameSystem: 'ADD1E', source: 'osric', title: 'OSRIC / AD&D 1E Reference' },
+  ADD2E: { file: 'osric-stub.md', gameSystem: 'ADD2E', source: 'osric', title: 'OSRIC / AD&D 2E Reference' },
+  DCC: { file: 'dcc-stub.md', gameSystem: 'DCC', source: 'dcc-stub', title: 'Dungeon Crawl Classics Reference' },
+  '4E': { file: 'dnd4e-stub.md', gameSystem: '4E', source: 'dnd4e-stub', title: 'D&D 4th Edition Reference' },
+  TOR2E: { file: 'tor2e-stub.md', gameSystem: 'TOR2E', source: 'tor2e-stub', title: 'The One Ring 2E Reference' },
+  CYBERPUNK_2020: {
+    file: 'cyberpunk2020-stub.md',
+    gameSystem: 'CYBERPUNK_2020',
+    source: 'cyberpunk2020-stub',
+    title: 'Cyberpunk 2020 Reference',
+  },
+  FALLOUT_2D20: {
+    file: 'fallout2d20-stub.md',
+    gameSystem: 'FALLOUT_2D20',
+    source: 'fallout2d20-stub',
+    title: 'Fallout 2d20 Reference',
+  },
+} as const;
 
 /** Create a Supabase client using the service role key (bypasses RLS) */
 function getServiceClient(): SupabaseClient {

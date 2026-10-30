@@ -9,10 +9,16 @@ on:
         type: choice
         options:
           - 5E_2014
+          - 5E_2024
           - ADD1E
           - ADD2E
           - PATHFINDER_2E
           - DCC
+          - 3_5E
+          - 4E
+          - TOR2E
+          - CYBERPUNK_2020
+          - FALLOUT_2D20
 
 jobs:
   ingest:

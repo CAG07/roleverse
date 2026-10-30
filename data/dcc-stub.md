@@ -20,6 +20,8 @@ Goodman Games product identity verbatim.
 
 ## What the Rules Arbiter should do for DCC queries
 
+- This document is a fallback. If the campaign has an uploaded DCC rulebook, prefer
+  it: uploads get a guaranteed priority slot in retrieval.
 - Ground answers in the indexed sections below whenever the question matches one
   of these topics: the dice chain, the funnel, Luck, Mighty Deeds, spellcasting
   mechanics, mercurial magic, corruption, patron bonds, turn unholy, disapproval,
@@ -941,3 +943,99 @@ Elves passively notice secret doors and concealed passages at a higher rate
 than other classes when merely passing nearby, and typically carry resistance
 or immunity to certain paralysis and sleep-based effects — a nod to their
 otherworldly, fae-adjacent nature in the DCC setting's implied cosmology.
+
+---
+
+## Glossary
+
+- Action die: the die rolled for attacks, skill checks, and spell checks (d20 for
+  most characters; higher-level characters get extra action dice).
+- Backstab: a thief's bonus attack against an unaware target.
+- Burn Luck: permanently spend Luck points to add to a roll.
+- Corruption: a physical or mental mutation from a wizard's or elf's spell going
+  badly wrong.
+- Crit die / crit table: the die and table rolled on a natural 20, which vary by
+  class and level.
+- Deed die: a warrior's or dwarf's die added to attack and damage. A 3 or higher on
+  it means a Mighty Deed succeeds.
+- Dice chain: the die sequence d3, d4, d5, d6, d7, d8, d10, d12, d14, d16, d20, d24,
+  d30. Stepping up or down the chain adjusts difficulty.
+- Disapproval: a cleric's deity growing displeased; the disapproval range on the d20
+  widens each time a spell check fails.
+- Fumble die: the die rolled on a natural 1, which depends on armor.
+- Funnel: the 0-level adventure where each player runs several peasants and the
+  survivors become 1st-level characters.
+- Invoke Patron: a spell that calls on a wizard's or elf's patron.
+- Judge: the game master.
+- Lay on Hands: a cleric's healing ability, based on a spell check.
+- Lucky roll / lucky sign: the birth augur a character's Luck modifier applies to.
+- Mercurial magic: a random side effect unique to each wizard's version of a spell.
+- Mighty Deed of Arms: a warrior's or dwarf's combat stunt, described before the
+  roll and triggered by the deed die.
+- Occupation: a 0-level character's former trade, which sets their starting weapon,
+  goods, and trained skill.
+- Patron taint: a lasting mark from a wizard's patron.
+- Spellburn: a wizard or elf spending ability score points to boost a spell check.
+- Spell check: the roll to cast a spell (d20 + caster level + ability modifier).
+- Turn Unholy: a cleric's ability to drive off unholy creatures.
+
+## RoleVerse Character Sheet Fields
+
+What each field on RoleVerse's DCC character sheet holds:
+
+- Title: the character's level title for their class.
+- AC, Initiative, Speed: Armor Class, initiative modifier, and movement.
+- Action Dice: the dice the character rolls for actions (for example "1d20" or
+  "1d20 + 1d14").
+- Attack: the attack bonus (for warriors and dwarves, this is the deed die).
+- Crit Die, Crit Table: what the character rolls on a natural 20, and which table.
+- Lucky Roll: the birth augur the Luck modifier applies to.
+- Experience Points.
+- Ability Modifiers: the modifier for each of the six ability scores (DCC's modifier
+  table is not the same as later editions').
+- Attack & Damage Modifiers: melee and missile modifiers.
+- Weapons: one row per weapon with attack modifier, damage, and notes.
+- Deed Die (Warriors / Dwarves), Backstab (Thieves / Halflings), Disapproval Range
+  (Clerics), Corruption (Wizards / Elves), Patron Taint (patron-bonded casters):
+  class-specific tracks.
+- Saving Throws: Fortitude, Reflex, and Willpower.
+- Thief Skills (%): thief and halfling skills.
+- Known Spells (Wizards / Clerics / Elves), Languages.
+- Fields outside the generic sheet: occupation, lucky sign, alignment (Lawful,
+  Neutral, Chaotic), current and starting Luck (the Luck editor on the sheet),
+  mercurial magic results per spell, and the funnel roster of other 0-level
+  characters.
+
+## GM Quick Reference
+
+- Difficulty classes: DC 5 is easy, DC 10 is average, DC 15 is hard, and DC 20 is
+  heroic. Untrained checks use a d10 instead of a d20, and trained ones use the full
+  action die.
+- Use the dice chain as a dial: a big advantage steps the die up and a big
+  disadvantage steps it down, instead of adding many small modifiers.
+- Funnel encounters: build for a crowd of fragile peasants. Traps, hazards, and
+  monsters that can kill one or two characters at a time keep the funnel tense
+  without wiping the whole group at once.
+- Experience: award 0 to 4 XP per encounter, based on how dangerous or important it
+  was. A 0-level character who survives the funnel with 10 XP becomes 1st level.
+- Magic should be dangerous: let spell check failures, corruption, disapproval, and
+  mercurial magic happen as written. That unpredictability is the game's tone.
+- Treasure is strange and rare. A single unusual magic item matters more than a
+  steady stream of gold.
+
+## Commonly Confused Rules
+
+- Luck has a score and a modifier. The modifier applies to the lucky roll chosen at
+  creation, and it changes when the Luck score changes.
+- Burned Luck is gone for good, except that thieves and halflings recover theirs
+  over time.
+- DCC's ability modifiers come from their own table, not the (score - 10) / 2
+  formula used by later editions. A 16 gives +2, not +3.
+- Saving throws are Fortitude, Reflex, and Willpower. There are no five AD&D-style
+  categories.
+- A warrior's deed die replaces a fixed attack bonus, and a Mighty Deed only works if
+  the player announces it before rolling.
+- A failed spell check can mean the spell is lost for the day (wizards and elves) or
+  that disapproval grows (clerics). Natural 1s can trigger corruption or patron
+  taint.
+- 0-level characters roll a d10 for skills from outside their occupation.
