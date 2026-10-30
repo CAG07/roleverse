@@ -45,6 +45,13 @@ describe('Fantasy Grounds XML round trip', () => {
 });
 
 describe('decodeXmlBytes', () => {
+  it('preserves UTF-8 bytes from legacy exports declaring Latin-1', () => {
+    const bytes = new TextEncoder().encode(
+      '<?xml version="1.0" encoding="iso-8859-1"?><name>Zoë</name>'
+    );
+    expect(decodeXmlBytes(bytes)).toContain('<name>Zoë</name>');
+  });
+
   it('reads a Latin-1 file using its declared encoding', () => {
     const bytes = encodeLatin1('<?xml version="1.0" encoding="iso-8859-1"?><name>Zoë</name>');
     expect(decodeXmlBytes(bytes)).toContain('<name>Zoë</name>');

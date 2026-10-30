@@ -76,13 +76,21 @@ export function encodeLatin1(text: string): Uint8Array<ArrayBuffer> {
 
 /**
  * Decodes an uploaded XML file using the encoding its own prolog declares
- * (<?xml ... encoding="iso-8859-1"?>), falling back to UTF-8. The prolog is
- * plain ASCII in every encoding FG uses, so it can be read before decoding.
+ * (<?xml ... encoding="iso-8859-1"?>), preserving valid UTF-8 from older
+ * RoleVerse exports that used that declaration. The prolog is plain ASCII in
+ * every encoding FG uses, so it can be read before decoding.
  */
 export function decodeXmlBytes(bytes: ArrayBuffer | Uint8Array): string {
   const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   const head = String.fromCharCode(...view.subarray(0, 200));
   const declared = /<\?xml[^>]*\bencoding\s*=\s*["']([A-Za-z0-9._-]+)["']/i.exec(head)?.[1];
+  if (declared && /^(?:iso-8859-1|latin-?1|windows-1252|cp1252)$/i.test(declared)) {
+    try {
+      return new TextDecoder('utf-8', { fatal: true }).decode(view);
+    } catch {
+      // Older RoleVerse exports declared Latin-1 despite containing UTF-8 bytes.
+    }
+  }
   try {
     return new TextDecoder(declared ?? 'utf-8').decode(view);
   } catch {
