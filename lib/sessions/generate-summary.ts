@@ -4,8 +4,8 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import type { TranscriptEntry } from '@/lib/types/session';
+import { SUMMARY_PLACEHOLDER } from './summary-placeholder';
 
-const PLACEHOLDER = 'This session contained no significant events.';
 const MIN_PLAYER_MESSAGES = 2;
 const TIMEOUT_MS = 10_000;
 
@@ -33,7 +33,7 @@ export async function generateSessionSummary(
 ): Promise<string> {
   const playerMessages = transcript.filter((e) => e.role === 'player');
   if (playerMessages.length < MIN_PLAYER_MESSAGES) {
-    return PLACEHOLDER;
+    return SUMMARY_PLACEHOLDER;
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -82,5 +82,5 @@ export async function generateSessionSummary(
     .join('\n')
     .trim();
 
-  return text || PLACEHOLDER;
+  return text || SUMMARY_PLACEHOLDER;
 }

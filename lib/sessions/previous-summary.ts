@@ -4,8 +4,13 @@
 // recap). The summary itself is written to explicitly close with where the
 // party left off (see lib/sessions/generate-summary.ts), so this alone is
 // enough context to resume smoothly without needing raw transcript text.
+//
+// Sessions that ended with the placeholder summary (opened and closed with no
+// real play) are skipped, so the last real recap is found instead of being
+// hidden behind "no significant events".
 
 import { createClient } from '@/lib/supabase/server';
+import { SUMMARY_PLACEHOLDER } from './summary-placeholder';
 
 export async function fetchPreviousEndedSessionSummary(campaignId: string): Promise<string | null> {
   try {
@@ -16,6 +21,7 @@ export async function fetchPreviousEndedSessionSummary(campaignId: string): Prom
       .eq('campaign_id', campaignId)
       .not('ended_at', 'is', null)
       .not('summary', 'is', null)
+      .neq('summary', SUMMARY_PLACEHOLDER)
       .order('ended_at', { ascending: false })
       .limit(1)
       .maybeSingle();
