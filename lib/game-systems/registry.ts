@@ -19,13 +19,10 @@ const add1e: GameSystem = {
     'You are a rules arbiter for AD&D 1st Edition. Use THAC0 for attack rolls and descending armor class. Enforce strict class and race restrictions per the 1E PHB and DMG.',
   supported: true,
   ragSource: {
-    type: 'srd_clone',
-    url: 'https://osricwiki.presgas.name/doku.php',
+    type: 'none',
     notes:
-      'OSRIC (Old School Reference and Index Compilation) is a retro-clone of AD&D 1E/2E rules ' +
-      'released under the OGL. Indexed under ADD1E via the shared data/osric-stub.md — the same ' +
-      'file is also ingested under ADD2E (see lib/rag/fetchers/osric.ts); the "Where 1E and 2E ' +
-      'Diverge" section of that file calls out the handful of mechanics that differ.',
+      'No open, machine-readable source of spells or other lookup data exists, so there is no ' +
+      'shared baseline index. Rules come from rulebooks players upload to their campaigns.',
   },
 };
 
@@ -48,14 +45,10 @@ const add2e: GameSystem = {
     'You are a rules arbiter for AD&D 2nd Edition. Use THAC0 for attack rolls, descending armor class, and 2E saving throw categories (Paralyzation/Poison/Death Magic, Rod/Staff/Wand, Petrification/Polymorph, Breath Weapon, Spell). Enforce proficiency slots and kit restrictions.',
   supported: true,
   ragSource: {
-    type: 'srd_clone',
-    url: 'https://osricwiki.presgas.name/doku.php',
+    type: 'none',
     notes:
-      'OSRIC (Old School Reference and Index Compilation) is a retro-clone of AD&D 1E/2E rules ' +
-      'released under the OGL. No clean machine-readable JSON/markdown source was found — ' +
-      'indexed via the hand-authored data/osric-stub.md instead (see .claude/commands/roadmap.md ' +
-      'for the backlog of other systems still needing this treatment). The same file is also ' +
-      'ingested under ADD1E (see lib/rag/fetchers/osric.ts).',
+      'No open, machine-readable source of spells or other lookup data exists, so there is no ' +
+      'shared baseline index. Rules come from rulebooks players upload to their campaigns.',
   },
 };
 
@@ -242,11 +235,10 @@ const dcc: GameSystem = {
     'You are a rules arbiter for Dungeon Crawl Classics. Use the DCC dice chain, mighty deeds for warriors, patron bond and spellburn for wizards, and disapproval tables for clerics.',
   supported: true,
   ragSource: {
-    type: 'srd_clone',
+    type: 'none',
     notes:
-      'DCC RPG core mechanics are covered under the Fifth Edition Foes / DCC SRD-equivalent OGL ' +
-      'release. No clean machine-readable JSON/markdown source was found; falling back to ' +
-      'data/dcc-stub.md placeholder. The Rules Arbiter for DCC relies primarily on Claude training knowledge.',
+      'No open, machine-readable source of spells or other lookup data exists, so there is no ' +
+      'shared baseline index. Rules come from rulebooks players upload to their campaigns.',
   },
 };
 

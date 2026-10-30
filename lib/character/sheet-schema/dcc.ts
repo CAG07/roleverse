@@ -1,10 +1,8 @@
 import type { SystemSheetSchema } from './types';
 
-// Field selection is grounded in this project's own DCC reference (data/dcc-stub.md,
-// an original independently-written mechanics summary) rather than any Goodman Games
+// Field selection is grounded in DCC's core mechanics rather than any Goodman Games
 // printed sheet — DCC's official character sheet art/layout is their product identity,
-// which this project deliberately avoids reproducing (see dcc-stub.md's own note on the
-// same principle for named patrons). The mechanical content below (saves, thief skills,
+// which this project deliberately avoids reproducing. The mechanical content below (saves, thief skills,
 // spellcasting, corruption, patron taint) matches what a DCC character actually tracks.
 //
 // Occupation, luckySign, alignment, currentLuck, startingLuck, and mercurialMagic
@@ -105,8 +103,7 @@ const schema: SystemSheetSchema = {
       // Percentile skills for Thieves/Halflings (sneak silently, hide in shadows,
       // pick locks, pick pockets, disable traps, climb sheer surfaces, forge
       // documents, handle poison, read languages, cast spell from scroll) — open
-      // record since the exact list varies by table/printing (dcc-stub.md, "Core
-      // Thief Skills").
+      // record since the exact list varies by table/printing.
       key: 'thiefSkills',
       label: 'Thief Skills (%)',
       column: 'skills',

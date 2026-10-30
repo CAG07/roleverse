@@ -10,10 +10,7 @@ on:
         options:
           - 5E_2014
           - 5E_2024
-          - ADD1E
-          - ADD2E
           - PATHFINDER_2E
-          - DCC
           - 3_5E
 
 jobs:

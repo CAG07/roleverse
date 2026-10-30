@@ -5,11 +5,11 @@ import type { SystemSheetSchema } from './types';
 // thief skills, class abilities, movement/attacks/XP), plus the field set from
 // the "AD&D 1st Edition Player Character Sheet (Unearthed Arcana Version)" by
 // Steve Jensen (identity/adjustment/breakdown fields below) — not either
-// sheet's printed layout or artwork. Grounded in data/osric-stub.md,
-// specifically its "Where 1E and 2E Diverge" section, which is why this schema
+// sheet's printed layout or artwork. Grounded in where the 1E and 2E rules
+// diverge (as summarized by the OSRIC retro-clone), which is why this schema
 // differs from add2e.ts exactly where it does:
 //   - No `nonWeaponProficiencies` field — that's a 2E-only proficiency-slot
-//     system per the stub; 1E core rules have no equivalent.
+//     system; 1E core rules have no equivalent.
 const schema: SystemSheetSchema = {
   gameSystem: 'ADD1E',
   fields: [

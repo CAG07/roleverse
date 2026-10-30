@@ -5,20 +5,14 @@ import { ingestSystem, type IngestableSystem } from '../lib/rag/ingest';
 const VALID_SYSTEMS: IngestableSystem[] = [
   '5E_2014',
   '5E_2024',
-  'ADD1E',
-  'ADD2E',
   'PATHFINDER_2E',
-  'DCC',
   '3_5E',
 ];
 
 const SOURCE_LABELS: Record<IngestableSystem, string> = {
   '5E_2014': 'open5e',
   '5E_2024': 'open5e-v2',
-  ADD1E: 'osric',
-  ADD2E: 'osric',
   PATHFINDER_2E: 'pf2e-foundry',
-  DCC: 'dcc-stub',
   '3_5E': 'srd35',
 };
 
