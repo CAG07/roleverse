@@ -43,11 +43,6 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     title: 'The Studio',
     description: 'Cover images, character portraits, and YouTube links for your campaign.',
   },
-  {
-    slug: 'workshop',
-    title: 'The Workshop',
-    description: 'A curated directory of outside tools and references, plus how to suggest your own.',
-  },
 ];
 
 export function getAdjacentTopics(slug: string): { prev: GuideTopic | null; next: GuideTopic | null } {
