@@ -21,6 +21,9 @@ export type IngestableSystem =
   | '5E_2014'
   | '5E_2024'
   | 'PATHFINDER_2E'
+  | 'ADD1E'
+  | 'ADD2E'
+  | 'DCC'
   | '3_5E';
 
 export interface IngestOptions {
@@ -224,6 +227,21 @@ export async function* streamChunksForSystem(gameSystem: IngestableSystem): Asyn
     case 'PATHFINDER_2E': {
       const { fetchPf2eChunks } = await import('./fetchers/pf2e');
       yield* fetchPf2eChunks();
+      break;
+    }
+    case 'ADD1E': {
+      const { fetchOsricChunks } = await import('./fetchers/osric');
+      yield* fetchOsricChunks('ADD1E');
+      break;
+    }
+    case 'ADD2E': {
+      const { fetchOsricChunks } = await import('./fetchers/osric');
+      yield* fetchOsricChunks('ADD2E');
+      break;
+    }
+    case 'DCC': {
+      const { fetchDccChunks } = await import('./fetchers/dcc');
+      yield* fetchDccChunks();
       break;
     }
     default: {

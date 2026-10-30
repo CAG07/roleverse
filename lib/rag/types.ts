@@ -13,7 +13,7 @@ export interface RagChunk {
 export interface ChunkMetadata {
   /** Game system this content belongs to (e.g. '5E_2014') */
   gameSystem: string;
-  /** Source label (e.g. 'open5e', 'srd35', 'pf2e-foundry') */
+  /** Source label (e.g. 'open5e', 'osric', 'pf2e-foundry') */
   source: string;
   /** Logical category within the source (e.g. 'spell', 'monster', 'class', 'rule') */
   category: string;

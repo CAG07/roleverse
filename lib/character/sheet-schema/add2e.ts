@@ -5,8 +5,8 @@ import type { SystemSheetSchema } from './types';
 // per-ability adjustments, thief skills, class abilities, movement/attacks/XP),
 // plus the field set from the "AD&D 1st Edition Player Character Sheet
 // (Unearthed Arcana Version)" by Steve Jensen — the author's notes say it's
-// also usable for 2E play, and where the 1E and 2E rules diverge (as
-// summarized by the OSRIC retro-clone) the only mechanical difference from add1e.ts is the
+// also usable for 2E play, and per data/osric-stub.md's "Where 1E and 2E
+// Diverge" section the only mechanical difference from add1e.ts is the
 // 2E-only proficiency-slot system (`nonWeaponProficiencies`), kept below.
 const schema: SystemSheetSchema = {
   gameSystem: 'ADD2E',
