@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { GeneratingIndicator } from '@/components/ui/GeneratingIndicator';
 import { parseFGAddCharacterXml } from '@/lib/character/import/fantasy-grounds/parse-add';
+import { decodeXmlBytes } from '@/lib/character/fantasy-grounds-encoding';
 import SystemFields, { createSystemFieldsValue, buildCharacterColumns, hydrateSystemFieldsValue } from './SystemFields';
 import type { SystemFieldsValue } from './SystemFields';
 
@@ -100,7 +101,7 @@ export function NewCharacterForm({
     setImportError('');
     setImporting(true);
     try {
-      const text = await file.text();
+      const text = decodeXmlBytes(await file.arrayBuffer());
       const parsed = parseFGAddCharacterXml(text);
       if ('error' in parsed) {
         setImportError(parsed.error);

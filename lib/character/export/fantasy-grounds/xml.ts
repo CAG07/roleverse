@@ -4,13 +4,21 @@
 // XSD/schema ("learned from examples"), so a generic tree serializer would buy
 // nothing a handful of small string helpers don't already cover.
 
+import { foldTypography, toLatin1Xml } from '@/lib/character/fantasy-grounds-encoding';
+
+/**
+ * Escapes XML special characters and makes the text Latin-1 safe, since every
+ * document here declares encoding="iso-8859-1" (see fantasy-grounds-encoding.ts).
+ */
 export function escapeXml(value: string): string {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+  return toLatin1Xml(
+    foldTypography(String(value))
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;')
+  );
 }
 
 /** A typed leaf node: <tag type="number">1</tag> or <tag type="string">Foo</tag>. */
