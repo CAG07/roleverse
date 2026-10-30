@@ -103,13 +103,18 @@ function formatSpell(r: Rec): string {
   return [
     `## ${text(r.name)}`,
     level === 0 ? `${school} Cantrip` : `Level ${level} ${school}${r.ritual ? ' (Ritual)' : ''}`,
-    line('Casting Time', r.casting_time),
+    // Reaction triggers live only in reaction_condition (e.g. Counterspell's
+    // "when you see a creature ... casting a spell"), not in desc.
+    line('Casting Time', [text(r.casting_time), text(r.reaction_condition)].filter(Boolean).join(', ')),
     line('Range', r.range_text),
     line('Components', components + (material ? ` (${material})` : '')),
     line('Duration', `${r.concentration ? 'Concentration, ' : ''}${text(r.duration)}`),
     line('Classes', names(r.classes)),
     text(r.desc),
-    r.higher_level ? `**Using a Higher-Level Spell Slot.** ${text(r.higher_level)}` : '',
+    // Cantrips use higher_level for character-level scaling, not slot upcasting.
+    r.higher_level
+      ? `**${level === 0 ? 'Cantrip Upgrade' : 'Using a Higher-Level Spell Slot'}.** ${text(r.higher_level)}`
+      : '',
   ]
     .filter(Boolean)
     .join('\n\n');
@@ -157,7 +162,7 @@ function formatCreature(r: Rec): string {
     byType.set(type, [...(byType.get(type) ?? []), a]);
   }
   for (const [type, actions] of byType) {
-    body.push(`### ${actionHeading(type)}`, ...actions.map((a) => `**${text(a.name)}.** ${text(a.desc)}`));
+    body.push(`### ${actionHeading(type)}`, ...actions.map((a) => `**${actionName(a)}.** ${text(a.desc)}`));
   }
 
   return [header.join('\n'), ...body].join('\n\n');
@@ -227,6 +232,27 @@ function formatSenses(r: Rec): string {
     .map((s) => `${capitalize(s)} ${text(r[`${s}_range`])} ft.`);
   if (r.passive_perception != null) senses.push(`Passive Perception ${text(r.passive_perception)}`);
   return senses.join(', ');
+}
+
+/**
+ * An action's name plus its usage limits, which v2 stores in usage_limits rather
+ * than in the name or desc (e.g. Fire Breath's recharge). Some names already
+ * carry the limit ("Teleport (Recharge 4-6)"), so it isn't added twice.
+ */
+function actionName(a: Rec): string {
+  const name = text(a.name);
+  const limits: string[] = [];
+  const usage = a.usage_limits as Rec | null;
+  if (usage && !/\(.*(recharge|\/day).*\)/i.test(name)) {
+    const n = Number(usage.param);
+    if (usage.type === 'PER_DAY') limits.push(`${n}/Day`);
+    else if (usage.type === 'RECHARGE' || usage.type === 'RECHARGE_ON_ROLL') {
+      limits.push(n >= 6 ? 'Recharge 6' : `Recharge ${n}–6`);
+    }
+  }
+  const cost = Number(a.legendary_action_cost ?? 0);
+  if (a.action_type === 'LEGENDARY_ACTION' && cost > 1) limits.push(`Costs ${cost} Actions`);
+  return limits.length ? `${name} (${limits.join('; ')})` : name;
 }
 
 function actionHeading(type: string): string {

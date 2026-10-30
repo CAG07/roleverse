@@ -144,12 +144,13 @@ function formatEntry(entry: FoundryEntry): string {
     line('Area', s.area ? `${text(obj(s.area).value)}-foot ${text(obj(s.area).type)}` : ''),
     line('Targets', obj(s.target).value),
     line('Defense', obj(obj(s.defense).save).statistic),
-    line('Duration', obj(s.duration).value),
+    line('Duration', formatDuration(obj(s.duration))),
     line('Prerequisites', arr(obj(s.prerequisites).value).map((p) => text(obj(p).value)).join(', ')),
     line('Hit Points', obj(s.hp).value),
     line('Price', formatPrice(obj(obj(s.price).value))),
     line('Bulk', obj(s.bulk).value),
-    cleanDescription(text(obj(s.description).value)),
+    // A spell's level is its base rank, which resolves rank-dependent damage.
+    cleanDescription(text(obj(s.description).value), entry.type === 'spell' ? Number(level) || undefined : undefined),
   ];
   return lines.filter(Boolean).join('\n');
 }
@@ -219,20 +220,8 @@ function packNameToCategory(packName: string): string {
  * the label, `@Damage[2d6[fire]]` becomes "2d6 fire", `@Check[reflex|dc:20]`
  * becomes "DC 20 Reflex", and `@Localize[...]` (UI text keys) is dropped.
  */
-export function cleanDescription(html: string): string {
-  return html
-    .replace(/@\w+\[[^\]]*(?:\[[^\]]*\][^\]]*)*\]\{([^}]*)\}/g, '$1')
-    .replace(/@Damage\[([^\]]*(?:\[[^\]]*\][^\]]*)*)\]/g, (_, inner: string) =>
-      inner.replace(/\[([^\]]*)\]/g, ' $1').replace(/[()]/g, '')
-    )
-    .replace(/@Check\[([^\]]*)\]/g, (_, inner: string) => {
-      const [type, ...opts] = inner.split('|');
-      const dc = opts.find((o) => o.startsWith('dc:'))?.slice(3);
-      return `${dc ? `DC ${dc} ` : ''}${capitalize(type.replace(/^type:/, ''))}`;
-    })
-    .replace(/@UUID\[[^\]]*\.([^.\]]+)\]/g, '$1')
-    .replace(/@Localize\[[^\]]*\]/g, '')
-    .replace(/@\w+\[([^\]]*)\]/g, '$1')
+export function cleanDescription(html: string, rank?: number): string {
+  return replaceEnrichers(html, rank)
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/(p|li|h\d)>/gi, '\n')
     .replace(/<hr\s*\/?>/gi, '\n')
@@ -246,6 +235,131 @@ export function cleanDescription(html: string): string {
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+}
+
+/**
+ * Replace each `@Name[...]` enricher (with an optional `{Label}` after it). The
+ * brackets are matched by depth rather than by regex, because damage formulas
+ * nest them: `@Damage[(@item.level)d4[persistent,mental]]`.
+ */
+function replaceEnrichers(source: string, rank?: number): string {
+  let out = '';
+  let i = 0;
+  const start = /@(\w+)\[/g;
+  let m: RegExpExecArray | null;
+  while ((m = start.exec(source))) {
+    const open = m.index + m[0].length;
+    let depth = 1;
+    let close = open;
+    while (close < source.length && depth > 0) {
+      if (source[close] === '[') depth++;
+      else if (source[close] === ']') depth--;
+      if (depth > 0) close++;
+    }
+    if (depth > 0) break; // unbalanced: leave the rest as-is
+    const inner = source.slice(open, close);
+    let end = close + 1;
+    let label: string | null = null;
+    if (source[end] === '{') {
+      const labelEnd = source.indexOf('}', end);
+      if (labelEnd !== -1) {
+        label = source.slice(end + 1, labelEnd);
+        end = labelEnd + 1;
+      }
+    }
+    out += source.slice(i, m.index) + (label ?? renderEnricher(m[1], inner, rank));
+    i = end;
+    start.lastIndex = end;
+  }
+  return out + source.slice(i);
+}
+
+function renderEnricher(name: string, inner: string, rank?: number): string {
+  switch (name) {
+    case 'Damage':
+      return resolveDamage(inner, rank);
+    case 'Check': {
+      const [type, ...opts] = inner.split('|');
+      const dc = opts.find((o) => o.startsWith('dc:'))?.slice(3);
+      return `${dc ? `DC ${dc} ` : ''}${capitalize(type.replace(/^type:/, ''))}`;
+    }
+    case 'UUID':
+      return inner.split('.').pop() ?? '';
+    case 'Localize':
+      return '';
+    case 'Template': {
+      const opts = Object.fromEntries(inner.split('|').map((o) => o.split(':') as [string, string]));
+      const type = opts.type ?? inner.split('|')[0];
+      return opts.distance ? `${opts.distance}-foot ${type}` : type;
+    }
+    default:
+      return inner.split('|')[0];
+  }
+}
+
+/**
+ * Turn a Foundry damage formula into readable text. Rank variables
+ * (@item.level, @item.rank) resolve to the spell's rank when it's known, and
+ * purely numeric arithmetic is evaluated, so `(@item.level)d4[persistent,mental]`
+ * at rank 1 becomes "1d4 persistent mental". Anything that can't be resolved
+ * (a creature's level, say) is kept readable rather than mangled.
+ */
+export function resolveDamage(formula: string, rank?: number): string {
+  let f = formula.split('|')[0];
+  f = f.replace(/@(item|spell)\.(level|rank)/g, rank !== undefined ? String(rank) : 'spell rank');
+  f = f.replace(/@actor\.level/g, 'your level');
+
+  // Evaluate numeric-only groups, innermost first: (1), floor(5/2), ceil((3+1)/2).
+  let previous: string;
+  do {
+    previous = f;
+    f = f.replace(/(floor|ceil)?\(([\d+\-*/. ]+)\)/g, (match, fn: string | undefined, expr: string) => {
+      const value = evaluateArithmetic(expr);
+      if (value === null) return match;
+      const n = fn === 'floor' ? Math.floor(value) : fn === 'ceil' ? Math.ceil(value) : value;
+      return String(n);
+    });
+  } while (f !== previous);
+  f = f.replace(/floor\(([^()]*)\)/g, '($1, rounded down)').replace(/ceil\(([^()]*)\)/g, '($1, rounded up)');
+
+  // Damage type tags: 2d6[fire] -> "2d6 fire", [persistent,mental] -> "persistent mental".
+  do {
+    previous = f;
+    f = f.replace(/\[([A-Za-z][A-Za-z,\- ]*)\]/g, (_, types: string) => ` ${types.split(',').join(' ')}`);
+  } while (f !== previous);
+
+  return f
+    .replace(/[{}]/g, '')
+    .replace(/,\s*/g, ', ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Evaluate +, -, *, / over plain numbers. Returns null for anything else. */
+function evaluateArithmetic(expr: string): number | null {
+  const tokens = expr.replace(/\s+/g, '').match(/\d+(?:\.\d+)?|[+\-*/]/g);
+  if (!tokens || tokens.join('') !== expr.replace(/\s+/g, '')) return null;
+  // Two passes: * and / first, then + and -.
+  const terms: (number | string)[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if ((t === '*' || t === '/') && terms.length) {
+      const left = terms.pop() as number;
+      const right = Number(tokens[++i]);
+      if (Number.isNaN(right)) return null;
+      terms.push(t === '*' ? left * right : left / right);
+    } else {
+      terms.push(t === '+' || t === '-' ? t : Number(t));
+    }
+  }
+  let total = typeof terms[0] === 'number' ? terms[0] : NaN;
+  for (let i = 1; i < terms.length; i += 2) {
+    const op = terms[i];
+    const value = terms[i + 1];
+    if (typeof value !== 'number') return null;
+    total = op === '+' ? total + value : total - value;
+  }
+  return Number.isFinite(total) ? total : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -287,6 +401,13 @@ function listOf(v: unknown, label: string): string {
     return `${text(o.type)}${o.value != null ? ` ${text(o.value)}` : ''}`;
   });
   return items.length ? `; ${label} ${items.join(', ')}` : '';
+}
+
+/** "Sustained up to 1 minute" when the spell must be Sustained; the description often doesn't say. */
+function formatDuration(duration: Rec): string {
+  const value = text(duration.value);
+  if (duration.sustained === true) return value ? `Sustained up to ${value}` : 'Sustained';
+  return value;
 }
 
 function formatPrice(price: Rec): string {
