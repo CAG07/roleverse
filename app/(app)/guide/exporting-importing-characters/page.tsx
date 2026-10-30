@@ -1,4 +1,4 @@
-import { GuideNote, GuideTopic } from '@/components/guide/GuideTopic';
+import { GuideNote, GuideSection, GuideTopic } from '@/components/guide/GuideTopic';
 
 export default function ExportingImportingCharactersGuide() {
   return (
@@ -7,7 +7,7 @@ export default function ExportingImportingCharactersGuide() {
       title="Exporting & Importing Characters"
       dek="Print a sheet, export to Fantasy Grounds, or bring a character in from a file."
     >
-      <h2>Exporting a Character</h2>
+      <GuideSection topic="exporting-importing-characters" id="exporting-a-character" />
       <p>
         On any character&apos;s sheet page, you&apos;ll find:
       </p>
@@ -25,7 +25,7 @@ export default function ExportingImportingCharactersGuide() {
         </li>
       </ul>
 
-      <h2>Importing Into an Existing Character</h2>
+      <GuideSection topic="exporting-importing-characters" id="importing-into-an-existing-character" />
       <p>
         The same sheet page also offers <strong>Import from Fantasy Grounds</strong> and{' '}
         <strong>Import as Text</strong>, so you can bring updates into a character you already
@@ -45,7 +45,7 @@ export default function ExportingImportingCharactersGuide() {
         always double-check the review screen before confirming.
       </GuideNote>
 
-      <h2>A Note on Fantasy Grounds</h2>
+      <GuideSection topic="exporting-importing-characters" id="a-note-on-fantasy-grounds" />
       <p>
         RoleVerse doesn&apos;t connect live to Fantasy Grounds — there&apos;s no ongoing sync.
         Exporting and importing both work through a plain file you download and upload

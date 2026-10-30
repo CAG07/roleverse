@@ -1,0 +1,167 @@
+/*
+ * IMPORTANT: This component uses CSS Modules (not styled-jsx) intentionally.
+ * See CharactersPage.module.css for the full rationale. Do NOT convert this
+ * file back to styled-jsx or inline styles.
+ */
+
+.root {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: start;
+  padding: 2rem 1.5rem 4rem;
+  min-height: 100vh;
+  background: var(--void);
+}
+
+.sidebar {
+  position: sticky;
+  top: 1.5rem;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+  padding-right: 1rem;
+  border-right: var(--rule-thin);
+}
+
+.searchWrap {
+  margin-bottom: 1.25rem;
+}
+
+.searchLabel,
+.contentsLabel {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.searchLabel {
+  margin-bottom: 0.4rem;
+}
+
+.contentsLabel {
+  margin: 1.1rem 0 0.4rem;
+}
+
+.searchInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.65rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ivory);
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  border-radius: 0;
+}
+.searchInput::placeholder {
+  color: var(--ivory-dim);
+}
+.searchInput:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.articleLink {
+  display: block;
+  padding: 0.35rem 0.5rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.35;
+  color: var(--ivory-muted);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.articleLink:hover {
+  color: var(--ivory);
+}
+.active {
+  color: var(--ivory);
+  border-left-color: var(--crimson);
+}
+
+.sectionList {
+  list-style: none;
+  margin: 0.15rem 0 0.5rem;
+  padding: 0 0 0 1rem;
+}
+
+.sectionLink {
+  display: block;
+  padding: 0.25rem 0.5rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: var(--ivory-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.sectionLink:hover {
+  color: var(--gold);
+}
+
+.resultLink {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.4rem 0.5rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--ivory);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.resultLink:hover {
+  color: var(--gold);
+}
+
+.resultParent {
+  font-size: 0.75rem;
+  color: var(--ivory-dim);
+}
+
+.noResults {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--ivory-muted);
+  margin: 0;
+}
+
+.content {
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .root {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+  .sidebar {
+    position: static;
+    max-height: none;
+    padding: 0 0 1.25rem;
+    border-right: none;
+    border-bottom: var(--rule-thin);
+  }
+}
+
+@media print {
+  .root {
+    display: block;
+  }
+  .sidebar {
+    display: none;
+  }
+}

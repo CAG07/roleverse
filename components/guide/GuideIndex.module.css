@@ -5,40 +5,16 @@
  */
 
 .root {
-  padding: 2rem 1.5rem;
-  min-height: 100vh;
-  background: var(--void);
+  max-width: 720px;
 }
 
-.header {
-  margin-bottom: 2rem;
-  max-width: 640px;
-}
-
-.title {
-  font-family: var(--font-heading);
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--ivory);
-  margin: 0 0 0.5rem;
-}
-
-.subtitle {
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  color: var(--ivory-muted);
-  margin: 0;
-  line-height: 1.6;
-}
-
-.sectionLabel {
+.eyebrow {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
-.sectionLabelText {
+.eyebrowText {
   font-family: var(--font-heading);
   font-size: 0.6rem;
   font-weight: 600;
@@ -47,66 +23,66 @@
   color: var(--gold);
   white-space: nowrap;
 }
-.sectionLabelLine {
+.eyebrowLine {
   flex: 1;
   height: 1px;
   background: linear-gradient(90deg, var(--crimson-dim), transparent);
 }
 
-.topicGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1rem;
-}
-
-.topicCard {
-  position: relative;
-  background: var(--surface-card);
-  border: var(--rule-thin);
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  cursor: pointer;
-  text-decoration: none;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-.topicCard:hover {
-  background: var(--surface-hover);
-  border-color: var(--crimson-dim);
-  box-shadow: 0 0 20px var(--crimson-glow);
-}
-.topicCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--crimson), transparent);
-}
-
-.topicNumber {
+.title {
   font-family: var(--font-heading);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  color: var(--crimson-bright);
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ivory);
+  margin: 0 0 0.75rem;
 }
 
-.topicTitle {
+.intro {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--ivory-muted);
+  margin: 0 0 2rem;
+}
+
+.sectionHeading {
   font-family: var(--font-heading);
   font-size: 1rem;
   font-weight: 600;
-  color: var(--ivory);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 0.9rem;
+  padding-bottom: 0.4rem;
+  border-bottom: var(--rule-thin);
 }
 
-.topicDescription {
+.articleList {
+  margin: 0;
+  padding-left: 1.4rem;
   font-family: var(--font-body);
-  font-size: 0.85rem;
-  color: var(--ivory-muted);
+  color: var(--ivory-dim);
+}
+
+.articleItem {
+  margin-bottom: 0.9rem;
   line-height: 1.5;
+}
+
+.articleLink {
+  display: block;
+  font-size: 1rem;
+  color: var(--gold);
+  text-decoration: none;
+}
+.articleLink:hover {
+  color: var(--crimson-bright);
+  text-decoration: underline;
+}
+
+.articleDescription {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--ivory-muted);
 }

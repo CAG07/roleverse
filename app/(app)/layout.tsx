@@ -31,7 +31,6 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           marginLeft: 'var(--sidebar-width)',
           minHeight: '100vh',
           background: 'var(--void)',
-          overflowY: 'auto',
         }}
       >
         {children}

@@ -1,4 +1,4 @@
-import { GuideTopic } from '@/components/guide/GuideTopic';
+import { GuideSection, GuideTopic } from '@/components/guide/GuideTopic';
 
 export default function StudioGuide() {
   return (
@@ -7,7 +7,7 @@ export default function StudioGuide() {
       title="The Studio"
       dek="Cover images, character portraits, and YouTube links for your campaign."
     >
-      <h2>Images</h2>
+      <GuideSection topic="studio" id="images" />
       <p>
         The Studio gathers every image tied to a campaign in one place — your campaign&apos;s
         cover image, each character&apos;s avatar, and anything you&apos;ve uploaded to the
@@ -17,13 +17,27 @@ export default function StudioGuide() {
         appears here automatically.
       </p>
 
-      <h2>Videos</h2>
+      <GuideSection topic="studio" id="videos" />
       <p>
-        RoleVerse doesn&apos;t host video directly. Instead, if a YouTube link appears in a
-        document you&apos;ve uploaded to the campaign (a module, house rules, or your own
-        notes), it&apos;s picked up and shown here as a playable embed — a way to attach
-        handout music, battle maps in video form, or other reference clips without RoleVerse
-        needing to store the video itself.
+        RoleVerse doesn&apos;t host video files. Instead, the Studio shows YouTube videos as
+        playable embeds, gathered from two places:
+      </p>
+      <ul>
+        <li>
+          <strong>Videos you add by hand</strong> — paste a YouTube link into the Scene
+          Library on the campaign page, or into the <strong>Attach Scene</strong> window
+          during a session. These show the title you gave them, or &quot;Added to the Scene
+          Library&quot; if you left the title blank.
+        </li>
+        <li>
+          <strong>Links found in your documents</strong> — any YouTube link inside a module,
+          house rules, or notes you&apos;ve uploaded is picked up automatically and shown
+          with that document&apos;s title.
+        </li>
+      </ul>
+      <p>
+        Either way, it&apos;s a way to attach ambient music, battle maps in video form, or
+        other reference clips without using any of your campaign&apos;s storage space.
       </p>
     </GuideTopic>
   );

@@ -1,4 +1,4 @@
-import { GuideNote, GuideTopic } from '@/components/guide/GuideTopic';
+import { GuideNote, GuideSection, GuideTopic } from '@/components/guide/GuideTopic';
 
 export default function PlayingASessionGuide() {
   return (
@@ -7,7 +7,7 @@ export default function PlayingASessionGuide() {
       title="Playing a Session"
       dek="The chat window, the Oracle, session notes, and picking up where you left off."
     >
-      <h2>Starting and Resuming</h2>
+      <GuideSection topic="playing-a-session" id="starting-and-resuming" />
       <p>
         From a campaign&apos;s page, select <strong>Start Session</strong>. If a session is
         already in progress, the same button reads <strong>Resume Session</strong> — sessions
@@ -15,7 +15,7 @@ export default function PlayingASessionGuide() {
         exactly where you were, including with a fresh recap of what happened last time.
       </p>
 
-      <h2>Talking to the Game Master</h2>
+      <GuideSection topic="playing-a-session" id="talking-to-the-game-master" />
       <p>
         The chat window is where you play. Describe what your character says or does, in
         plain language, and you&apos;ll see a reply appear underneath. Replies are labeled by
@@ -43,7 +43,17 @@ export default function PlayingASessionGuide() {
         and your message goes to whichever one fits.
       </p>
 
-      <h2>Voice Input</h2>
+      <GuideSection topic="playing-a-session" id="scene-display" />
+      <p>
+        The <strong>Scene Display</strong> shows a picture or video alongside the chat, so you
+        can set the scene the way a Game Master would hold up a map or handout. Select{' '}
+        <strong>Attach Scene</strong> and choose any photo or YouTube video from the
+        campaign&apos;s Scene Library. You can also upload a new photo or add a new YouTube
+        link right from that window. Videos play directly in the Scene Display, and whatever
+        you attach stays there when you come back to the session later.
+      </p>
+
+      <GuideSection topic="playing-a-session" id="voice-input" />
       <p>
         The small microphone indicator near the chat is a permission toggle, not a
         transcription feature — RoleVerse never records or sends your voice anywhere. Turn it
@@ -52,7 +62,7 @@ export default function PlayingASessionGuide() {
         system&apos;s voice-typing shortcut) to speak your message straight into the chat box.
       </p>
 
-      <h2>The Oracle</h2>
+      <GuideSection topic="playing-a-session" id="the-oracle" />
       <p>
         The Oracle panel is a set of solo-play tools you can reach for any time you want an
         outside answer instead of deciding something yourself:
@@ -76,7 +86,7 @@ export default function PlayingASessionGuide() {
       </ul>
       <p>Every Oracle result is logged to your session automatically.</p>
 
-      <h2>Session Notes</h2>
+      <GuideSection topic="playing-a-session" id="session-notes" />
       <p>
         The Session Notes box is your own private scratchpad for the session — jot down
         anything you want to remember.
@@ -86,7 +96,7 @@ export default function PlayingASessionGuide() {
         follow you to a different device, and clearing your browser data will clear them too.
       </GuideNote>
 
-      <h2>Experience Points</h2>
+      <GuideSection topic="playing-a-session" id="experience-points" />
       <p>
         The Game Master calls out experience point awards in narration — after a fight, when
         treasure is recovered, or when a session wraps up — but doesn&apos;t save them
@@ -99,7 +109,7 @@ export default function PlayingASessionGuide() {
         your character sheet, not in the chat history.
       </GuideNote>
 
-      <h2>Session History</h2>
+      <GuideSection topic="playing-a-session" id="session-history" />
       <p>
         Select <strong>Session History</strong> from the session sidebar to browse every past
         session in the campaign, with an automatic summary and how long each one ran. You can
