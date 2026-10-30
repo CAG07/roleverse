@@ -17,10 +17,11 @@ export function buildTranscriptEntries(
   playerMessage: string,
   agentRole: AgentType,
   agentContent: string,
-  timestamp: string
+  timestamp: string,
+  playerTimestamp: string = timestamp
 ): [BuiltTranscriptEntry, BuiltTranscriptEntry] {
   return [
-    { role: 'player', content: playerMessage, timestamp },
+    { role: 'player', content: playerMessage, timestamp: playerTimestamp },
     { role: 'agent', agentType: agentRole, content: agentContent, timestamp },
   ];
 }

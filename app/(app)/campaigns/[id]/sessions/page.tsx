@@ -1,30 +1,11 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import LocalTime from '@/components/session/LocalTime';
+import { sessionPlayTimeLabel } from '@/lib/sessions/play-time';
 import styles from './page.module.css';
 
 const SUMMARY_PREVIEW_LENGTH = 150;
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric',
-  });
-}
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-US', {
-    hour: 'numeric', minute: '2-digit',
-  });
-}
-
-function formatDuration(startedAt: string, endedAt: string | null): string {
-  if (!endedAt) return 'Active';
-  const diffMs = new Date(endedAt).getTime() - new Date(startedAt).getTime();
-  const hours = Math.floor(diffMs / 3600000);
-  const mins = Math.floor((diffMs % 3600000) / 60000);
-  if (hours > 0) return `${hours}h ${mins}m`;
-  return `${mins}m`;
-}
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -47,7 +28,7 @@ export default async function SessionsListPage({ params }: Props) {
 
   const { data: sessions } = await supabase
     .from('sessions')
-    .select('id, started_at, ended_at, summary')
+    .select('id, started_at, ended_at, summary, transcript')
     .eq('campaign_id', id)
     .eq('user_id', user.id)
     .order('started_at', { ascending: false });
@@ -91,10 +72,15 @@ export default async function SessionsListPage({ params }: Props) {
                     style={{ backgroundColor: isActive ? 'var(--status-healthy)' : 'var(--ivory-dim)' }}
                   />
                   <span className={styles.sessionDate}>
-                    {formatDate(session.started_at as string)} · {formatTime(session.started_at as string)}
+                    <LocalTime iso={session.started_at as string} format="short-date" /> ·{' '}
+                    <LocalTime iso={session.started_at as string} format="time" />
                   </span>
                   <span className={styles.sessionDuration}>
-                    {formatDuration(session.started_at as string, session.ended_at as string | null)}
+                    {sessionPlayTimeLabel(
+                      session.started_at as string,
+                      session.ended_at as string | null,
+                      session.transcript
+                    )}
                   </span>
                   {isActive && <span className={styles.activeBadge}>Active</span>}
                 </div>

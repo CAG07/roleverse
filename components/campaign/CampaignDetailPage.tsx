@@ -10,6 +10,8 @@ import CampaignFilesPanel from './CampaignFilesPanel';
 import CampaignScenesPanel from './CampaignScenesPanel';
 import OracleRefsPanel from './OracleRefsPanel';
 import CsvExportPanel from './CsvExportPanel';
+import LocalTime from '@/components/session/LocalTime';
+import { sessionPlayTimeLabel } from '@/lib/sessions/play-time';
 import type { TranscriptEntry } from '@/lib/types/session';
 
 export interface CampaignCharacter {
@@ -74,15 +76,6 @@ function getLastPlayedTimestamp(session: CampaignSession): string {
     }
   }
   return session.started_at;
-}
-
-function formatSessionDuration(startedAt: string, endedAt: string | null): string {
-  if (!endedAt) return 'Active';
-  const diffMs = new Date(endedAt).getTime() - new Date(startedAt).getTime();
-  const hours = Math.floor(diffMs / 3600000);
-  const mins = Math.floor((diffMs % 3600000) / 60000);
-  if (hours > 0) return `${hours}h ${mins}m`;
-  return `${mins}m`;
 }
 
 export function CampaignDetailPage({
@@ -424,16 +417,6 @@ export function CampaignDetailPage({
                   ? `/campaigns/${id}/session`
                   : `/campaigns/${id}/sessions/${session.id}`;
 
-                const sessionDate = new Date(session.started_at).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                });
-                const sessionTime = new Date(session.started_at).toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: '2-digit',
-                });
-
                 return (
                   <div
                     key={session.id}
@@ -448,12 +431,11 @@ export function CampaignDetailPage({
                       style={{ backgroundColor: isActive ? '#4a9a5a' : 'var(--ivory-dim)' }}
                     />
                     <span className={styles.sessionDate}>
-                      {sessionDate} · {sessionTime}
+                      <LocalTime iso={session.started_at} format="short-date" /> ·{' '}
+                      <LocalTime iso={session.started_at} format="time" />
                     </span>
                     <span className={styles.sessionDuration}>
-                      {isActive
-                        ? 'Active'
-                        : formatSessionDuration(session.started_at, session.ended_at)}
+                      {sessionPlayTimeLabel(session.started_at, session.ended_at, session.transcript)}
                     </span>
                   </div>
                 );

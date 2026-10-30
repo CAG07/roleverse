@@ -31,6 +31,8 @@ export async function POST(
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   const { sessionId } = await params;
+  // When the player sent the message (the reply's entry gets the time it finished).
+  const receivedAt = new Date().toISOString();
 
   // --- Auth ---
   const supabase = await createClient();
@@ -212,7 +214,7 @@ export async function POST(
           const now = new Date().toISOString();
           const { error: transcriptError } = await supabase.rpc('append_session_transcript', {
             p_session_id: sessionId,
-            p_entries: buildTranscriptEntries(message, agentRole, fullContent, now),
+            p_entries: buildTranscriptEntries(message, agentRole, fullContent, now, receivedAt),
           });
           if (transcriptError) {
             console.warn('[transcript] Failed to save transcript entry:', transcriptError);
@@ -228,7 +230,7 @@ export async function POST(
           const now = new Date().toISOString();
           const { error: transcriptError } = await supabase.rpc('append_session_transcript', {
             p_session_id: sessionId,
-            p_entries: buildTranscriptEntries(message, agentRole, fullContent + ' [truncated]', now),
+            p_entries: buildTranscriptEntries(message, agentRole, fullContent + ' [truncated]', now, receivedAt),
           });
           if (transcriptError) {
             // already in error path — log only, don't let this mask the original error

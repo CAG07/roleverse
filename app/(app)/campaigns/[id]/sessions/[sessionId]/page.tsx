@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import Pagination from '@/components/ui/Pagination';
 import SessionExportButton from '@/components/session/SessionExportButton';
+import LocalTime from '@/components/session/LocalTime';
+import { sessionPlayTimeLabel } from '@/lib/sessions/play-time';
 import styles from './page.module.css';
 
 interface TranscriptEntry {
@@ -33,15 +35,6 @@ const agentLabels: Record<string, { label: string; accent: string }> = {
 };
 
 const PAGE_SIZE = 50;
-
-function formatDuration(startedAt: string, endedAt: string | null): string {
-  if (!endedAt) return 'Active';
-  const diffMs = new Date(endedAt).getTime() - new Date(startedAt).getTime();
-  const hours = Math.floor(diffMs / 3600000);
-  const mins = Math.floor((diffMs % 3600000) / 60000);
-  if (hours > 0) return `${hours}h ${mins}m`;
-  return `${mins}m`;
-}
 
 interface Props {
   params: Promise<{ id: string; sessionId: string }>;
@@ -80,12 +73,18 @@ export default async function SessionLogPage({ params, searchParams }: Props) {
   const isActive = !session.ended_at;
   const summary = (session.summary as string | null | undefined) ?? null;
 
-  const startDate = new Date(session.started_at as string).toLocaleDateString('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric',
-  });
-  const startTime = new Date(session.started_at as string).toLocaleTimeString('en-US', {
-    hour: 'numeric', minute: '2-digit',
-  });
+  // The page RPC only returns this page's entries; play time needs every
+  // message's timestamp, so read the full transcript once the session has ended
+  // (only the computed label reaches the browser).
+  let playTime = 'Active';
+  if (!isActive) {
+    const { data: full } = await supabase
+      .from('sessions')
+      .select('transcript')
+      .eq('id', sessionId)
+      .maybeSingle();
+    playTime = sessionPlayTimeLabel(session.started_at, session.ended_at, full?.transcript);
+  }
   const basePath = `/campaigns/${id}/sessions/${sessionId}`;
 
   return (
@@ -100,9 +99,12 @@ export default async function SessionLogPage({ params, searchParams }: Props) {
           <SessionExportButton campaignId={id} sessionId={sessionId} />
         </div>
         <div className={styles.logMeta}>
-          <span>{startDate} · {startTime}</span>
+          <span>
+            <LocalTime iso={session.started_at} format="long-date" /> ·{' '}
+            <LocalTime iso={session.started_at} format="time" />
+          </span>
           <span>·</span>
-          <span>{formatDuration(session.started_at as string, session.ended_at as string | null)}</span>
+          <span>{playTime}</span>
           {isActive && <span className={styles.activeBadge}>Active</span>}
         </div>
       </div>
@@ -125,11 +127,13 @@ export default async function SessionLogPage({ params, searchParams }: Props) {
           </p>
         ) : (
           entries.map((entry, i) => {
-            const time = entry.timestamp
-              ? new Date(entry.timestamp).toLocaleTimeString('en-US', {
-                  hour: 'numeric', minute: '2-digit',
-                })
-              : null;
+            // The date is shown on the first message of each new day, so a
+            // session resumed across several days reads in order.
+            const previousIso =
+              i > 0 ? entries[i - 1].timestamp : safePage === 1 ? session.started_at : null;
+            const time = entry.timestamp ? (
+              <LocalTime iso={entry.timestamp} format="time-with-new-day" previousIso={previousIso} />
+            ) : null;
 
             if (entry.role === 'player') {
               return (
