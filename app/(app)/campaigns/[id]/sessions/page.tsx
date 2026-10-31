@@ -28,7 +28,7 @@ export default async function SessionsListPage({ params }: Props) {
 
   const { data: sessions } = await supabase
     .from('sessions')
-    .select('id, started_at, ended_at, summary, transcript')
+    .select('id, started_at, ended_at, summary, play_time_seconds')
     .eq('campaign_id', id)
     .eq('user_id', user.id)
     .order('started_at', { ascending: false });
@@ -77,9 +77,8 @@ export default async function SessionsListPage({ params }: Props) {
                   </span>
                   <span className={styles.sessionDuration}>
                     {sessionPlayTimeLabel(
-                      session.started_at as string,
                       session.ended_at as string | null,
-                      session.transcript
+                      session.play_time_seconds as number | null
                     )}
                   </span>
                   {isActive && <span className={styles.activeBadge}>Active</span>}

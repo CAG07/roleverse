@@ -14,7 +14,7 @@
 //   exchanges are added after the older summary instead.
 
 import { createClient } from '@/lib/supabase/server';
-import { isPlaceholderSummary } from './summary-placeholder';
+import { EXCLUDE_PLACEHOLDER_SUMMARY_FILTER, isPlaceholderSummary } from './summary-placeholder';
 import { tailExcerpt, type TranscriptEntryLike } from './transcript-excerpt';
 
 /** How many recent ended sessions to look through for a real summary. */
@@ -31,6 +31,7 @@ export async function fetchPreviousEndedSessionSummary(campaignId: string): Prom
       .select('id, summary')
       .eq('campaign_id', campaignId)
       .not('ended_at', 'is', null)
+      .or(EXCLUDE_PLACEHOLDER_SUMMARY_FILTER)
       .order('ended_at', { ascending: false })
       .limit(LOOKBACK_SESSIONS);
 
