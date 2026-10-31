@@ -138,7 +138,7 @@ export default function PartyStatus({ members, marchingOrder, onMarchingOrderCha
                       role="button"
                       tabIndex={0}
                       aria-pressed={samePlace(picked, position)}
-                      aria-label={`${member.characterName}, ${rankLabel(r, ranks.length)} rank. Select to move.`}
+                      aria-label={`${member.characterName}, ${member.characterClass}, ${member.maxHp > 0 ? `${member.currentHp} of ${member.maxHp} HP` : 'HP not set'}, ${rankLabel(r, ranks.length)} rank. Select to move.`}
                       draggable
                       onDragStart={(e) => {
                         e.dataTransfer.effectAllowed = 'move';
