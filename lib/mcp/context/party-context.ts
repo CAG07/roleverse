@@ -4,8 +4,10 @@
 // doesn't depend on routing — every agent can see the party.
 
 import { createClient } from '@/lib/supabase/server';
+import { formatMarchingOrder, normalizeMarchingOrder } from '@/lib/characters/marching-order';
 
 interface PartyCharacterRow {
+  id: string;
   name: string;
   race: string | null;
   class: string | null;
@@ -71,11 +73,14 @@ function formatCharacter(c: PartyCharacterRow): string {
 export async function buildPartyContext(campaignId: string): Promise<string | null> {
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from('characters')
-      .select('name, race, class, level, hp, max_hp, game_data_stats, game_data_abilities')
-      .eq('campaign_id', campaignId)
-      .order('name', { ascending: true });
+    const [{ data, error }, { data: campaign }] = await Promise.all([
+      supabase
+        .from('characters')
+        .select('id, name, race, class, level, hp, max_hp, game_data_stats, game_data_abilities')
+        .eq('campaign_id', campaignId)
+        .order('name', { ascending: true }),
+      supabase.from('campaigns').select('marching_order').eq('id', campaignId).maybeSingle(),
+    ]);
 
     if (error) {
       console.warn('[party-context] Failed to load party characters', error);
@@ -84,6 +89,16 @@ export async function buildPartyContext(campaignId: string): Promise<string | nu
 
     const characters = (data as PartyCharacterRow[] | null) ?? [];
     if (characters.length === 0) return null;
+
+    const names = new Map(characters.map((c) => [c.id, c.name]));
+    const marchingOrder = formatMarchingOrder(
+      normalizeMarchingOrder(
+        campaign?.marching_order,
+        // Name order in JavaScript, matching the session sidebar's default.
+        [...characters].sort((a, b) => a.name.localeCompare(b.name)).map((c) => c.id)
+      ),
+      (id) => names.get(id)
+    );
 
     return [
       '## The Party',
@@ -95,6 +110,14 @@ export async function buildPartyContext(campaignId: string): Promise<string | nu
 'capabilities. Do not ask the player to manually share details that are listed here.',
 '',
       characters.map(formatCharacter).join('\n'),
+      '',
+      '### Marching Order (front to back)',
+      '',
+      'Set by the player in ranks of two. Use it for who is in front when the party meets',
+      'something ahead, who is at the back when something comes from behind, and who fits',
+      'side by side in a narrow passage. Do not ask the player for the marching order.',
+      '',
+      marchingOrder,
     ].join('\n');
   } catch {
     return null;
