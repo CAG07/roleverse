@@ -73,6 +73,15 @@ describe('executeUpdateLocation level guard', () => {
     expect(result.mapRoom?.mapLabel).toBe('Upper Level (UL)');
   });
 
+  it('looks only on the saved file and page when another upload shares the map label', async () => {
+    const savedMap = { mapLabel: 'Entrance Level (EL)', fileName: 'module.pdf', pageNumber: 35, roomKeys: ['18', '19'] };
+    const otherCopy = { ...savedMap, fileName: 'module-copy.pdf' };
+    mapRooms.listCampaignMaps.mockResolvedValue([otherCopy, savedMap]);
+    mapRooms.findMapRoom.mockResolvedValue({ room: entrance19, neighbors: [] });
+    await executeUpdateLocation({ location_label: 'room 19', room_key: '19' }, context);
+    expect(mapRooms.findMapRoom).toHaveBeenCalledWith('camp-1', 'Entrance Level (EL)', '19', [savedMap]);
+  });
+
   it('asks for a map when the party has no position yet', async () => {
     mapRooms.getMapPosition.mockResolvedValue(null);
     const result = await executeUpdateLocation({ location_label: 'room 19', room_key: '19' }, context);

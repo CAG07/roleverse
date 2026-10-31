@@ -104,8 +104,19 @@ export async function executeUpdateLocation(
     const current = await getMapPosition(context.campaignId);
     // A room number alone means a room on the map the party is already on.
     const requestedMap = input.map_label?.trim() || current?.mapLabel;
+    // Without a map_label, look only on the saved file and page: two uploads
+    // or pages can share a label, which findMapRoom would reject as ambiguous.
+    const savedMap =
+      !input.map_label?.trim() && current
+        ? maps.filter(
+            (m) =>
+              m.fileName === current.fileName &&
+              m.pageNumber === current.pageNumber &&
+              m.mapLabel === current.mapLabel
+          )
+        : [];
     const found = requestedMap
-      ? await findMapRoom(context.campaignId, requestedMap, input.room_key, maps)
+      ? await findMapRoom(context.campaignId, requestedMap, input.room_key, savedMap.length > 0 ? savedMap : maps)
       : null;
     const changesLevel =
       !!current &&

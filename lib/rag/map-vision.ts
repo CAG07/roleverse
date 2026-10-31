@@ -101,10 +101,11 @@ export interface MapRoom {
 function asPosition(value: unknown): MapRoom['position'] {
   if (typeof value !== 'object' || value === null) return null;
   const { x, y } = value as Record<string, unknown>;
-  const nx = Number(x);
-  const ny = Number(y);
-  if (!Number.isFinite(nx) || !Number.isFinite(ny) || nx < 0 || nx > 1 || ny < 0 || ny > 1) return null;
-  return { x: nx, y: ny };
+  // Only real numbers: Number(null), Number('') and Number(false) are all 0,
+  // which would place the room in the top-left corner.
+  if (typeof x !== 'number' || typeof y !== 'number') return null;
+  if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > 1 || y < 0 || y > 1) return null;
+  return { x, y };
 }
 
 export interface MapTranscription {

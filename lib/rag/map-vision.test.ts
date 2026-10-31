@@ -58,7 +58,7 @@ describe('parseMapTranscription', () => {
     expect(maps[0].mapLabel).toBe('Untitled map 2 (page 7)');
   });
 
-  it("keeps each room's position on the page, dropping one outside the page", () => {
+  it("keeps each room's position on the page, dropping one outside the page or not a number", () => {
     const text = JSON.stringify({
       maps: [
         {
@@ -67,12 +67,18 @@ describe('parseMapTranscription', () => {
             { key: '19', position: { x: 0.62, y: 0.47 }, exits: [] },
             { key: '20', position: { x: 1.4, y: 0.5 }, exits: [] },
             { key: '21', exits: [] },
+            { key: '22', position: { x: null, y: null }, exits: [] },
+            { key: '23', position: { x: '', y: false }, exits: [] },
+            { key: '24', position: { x: '0.5', y: '0.5' }, exits: [] },
           ],
         },
       ],
     });
     expect(parseMapTranscription(text, 35)[0].rooms.map((r) => r.position)).toEqual([
       { x: 0.62, y: 0.47 },
+      null,
+      null,
+      null,
       null,
       null,
     ]);
