@@ -4,6 +4,10 @@
 // is often resumed across several days; ended_at - started_at then counts every
 // day in between. Instead, add up the gaps between consecutive messages and
 // leave out any gap longer than IDLE_GAP_MS (the player stepped away).
+//
+// Computed once when the session ends and saved as sessions.play_time_seconds
+// (see the end route), so pages showing play time don't load full transcripts.
+// The migration that added the column backfills past sessions with the same rule.
 
 const IDLE_GAP_MS = 30 * 60 * 1000;
 
@@ -22,6 +26,12 @@ export function computePlayTimeMs(startedAt: string, timestamps: (string | null 
   return total;
 }
 
+/** Play time to save in sessions.play_time_seconds when a session ends. */
+export function computePlayTimeSeconds(startedAt: string, transcript: unknown): number {
+  const entries = Array.isArray(transcript) ? (transcript as { timestamp?: string }[]) : [];
+  return Math.floor(computePlayTimeMs(startedAt, entries.map((e) => e?.timestamp)) / 1000);
+}
+
 export function formatPlayTime(ms: number): string {
   const totalMinutes = Math.floor(ms / 60000);
   if (totalMinutes < 1) return 'Less than a minute played';
@@ -31,12 +41,8 @@ export function formatPlayTime(ms: number): string {
 }
 
 /** Play time label for a session row; "Active" while the session is still open. */
-export function sessionPlayTimeLabel(
-  startedAt: string,
-  endedAt: string | null,
-  transcript: unknown
-): string {
+export function sessionPlayTimeLabel(endedAt: string | null, playTimeSeconds: number | null): string {
   if (!endedAt) return 'Active';
-  const entries = Array.isArray(transcript) ? (transcript as { timestamp?: string }[]) : [];
-  return formatPlayTime(computePlayTimeMs(startedAt, entries.map((e) => e?.timestamp)));
+  if (playTimeSeconds == null) return 'Play time not recorded';
+  return formatPlayTime(playTimeSeconds * 1000);
 }

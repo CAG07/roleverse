@@ -8,6 +8,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { generateSessionSummary } from '@/lib/sessions/generate-summary';
+import { computePlayTimeSeconds } from '@/lib/sessions/play-time';
 import type { TranscriptEntry } from '@/lib/types/session';
 
 export async function POST(
@@ -53,11 +54,22 @@ export async function POST(
     .eq('campaign_id', session.campaign_id)
     .eq('user_id', user.id)
     .is('ended_at', null)
-    .select('id, transcript');
+    .select('id, started_at, transcript');
 
   if (endError) {
     return NextResponse.json({ error: endError.message }, { status: 500 });
   }
+
+  // Save each ended session's play time, so pages showing it read one number
+  // instead of loading the whole transcript. Runs whether or not AI Assist is on.
+  await Promise.all(
+    (endedSessions ?? []).map((ended) =>
+      supabase
+        .from('sessions')
+        .update({ play_time_seconds: computePlayTimeSeconds(ended.started_at as string, ended.transcript) })
+        .eq('id', ended.id)
+    )
+  );
 
   // Step 2: generate the summary after the response is sent — must not block the
   // response, but MUST still run to completion (a bare un-awaited promise has no

@@ -28,6 +28,7 @@ export interface CampaignSession {
   id: string;
   started_at: string;
   ended_at: string | null;
+  play_time_seconds: number | null;
   transcript: TranscriptEntry[] | null;
 }
 
@@ -435,7 +436,7 @@ export function CampaignDetailPage({
                       <LocalTime iso={session.started_at} format="time" />
                     </span>
                     <span className={styles.sessionDuration}>
-                      {sessionPlayTimeLabel(session.started_at, session.ended_at, session.transcript)}
+                      {sessionPlayTimeLabel(session.ended_at, session.play_time_seconds)}
                     </span>
                   </div>
                 );

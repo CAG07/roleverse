@@ -7,6 +7,13 @@
 
 export const SUMMARY_PLACEHOLDER = 'This session contained no significant events.';
 
+/**
+ * PostgREST `.or()` filter that leaves placeholder sessions out of a query, so
+ * a row limit counts only real sessions. Sessions with no summary at all are
+ * kept (null never equals the placeholder, so `neq` alone would drop them).
+ */
+export const EXCLUDE_PLACEHOLDER_SUMMARY_FILTER = `summary.is.null,summary.neq."${SUMMARY_PLACEHOLDER}"`;
+
 export function isPlaceholderSummary(summary: string | null | undefined): boolean {
   return summary?.trim() === SUMMARY_PLACEHOLDER;
 }

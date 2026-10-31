@@ -7,7 +7,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { createClient } from '@/lib/supabase/server';
-import { isPlaceholderSummary } from '@/lib/sessions/summary-placeholder';
+import { EXCLUDE_PLACEHOLDER_SUMMARY_FILTER, isPlaceholderSummary } from '@/lib/sessions/summary-placeholder';
 import { tailExcerpt, type TranscriptEntryLike } from '@/lib/sessions/transcript-excerpt';
 import { getMultiAgentContextSection } from './multi-agent-context';
 
@@ -108,6 +108,7 @@ async function fetchLoreContext(
     .select('started_at, ended_at, summary, transcript')
     .eq('campaign_id', campaignId)
     .not('ended_at', 'is', null)
+    .or(EXCLUDE_PLACEHOLDER_SUMMARY_FILTER)
     .order('ended_at', { ascending: false })
     .limit(MAX_ENDED_SESSIONS);
 

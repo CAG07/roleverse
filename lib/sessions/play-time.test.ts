@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { computePlayTimeMs, formatPlayTime, sessionPlayTimeLabel } from './play-time';
+import { computePlayTimeMs, computePlayTimeSeconds, formatPlayTime, sessionPlayTimeLabel } from './play-time';
 
 const MIN = 60_000;
 
@@ -41,15 +41,26 @@ describe('formatPlayTime and sessionPlayTimeLabel', () => {
   });
 
   it('says Active while the session is open', () => {
-    expect(sessionPlayTimeLabel('2026-10-27T05:26:00Z', null, [])).toBe('Active');
+    expect(sessionPlayTimeLabel(null, null)).toBe('Active');
   });
 
+  it('formats the saved play time, and says when none was recorded', () => {
+    expect(sessionPlayTimeLabel('2026-10-30T04:14:00Z', 60)).toBe('1m played');
+    expect(sessionPlayTimeLabel('2026-10-30T04:14:00Z', null)).toBe('Play time not recorded');
+  });
+});
+
+describe('computePlayTimeSeconds', () => {
   it('reads timestamps from transcript entries', () => {
     expect(
-      sessionPlayTimeLabel('2026-10-27T05:26:00Z', '2026-10-30T04:14:00Z', [
+      computePlayTimeSeconds('2026-10-27T05:26:00Z', [
         { role: 'player', timestamp: '2026-10-27T05:26:30Z' },
         { role: 'agent', timestamp: '2026-10-27T05:27:00Z' },
       ])
-    ).toBe('1m played');
+    ).toBe(60);
+  });
+
+  it('is zero for a transcript that is not a list', () => {
+    expect(computePlayTimeSeconds('2026-10-27T05:26:00Z', null)).toBe(0);
   });
 });

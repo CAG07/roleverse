@@ -74,17 +74,16 @@ export default async function SessionLogPage({ params, searchParams }: Props) {
   const isActive = !session.ended_at;
   const summary = (session.summary as string | null | undefined) ?? null;
 
-  // The page RPC only returns this page's entries; play time needs every
-  // message's timestamp, so read the full transcript once the session has ended
-  // (only the computed label reaches the browser).
+  // The page RPC doesn't return play time; read the saved value on its own
+  // (one number, not the full transcript).
   let playTime = 'Active';
   if (!isActive) {
-    const { data: full } = await supabase
+    const { data: timing } = await supabase
       .from('sessions')
-      .select('transcript')
+      .select('play_time_seconds')
       .eq('id', sessionId)
       .maybeSingle();
-    playTime = sessionPlayTimeLabel(session.started_at, session.ended_at, full?.transcript);
+    playTime = sessionPlayTimeLabel(session.ended_at, (timing?.play_time_seconds as number | null) ?? null);
   }
   const basePath = `/campaigns/${id}/sessions/${sessionId}`;
 
