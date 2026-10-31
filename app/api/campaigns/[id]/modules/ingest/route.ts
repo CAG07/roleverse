@@ -3,13 +3,14 @@
 // 'campaign-pdfs' Storage bucket into campaign_embeddings, so the Game Master
 // and Rules Arbiter can retrieve it (the Lore Keeper does not do RAG search).
 // Map pages are found and read afterwards through ../maps/route.ts.
-// DELETE — remove a file's indexed chunks, map chunks included (called when
-// the file itself is deleted from Storage, so RAG content doesn't outlive its
-// source).
+// DELETE — remove a file's indexed chunks, map chunks included, and its map
+// scan progress (called when the file itself is deleted from Storage, so RAG
+// content doesn't outlive its source).
 
 import { NextRequest, NextResponse } from 'next/server';
 
 import { ingestCampaignPdf, deleteIndexedPdfChunks } from '@/lib/rag/ingest-campaign-pdf';
+import { deleteMapScan } from '@/lib/rag/map-scans';
 import { authAndCampaign, downloadModuleFile } from '@/lib/campaigns/module-file-access';
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -73,6 +74,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
   try {
     await deleteIndexedPdfChunks(supabase, id, fileName);
+    await deleteMapScan(supabase, id, fileName);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to delete indexed chunks';
