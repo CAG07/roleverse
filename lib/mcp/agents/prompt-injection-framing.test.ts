@@ -61,6 +61,8 @@ describe('prompt-injection framing', () => {
   it('game-master.ts frames every injected content block as untrusted', () => {
     const content = readSource('lib/mcp/agents/game-master.ts');
     expectFramingInSection(content, '## Module / Adventure');
+    expectFramingInSection(content, "## Party's Current Position (Authoritative)");
+    expectFramingInSection(content, '## Known Maps');
     expectFramingInSection(content, '## Confirmed Map Layout (Authoritative)');
     expectFramingInSection(content, '## Uploaded Module Reference');
     expectFramingInSection(content, '## Previously in this Campaign');

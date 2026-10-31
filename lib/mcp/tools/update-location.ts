@@ -21,14 +21,32 @@
 // table-driven, not free-form LLM invention) and persists it. Same lazy,
 // confirmed-use growth profile as flagNpc — nothing is generated or written
 // until a location is actually visited.
+//
+// Exact map rooms (2026-10-30): when the GM also passes map_label + room_key
+// for a module map, the room is looked up exactly (lib/mcp/tools/map-rooms.ts)
+// along with the rooms it connects to, and saved as the party's position in
+// campaigns.current_map_position, which the GM sees on every later turn. A move
+// with no map_label/room_key (leaving the mapped area) clears that position.
 
 import { searchCampaignPriorityContent } from '@/lib/rag/search-campaign-priority';
 import { createClient } from '@/lib/supabase/server';
 import { generateLocationSeed } from './generate-location-seed';
+import { clearMapPosition, findMapRoom, listCampaignMaps, saveMapPosition } from './map-rooms';
 import type { MCPContext } from '../types';
 
 export interface UpdateLocationInput {
   location_label: string;
+  /** A map label from the "Known Maps" list, when the party is in a mapped room. */
+  map_label?: string;
+  /** The room's number or letter on that map. */
+  room_key?: string;
+}
+
+export interface MapRoomResult {
+  mapLabel: string;
+  roomKey: string;
+  room: string;
+  connectedRooms: string[];
 }
 
 export interface UpdateLocationMatch {
@@ -50,6 +68,8 @@ export interface UpdateLocationOutput {
   mapLayout: UpdateLocationMatch[];
   moduleExcerpts: UpdateLocationMatch[];
   generatedLocation?: GeneratedLocationResult;
+  /** Exact map room, when map_label + room_key matched (saved as the party's position). */
+  mapRoom?: MapRoomResult;
   note?: string;
 }
 
@@ -59,7 +79,35 @@ export async function executeUpdateLocation(
 ): Promise<UpdateLocationOutput> {
   const locationLabel = input.location_label.trim();
 
-  const results = await searchCampaignPriorityContent(locationLabel, {
+  let mapRoom: MapRoomResult | undefined;
+  let note: string | undefined;
+  if (input.map_label?.trim() && input.room_key?.trim()) {
+    const maps = await listCampaignMaps(context.campaignId);
+    const found = await findMapRoom(context.campaignId, input.map_label, input.room_key, maps);
+    if (found) {
+      await saveMapPosition(context.campaignId, found.room);
+      mapRoom = {
+        mapLabel: found.room.mapLabel,
+        roomKey: found.room.roomKey,
+        room: found.room.content,
+        connectedRooms: found.neighbors.map((n) => n.content),
+      };
+    } else {
+      note =
+        `No room "${input.room_key}" was found on a map matching "${input.map_label}". ` +
+        `Known maps: ${maps.map((m) => m.mapLabel).join('; ') || 'none'}. ` +
+        'The party position was not changed.';
+    }
+  } else if (!input.map_label?.trim() && !input.room_key?.trim()) {
+    // Moved somewhere that isn't a mapped room: a saved room would otherwise
+    // keep pulling the party back to the dungeon on every later turn.
+    await clearMapPosition(context.campaignId);
+  }
+
+  // An exact room match searches the module text for that room's keyed
+  // description; otherwise the GM's own label drives the search as before.
+  const query = mapRoom ? `${mapRoom.mapLabel} room ${mapRoom.roomKey}` : locationLabel;
+  const results = await searchCampaignPriorityContent(query, {
     campaignId: context.campaignId,
     sourceTypes: ['user_pdf'],
     matchCount: 8,
@@ -81,8 +129,13 @@ export async function executeUpdateLocation(
     }
   }
 
+  if (mapRoom) {
+    // The exact room replaces vector-matched map rows, which may come from another level.
+    return { locationLabel, mapRoom, mapLayout: [], moduleExcerpts, note };
+  }
+
   if (mapLayout.length > 0 || moduleExcerpts.length > 0) {
-    return { locationLabel, mapLayout, moduleExcerpts };
+    return { locationLabel, mapLayout, moduleExcerpts, note };
   }
 
   // Nothing in an uploaded module grounds this area — fall back to a

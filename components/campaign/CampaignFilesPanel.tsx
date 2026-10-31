@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { assertWithinQuota, getUsedBytes } from '@/lib/storage/check-quota';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
@@ -23,6 +23,135 @@ interface FileEntry {
   sizeBytes: number;
   indexStatus: IndexStatus;
   indexError?: string;
+  /** Progress or result of the map reading that follows text indexing (PDFs only). */
+  mapStatus?: string;
+  readingMaps?: boolean;
+}
+
+interface MapPageResult {
+  pageNumber: number;
+  mapsFound: number;
+  truncated: boolean;
+  read: boolean;
+}
+
+/** Saved progress of one file's map reading (GET/POST .../modules/maps, lib/rag/map-scans.ts). */
+interface MapScan {
+  fileName: string;
+  status: 'finding' | 'reading' | 'done' | 'failed';
+  mapPages: number[];
+  pageResults: MapPageResult[];
+  error: string | null;
+  busy: boolean;
+}
+
+/** How long to wait before checking again while another tab or request is reading. */
+const BUSY_RETRY_MS = 10_000;
+
+function isPdfFile(name: string): boolean {
+  return name.toLowerCase().endsWith('.pdf');
+}
+
+function plural(count: number, word: string): string {
+  return `${count} ${word}${count === 1 ? '' : 's'}`;
+}
+
+/** Final status line after every map page has been read. */
+function describeMapResults(results: MapPageResult[]): string {
+  const maps = results.reduce((sum, r) => sum + r.mapsFound, 0);
+  const parts = [`${plural(maps, 'map')} read`];
+  const unreadable = results.filter((r) => !r.read).map((r) => r.pageNumber);
+  if (unreadable.length > 0) parts.push(`could not read page ${unreadable.join(', ')}`);
+  const truncated = results.filter((r) => r.truncated).map((r) => r.pageNumber);
+  if (truncated.length > 0) parts.push(`page ${truncated.join(', ')} may be missing rooms`);
+  return parts.join('; ');
+}
+
+function describeScan(scan: MapScan): string {
+  switch (scan.status) {
+    case 'finding':
+      return 'Looking for maps…';
+    case 'reading':
+      return `Reading map page ${Math.min(scan.pageResults.length + 1, scan.mapPages.length)} of ${scan.mapPages.length}…`;
+    case 'failed':
+      return scan.error ?? 'Failed to read maps.';
+    case 'done':
+      return scan.mapPages.length === 0 ? 'No maps found' : describeMapResults(scan.pageResults);
+  }
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function fetchMapScans(campaignId: string): Promise<MapScan[]> {
+  const res = await fetch(`/api/campaigns/${campaignId}/modules/maps`);
+  if (!res.ok) throw new Error('Failed to load map reading progress.');
+  return ((await res.json()) as { scans: MapScan[] }).scans;
+}
+
+async function errorFrom(res: Response, fallback: string): Promise<Error> {
+  const body = (await res.json().catch(() => ({}))) as { error?: string };
+  return new Error(body.error ?? fallback);
+}
+
+/**
+ * Reads a file's maps one page per request, from its saved progress. restart
+ * starts over (after upload, or "Re-scan maps"); otherwise an unfinished scan
+ * continues where it stopped. While another tab or request holds the scan, it
+ * waits and checks again, so a page is never read twice at once. Keeps going
+ * after the panel unmounts (in-app navigation); a closed tab resumes on the
+ * next visit instead.
+ */
+async function runMapScan(
+  campaignId: string,
+  fileName: string,
+  restart: boolean,
+  update: (changes: Partial<FileEntry>) => void
+): Promise<void> {
+  const url = `/api/campaigns/${campaignId}/modules/maps`;
+  const request = (method: 'PUT' | 'POST') =>
+    fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileName }) });
+  const loadScan = async () => (await fetchMapScans(campaignId)).find((s) => s.fileName === fileName) ?? null;
+
+  update({ readingMaps: true, mapStatus: 'Looking for maps…' });
+  try {
+    let startOver = restart;
+    let scan: MapScan | null = null;
+    for (;;) {
+      if (startOver) {
+        startOver = false;
+        const res = await request('PUT');
+        if (res.status === 409) await sleep(BUSY_RETRY_MS);
+        else if (!res.ok) throw await errorFrom(res, 'Failed to look for maps.');
+        scan = await loadScan();
+        continue;
+      }
+      if (!scan) break;
+      update({ mapStatus: describeScan(scan) });
+
+      if (scan.busy) {
+        await sleep(BUSY_RETRY_MS);
+        scan = await loadScan();
+      } else if (scan.status === 'finding') {
+        // The page check was interrupted: run it again.
+        startOver = true;
+      } else if (scan.status === 'reading') {
+        const res = await request('POST');
+        if (res.status === 409) {
+          await sleep(BUSY_RETRY_MS);
+          scan = await loadScan();
+        } else if (!res.ok) {
+          throw await errorFrom(res, 'Failed to read map page.');
+        } else {
+          scan = ((await res.json()) as { scan: MapScan }).scan;
+        }
+      } else {
+        break;
+      }
+    }
+    update({ readingMaps: false, mapStatus: scan ? describeScan(scan) : undefined });
+  } catch (err) {
+    update({ readingMaps: false, mapStatus: err instanceof Error ? err.message : 'Failed to read maps.' });
+  }
 }
 
 function formatSize(bytes: number): string {
@@ -52,6 +181,8 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
   const [usedBytes, setUsedBytes] = useState<number | null>(null);
   const [pendingDelete, setPendingDelete] = useState<FileEntry | null>(null);
   const [deleting, setDeleting] = useState(false);
+  /** Files whose map reading this panel is already driving (guards double starts). */
+  const scansInProgress = useRef(new Set<string>());
 
   useEffect(() => {
     let cancelled = false;
@@ -90,23 +221,51 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
 
       if (listError) {
         setError(listError.message);
-      } else {
-        setFiles(
-          (listData ?? [])
-            .filter((f) => f.id !== null) // exclude the placeholder row for empty folders
-            .map((f) => ({
-              name: f.name,
-              displayName: toDisplayName(f.name),
-              sizeBytes: (f.metadata?.size as number | undefined) ?? 0,
-              // A file already in Storage that isn't yet indexed means an earlier
-              // auto-index attempt never completed (e.g. tab closed mid-request) —
-              // surface it as a retryable error rather than silently unindexed.
-              indexStatus: indexedNames.has(f.name) ? ('indexed' as const) : ('error' as const),
-              indexError: indexedNames.has(f.name) ? undefined : 'Not indexed yet.',
-            }))
-        );
+        setLoading(false);
+        return;
       }
+
+      const loaded: FileEntry[] = (listData ?? [])
+        .filter((f) => f.id !== null) // exclude the placeholder row for empty folders
+        .map((f) => ({
+          name: f.name,
+          displayName: toDisplayName(f.name),
+          sizeBytes: (f.metadata?.size as number | undefined) ?? 0,
+          // A file already in Storage that isn't yet indexed means an earlier
+          // auto-index attempt never completed (e.g. tab closed mid-request) —
+          // surface it as a retryable error rather than silently unindexed.
+          indexStatus: indexedNames.has(f.name) ? ('indexed' as const) : ('error' as const),
+          indexError: indexedNames.has(f.name) ? undefined : 'Not indexed yet.',
+        }));
+      setFiles(loaded);
       setLoading(false);
+
+      // Map reading with no clicks: show each PDF's saved result, continue any
+      // scan that was interrupted, and scan indexed PDFs that were never
+      // scanned (uploaded before map reading was saved). One file at a time.
+      const scans = await fetchMapScans(campaignId).catch(() => null);
+      if (!scans || cancelled) return;
+      const byFile = new Map(scans.map((scan) => [scan.fileName, scan]));
+      const toRun: { name: string; restart: boolean }[] = [];
+      for (const f of loaded) {
+        if (!isPdfFile(f.name) || f.indexStatus !== 'indexed') continue;
+        const scan = byFile.get(f.name);
+        if (!scan) toRun.push({ name: f.name, restart: true });
+        else if (scan.status === 'finding' || scan.status === 'reading') toRun.push({ name: f.name, restart: false });
+        else {
+          const mapStatus = describeScan(scan);
+          setFiles((prev) => prev.map((p) => (p.name === f.name ? { ...p, mapStatus } : p)));
+        }
+      }
+      for (const { name, restart } of toRun) {
+        if (cancelled) return;
+        if (scansInProgress.current.has(name)) continue;
+        scansInProgress.current.add(name);
+        await runMapScan(campaignId, name, restart, (changes) =>
+          setFiles((prev) => prev.map((p) => (p.name === name ? { ...p, ...changes } : p)))
+        );
+        scansInProgress.current.delete(name);
+      }
     }
 
     void load();
@@ -115,10 +274,22 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
     };
   }, [campaignId]);
 
+  const updateFile = (name: string, changes: Partial<FileEntry>) => {
+    setFiles((prev) => prev.map((f) => (f.name === name ? { ...f, ...changes } : f)));
+  };
+
+  // Map reading runs after the text is indexed, one request per map page, so a
+  // module with several large maps never hits a single request's time limit.
+  // Always starts over: used after (re-)indexing and by "Re-scan maps".
+  const handleReadMaps = async (name: string) => {
+    if (scansInProgress.current.has(name)) return;
+    scansInProgress.current.add(name);
+    await runMapScan(campaignId, name, true, (changes) => updateFile(name, changes));
+    scansInProgress.current.delete(name);
+  };
+
   const handleIndex = async (name: string) => {
-    setFiles((prev) =>
-      prev.map((f) => (f.name === name ? { ...f, indexStatus: 'indexing', indexError: undefined } : f))
-    );
+    updateFile(name, { indexStatus: 'indexing', indexError: undefined, mapStatus: undefined });
     try {
       const res = await fetch(`/api/campaigns/${campaignId}/modules/ingest`, {
         method: 'POST',
@@ -129,13 +300,13 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
         const body = await res.json().catch(() => ({ error: 'Failed to index file.' }));
         throw new Error(body.error ?? 'Failed to index file.');
       }
-      setFiles((prev) => prev.map((f) => (f.name === name ? { ...f, indexStatus: 'indexed' } : f)));
+      updateFile(name, { indexStatus: 'indexed' });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to index file.';
-      setFiles((prev) =>
-        prev.map((f) => (f.name === name ? { ...f, indexStatus: 'error', indexError: message } : f))
-      );
+      updateFile(name, { indexStatus: 'error', indexError: message });
+      return;
     }
+    if (isPdfFile(name)) await handleReadMaps(name);
   };
 
   const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -300,6 +471,19 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
                 </div>
               )}
               {f.indexStatus === 'indexed' && <span className={styles.statusIndexed}>Indexed ✓</span>}
+              {f.indexStatus === 'indexed' && isPdfFile(f.name) && (
+                <div className={styles.mapRow}>
+                  {f.mapStatus && <span className={styles.mapStatus}>{f.mapStatus}</span>}
+                  <button
+                    type="button"
+                    className={styles.btnRetry}
+                    onClick={() => void handleReadMaps(f.name)}
+                    disabled={f.readingMaps}
+                  >
+                    Re-scan maps
+                  </button>
+                </div>
+              )}
               {f.indexStatus === 'error' && (
                 <div className={styles.statusErrorRow}>
                   <span className={styles.statusError}>{f.indexError ?? 'Indexing failed.'}</span>
