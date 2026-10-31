@@ -4,10 +4,16 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import type { TranscriptEntry } from '@/lib/types/session';
+import { SUMMARY_PLACEHOLDER } from './summary-placeholder';
 
-const PLACEHOLDER = 'This session contained no significant events.';
 const MIN_PLAYER_MESSAGES = 2;
-const TIMEOUT_MS = 10_000;
+// A session resumed over many days can run to hundreds of messages. Haiku
+// needs longer than 10s to read that much, and a failed summary leaves the
+// next session without its recap, so allow more time and send only the most
+// recent part of very long transcripts (the end is what "Where We Left Off"
+// needs most).
+const TIMEOUT_MS = 30_000;
+const MAX_TRANSCRIPT_CHARS = 200_000;
 
 function getHaikuModel(): string {
   const model = process.env.ANTHROPIC_HAIKU_MODEL;
@@ -16,7 +22,7 @@ function getHaikuModel(): string {
 }
 
 function formatTranscript(entries: TranscriptEntry[]): string {
-  return entries
+  const text = entries
     .filter((e) => e.role === 'player' || e.role === 'agent' || e.role === 'oracle')
     .map((e) => {
       if (e.role === 'player') return `Player: ${e.content ?? ''}`;
@@ -25,6 +31,10 @@ function formatTranscript(entries: TranscriptEntry[]): string {
       return `${label}: ${e.content ?? ''}`;
     })
     .join('\n\n');
+  if (text.length <= MAX_TRANSCRIPT_CHARS) return text;
+  const tail = text.slice(-MAX_TRANSCRIPT_CHARS);
+  const start = tail.indexOf('\n\n');
+  return `(The earlier part of this session is omitted.)\n\n${start >= 0 ? tail.slice(start + 2) : tail}`;
 }
 
 export async function generateSessionSummary(
@@ -33,7 +43,7 @@ export async function generateSessionSummary(
 ): Promise<string> {
   const playerMessages = transcript.filter((e) => e.role === 'player');
   if (playerMessages.length < MIN_PLAYER_MESSAGES) {
-    return PLACEHOLDER;
+    return SUMMARY_PLACEHOLDER;
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -62,7 +72,7 @@ export async function generateSessionSummary(
 
   const timeoutPromise = new Promise<never>((_, reject) =>
     setTimeout(
-      () => reject(new Error('Summary generation timed out after 10s')),
+      () => reject(new Error(`Summary generation timed out after ${TIMEOUT_MS / 1000}s`)),
       TIMEOUT_MS
     )
   );
@@ -82,5 +92,5 @@ export async function generateSessionSummary(
     .join('\n')
     .trim();
 
-  return text || PLACEHOLDER;
+  return text || SUMMARY_PLACEHOLDER;
 }

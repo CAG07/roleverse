@@ -29,4 +29,16 @@ describe('buildTranscriptEntries', () => {
       timestamp: '2026-01-02T00:00:00Z',
     });
   });
+
+  it('stamps the player entry with when it was sent and the reply with when it finished', () => {
+    const [playerEntry, agentEntry] = buildTranscriptEntries(
+      'I search the room.',
+      'game_master',
+      'You find a loose stone.',
+      '2026-01-02T00:00:20Z',
+      '2026-01-02T00:00:00Z'
+    );
+    expect(playerEntry.timestamp).toBe('2026-01-02T00:00:00Z');
+    expect(agentEntry.timestamp).toBe('2026-01-02T00:00:20Z');
+  });
 });

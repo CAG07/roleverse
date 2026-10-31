@@ -15,7 +15,8 @@ export interface TranscriptEntryLike {
  * not their most recent — the mirror image of a naive head-first accumulator.
  *
  * The separator cost ("\n\n" = 2 chars per join) is included in the budget
- * check so the returned string never exceeds maxChars.
+ * check so the returned string never exceeds maxChars. If the newest entry
+ * alone exceeds maxChars, its last part is returned (marked with "…").
  */
 export function tailExcerpt(entries: TranscriptEntryLike[], maxChars: number): string {
   const lines: string[] = [];
@@ -30,7 +31,15 @@ export function tailExcerpt(entries: TranscriptEntryLike[], maxChars: number): s
     const line = `${prefix} ${entry.content}`;
     // Account for the "\n\n" separator that join() will add between lines.
     const separatorCost = lines.length > 0 ? 2 : 0;
-    if (charCount + separatorCost + line.length > maxChars) break;
+    if (charCount + separatorCost + line.length > maxChars) {
+      // The newest entry alone is over budget (a long journal entry): keep its
+      // end rather than returning nothing, since that's where play left off.
+      if (lines.length === 0) {
+        const room = maxChars - prefix.length - 2; // the space and the "…"
+        if (room > 0) lines.push(`${prefix} …${entry.content.slice(-room)}`);
+      }
+      break;
+    }
 
     lines.push(line);
     charCount += separatorCost + line.length;

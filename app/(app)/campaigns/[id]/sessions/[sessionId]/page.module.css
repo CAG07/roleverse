@@ -32,6 +32,13 @@
   flex-wrap: wrap;
 }
 
+.logActions {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .logTitle {
   font-family: var(--font-heading);
   font-size: 1.5rem;

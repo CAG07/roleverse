@@ -7,6 +7,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { getGameSystem } from '@/lib/game-systems/registry';
 import { createClient } from '@/lib/supabase/server';
+import { EXCLUDE_PLACEHOLDER_SUMMARY_FILTER, isPlaceholderSummary } from '@/lib/sessions/summary-placeholder';
 import { tailExcerpt, type TranscriptEntryLike } from '@/lib/sessions/transcript-excerpt';
 import { getMultiAgentContextSection } from './multi-agent-context';
 
@@ -107,6 +108,7 @@ async function fetchLoreContext(
     .select('started_at, ended_at, summary, transcript')
     .eq('campaign_id', campaignId)
     .not('ended_at', 'is', null)
+    .or(EXCLUDE_PLACEHOLDER_SUMMARY_FILTER)
     .order('ended_at', { ascending: false })
     .limit(MAX_ENDED_SESSIONS);
 
@@ -116,6 +118,10 @@ async function fetchLoreContext(
 
     const date = formatDate(session.started_at as string);
     const summary = (session.summary as string | null | undefined) ?? null;
+
+    // Opened and closed without real play: its transcript is just the opening
+    // recap of older sessions, which are already included on their own.
+    if (isPlaceholderSummary(summary)) continue;
 
     if (summary) {
       const header = `${sessionHeader(date, 'summary')}\n`;
