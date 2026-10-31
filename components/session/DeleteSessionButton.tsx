@@ -15,10 +15,15 @@ interface DeleteSessionButtonProps {
   sessionId: string;
 }
 
+// Deleting removes only this session's own row. Anything copied out of it stays:
+// the next session opened with a recap of this one (in that session's transcript
+// and summary), and play may have changed the NPC roster, character sheets, or
+// campaign notes. The Game Master and Lore Keeper read those, so say so plainly.
 const CONFIRM_MESSAGE =
-  "This permanently deletes this session's transcript and summary. The Game Master and Lore Keeper " +
-  'will no longer remember anything from it. If this is your most recent session, your next session ' +
-  'will continue from the one before it. NPCs you added to the roster are kept.';
+  "This permanently deletes this session's transcript and summary. If this is your most recent " +
+  'session, your next session will continue from the one before it. Anything carried out of this ' +
+  'session is kept: the recap at the start of later sessions, NPCs added to the roster, character ' +
+  'sheet changes, and your campaign notes. The Game Master and Lore Keeper can still recall those.';
 
 export default function DeleteSessionButton({ campaignId, sessionId }: DeleteSessionButtonProps) {
   const router = useRouter();
