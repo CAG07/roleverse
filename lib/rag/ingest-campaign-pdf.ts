@@ -80,7 +80,9 @@ export async function ingestCampaignPdf(
 
   // Replace any prior chunks from this same file before writing new ones, so
   // re-indexing after an edit doesn't leave stale duplicate content behind.
-  await deleteIndexedPdfChunks(supabase, campaignId, fileName);
+  // Map rows are left alone: map reading replaces them page by page afterwards
+  // (lib/rag/index-map-pages.ts), and keeps them if that reading fails.
+  await deleteIndexedPdfChunks(supabase, campaignId, fileName, { keepMaps: true });
 
   // A player can reference their own already-uploaded Scene Library image by
   // filename inside this document's text — fetched once, checked per chunk
@@ -144,18 +146,25 @@ export async function ingestCampaignPdf(
   return { chunksIndexed, pages };
 }
 
-/** Remove previously indexed chunks for a given source file (used before re-indexing and on delete). */
+/**
+ * Remove previously indexed chunks for a given source file (used before
+ * re-indexing and on delete). keepMaps leaves its map_layout rows in place.
+ */
 export async function deleteIndexedPdfChunks(
   supabase: SupabaseClient,
   campaignId: string,
-  fileName: string
+  fileName: string,
+  options: { keepMaps?: boolean } = {}
 ): Promise<void> {
-  const { error } = await supabase
+  let query = supabase
     .from('campaign_embeddings')
     .delete()
     .eq('campaign_id', campaignId)
     .eq('source_type', 'user_pdf')
     .eq('metadata->>title', fileName);
+  if (options.keepMaps) query = query.neq('metadata->>category', 'map_layout');
+
+  const { error } = await query;
 
   if (error) {
     throw new Error(`Failed to delete previously indexed PDF chunks: ${error.message}`);

@@ -32,6 +32,7 @@ function getClient(): Anthropic {
 }
 
 const CLASSIFY_BATCH_SIZE = 20;
+const CLASSIFY_ATTEMPTS = 2;
 const CLASSIFY_MAX_TOKENS = 2000;
 
 /** Large enough for a 60-room level with exits; the old 1,024 cap cut off any
@@ -101,7 +102,8 @@ export interface MapTranscription {
 }
 
 export interface MapPageReading {
-  maps: MapTranscription[];
+  /** Null when the reply couldn't be read (an API error, or JSON cut off at the output limit). */
+  maps: MapTranscription[] | null;
   /** True when the model hit its output limit — rooms may be missing. */
   truncated: boolean;
 }
@@ -148,7 +150,8 @@ export function parseMapPageClassification(text: string): number[] {
 
 /**
  * Returns the page numbers that hold maps, in page order. A batch that fails
- * is logged and skipped rather than failing the whole upload.
+ * is retried once; if it fails again the whole scan fails, so a partial scan
+ * is never reported as complete (and the caller keeps the existing map data).
  */
 export async function classifyMapPages(thumbnails: PageImage[]): Promise<number[]> {
   const model = getRequiredEnv('ANTHROPIC_HAIKU_MODEL');
@@ -163,20 +166,29 @@ export async function classifyMapPages(thumbnails: PageImage[]): Promise<number[
     ]);
     content.push({ type: 'text', text: CLASSIFY_PROMPT });
 
-    try {
-      const response = await client.messages.create({
-        model,
-        max_tokens: CLASSIFY_MAX_TOKENS,
-        messages: [{ role: 'user', content }],
-      });
-      const batchPages = new Set(batch.map((t) => t.pageNumber));
-      for (const page of parseMapPageClassification(textOf(response))) {
-        if (batchPages.has(page)) mapPages.add(page);
+    const batchPages = new Set(batch.map((t) => t.pageNumber));
+    let lastError: unknown;
+    let classified = false;
+    for (let attempt = 1; attempt <= CLASSIFY_ATTEMPTS && !classified; attempt++) {
+      try {
+        const response = await client.messages.create({
+          model,
+          max_tokens: CLASSIFY_MAX_TOKENS,
+          messages: [{ role: 'user', content }],
+        });
+        for (const page of parseMapPageClassification(textOf(response))) {
+          if (batchPages.has(page)) mapPages.add(page);
+        }
+        classified = true;
+      } catch (err) {
+        lastError = err;
       }
-    } catch (err) {
+    }
+    if (!classified) {
       const first = batch[0].pageNumber;
       const last = batch[batch.length - 1].pageNumber;
-      console.warn(`[map-vision] Failed to classify pages ${first}-${last}:`, err);
+      console.warn(`[map-vision] Failed to classify pages ${first}-${last}:`, lastError);
+      throw new Error(`Could not check pages ${first} to ${last} for maps. Try Re-scan maps.`);
     }
   }
 
@@ -227,10 +239,10 @@ export function parseMapTranscription(text: string, pageNumber: number): MapTran
 }
 
 /**
- * Reads every map on one page. Returns null on an API or parse failure
- * (logged, never fatal to the rest of the upload).
+ * Reads every map on one page. maps is null on an API or parse failure
+ * (logged, never fatal to the rest of the upload); truncated is kept either way.
  */
-export async function transcribeMapPage(images: MapPageImages): Promise<MapPageReading | null> {
+export async function transcribeMapPage(images: MapPageImages): Promise<MapPageReading> {
   const { pageNumber } = images;
   try {
     const content: Anthropic.Messages.ContentBlockParam[] = [
@@ -254,10 +266,17 @@ export async function transcribeMapPage(images: MapPageImages): Promise<MapPageR
       console.warn(`[map-vision] Map reading for page ${pageNumber} hit the output limit; rooms may be missing.`);
     }
 
-    return { maps: parseMapTranscription(textOf(response), pageNumber), truncated };
+    try {
+      return { maps: parseMapTranscription(textOf(response), pageNumber), truncated };
+    } catch (err) {
+      // A reply cut off at the output limit usually ends mid-JSON; keep the flag
+      // so the player sees why the page wasn't read.
+      console.warn(`[map-vision] Could not parse the map reading for page ${pageNumber}:`, err);
+      return { maps: null, truncated };
+    }
   } catch (err) {
     console.warn(`[map-vision] Failed to read map page ${pageNumber}:`, err);
-    return null;
+    return { maps: null, truncated: false };
   }
 }
 

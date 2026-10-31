@@ -60,22 +60,44 @@ export async function deleteMapChunks(
   if (error) throw new Error(`Failed to remove previous map data: ${error.message}`);
 }
 
-/** Clears this file's old map data and returns the page numbers that hold maps. */
+/**
+ * Returns the page numbers that hold maps. Existing map data is only touched
+ * once classification has succeeded: pages that no longer hold a map lose
+ * their old rows here, and map pages keep theirs until indexMapPage has a
+ * replacement ready. A failed scan leaves everything as it was.
+ */
 export async function findMapPages(ctx: MapPageContext): Promise<number[]> {
-  await deleteMapChunks(ctx.supabase, ctx.campaignId, ctx.fileName);
   const thumbnails = await renderPageThumbnails(ctx.fileBuffer);
-  return classifyMapPages(thumbnails);
+  const mapPages = await classifyMapPages(thumbnails);
+  await deleteStaleMapChunks(ctx, mapPages);
+  return mapPages;
 }
 
-/** Reads one map page and replaces its map chunks. */
+async function deleteStaleMapChunks(ctx: MapPageContext, mapPages: number[]): Promise<void> {
+  let query = ctx.supabase
+    .from('campaign_embeddings')
+    .delete()
+    .eq('campaign_id', ctx.campaignId)
+    .eq('source_type', 'user_pdf')
+    .eq('metadata->>title', ctx.fileName)
+    .eq('metadata->>category', 'map_layout');
+  if (mapPages.length > 0) query = query.not('metadata->>pageNumber', 'in', `(${mapPages.join(',')})`);
+
+  const { error } = await query;
+  if (error) throw new Error(`Failed to remove old map data: ${error.message}`);
+}
+
+/**
+ * Reads one map page and replaces its map chunks. The old rows are removed only
+ * after the new reading and its embeddings are ready, so a failed or empty
+ * reading keeps whatever the page had before.
+ */
 export async function indexMapPage(ctx: MapPageContext, pageNumber: number): Promise<IndexMapPageResult> {
   const images = await renderMapPage(ctx.fileBuffer, pageNumber);
   const reading = await transcribeMapPage(images);
 
-  await deleteMapChunks(ctx.supabase, ctx.campaignId, ctx.fileName, pageNumber);
-
-  if (!reading) {
-    return { pageNumber, mapsFound: 0, roomsFound: 0, truncated: false, read: false };
+  if (!reading.maps || reading.maps.length === 0) {
+    return { pageNumber, mapsFound: 0, roomsFound: 0, truncated: reading.truncated, read: reading.maps !== null };
   }
 
   const rows: { content: string; metadata: ChunkMetadata }[] = [];
@@ -104,21 +126,22 @@ export async function indexMapPage(ctx: MapPageContext, pageNumber: number): Pro
     }
   }
 
-  if (rows.length > 0) {
-    const embeddings = await embedBatch(rows.map((r) => r.content));
-    const { error } = await ctx.supabase.from('campaign_embeddings').insert(
-      rows.map((row, i) => ({
-        campaign_id: ctx.campaignId,
-        user_id: ctx.userId,
-        game_system: ctx.gameSystem,
-        content: row.content,
-        embedding: embeddings[i],
-        metadata: row.metadata,
-        source_type: 'user_pdf' as const,
-      }))
-    );
-    if (error) throw new Error(`Failed to save map data: ${error.message}`);
-  }
+  const embeddings = await embedBatch(rows.map((r) => r.content));
+
+  // Replace: delete the page's old rows, then insert the new ones right away.
+  await deleteMapChunks(ctx.supabase, ctx.campaignId, ctx.fileName, pageNumber);
+  const { error } = await ctx.supabase.from('campaign_embeddings').insert(
+    rows.map((row, i) => ({
+      campaign_id: ctx.campaignId,
+      user_id: ctx.userId,
+      game_system: ctx.gameSystem,
+      content: row.content,
+      embedding: embeddings[i],
+      metadata: row.metadata,
+      source_type: 'user_pdf' as const,
+    }))
+  );
+  if (error) throw new Error(`Failed to save map data: ${error.message}`);
 
   return {
     pageNumber,

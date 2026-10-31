@@ -188,6 +188,17 @@ export async function saveMapPosition(campaignId: string, room: MapRoomRecord): 
   if (error) console.warn('[map-rooms] Failed to save the party position:', error.message);
 }
 
+/** The party left the mapped area: forget the saved room. */
+export async function clearMapPosition(campaignId: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('campaigns')
+    .update({ current_map_position: null })
+    .eq('id', campaignId)
+    .not('current_map_position', 'is', null);
+  if (error) console.warn('[map-rooms] Failed to clear the party position:', error.message);
+}
+
 /** "Known maps" prompt lines: each map's label and its room keys. */
 export function formatKnownMaps(maps: CampaignMap[]): string {
   return maps.map((m) => `- ${m.mapLabel}: rooms ${m.roomKeys.join(', ')}`).join('\n');
@@ -214,8 +225,20 @@ export async function fetchMapContext(
     const maps = await listCampaignMaps(campaignId);
     if (maps.length === 0) return { knownMaps: '', currentPosition: '' };
 
+    // Restore on the exact map it was saved on (same file, page, and label), so
+    // a duplicate label in another upload can't make it ambiguous, and deleting
+    // that upload can't move the party onto a different map.
     const position = await getMapPosition(campaignId);
-    const found = position ? await findMapRoom(campaignId, position.mapLabel, position.roomKey, maps) : null;
+    const savedMap = position
+      ? maps.find(
+          (m) =>
+            m.fileName === position.fileName &&
+            m.pageNumber === position.pageNumber &&
+            m.mapLabel === position.mapLabel
+        )
+      : undefined;
+    const found =
+      position && savedMap ? await findMapRoom(campaignId, savedMap.mapLabel, position.roomKey, [savedMap]) : null;
     return {
       knownMaps: formatKnownMaps(maps),
       currentPosition: found ? formatPosition(found.room, found.neighbors) : '',

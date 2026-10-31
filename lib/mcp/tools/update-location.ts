@@ -25,12 +25,13 @@
 // Exact map rooms (2026-10-30): when the GM also passes map_label + room_key
 // for a module map, the room is looked up exactly (lib/mcp/tools/map-rooms.ts)
 // along with the rooms it connects to, and saved as the party's position in
-// campaigns.current_map_position, which the GM sees on every later turn.
+// campaigns.current_map_position, which the GM sees on every later turn. A move
+// with no map_label/room_key (leaving the mapped area) clears that position.
 
 import { searchCampaignPriorityContent } from '@/lib/rag/search-campaign-priority';
 import { createClient } from '@/lib/supabase/server';
 import { generateLocationSeed } from './generate-location-seed';
-import { findMapRoom, listCampaignMaps, saveMapPosition } from './map-rooms';
+import { clearMapPosition, findMapRoom, listCampaignMaps, saveMapPosition } from './map-rooms';
 import type { MCPContext } from '../types';
 
 export interface UpdateLocationInput {
@@ -97,6 +98,10 @@ export async function executeUpdateLocation(
         `Known maps: ${maps.map((m) => m.mapLabel).join('; ') || 'none'}. ` +
         'The party position was not changed.';
     }
+  } else if (!input.map_label?.trim() && !input.room_key?.trim()) {
+    // Moved somewhere that isn't a mapped room: a saved room would otherwise
+    // keep pulling the party back to the dungeon on every later turn.
+    await clearMapPosition(context.campaignId);
   }
 
   // An exact room match searches the module text for that room's keyed
