@@ -4,7 +4,7 @@
 
 BEGIN;
 
-SELECT plan(31);
+SELECT plan(32);
 
 -- ============================================================================
 -- 1. Verify RLS is enabled on every table in the public schema
@@ -105,6 +105,17 @@ SELECT ok(
       AND column_name = 'user_id'
   ),
   'campaigns table does NOT have user_id column (renamed to owner_id)'
+);
+
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'campaigns'
+      AND column_name = 'current_map_position'
+      AND data_type = 'jsonb'
+  ),
+  'campaigns has a jsonb current_map_position column (party position on module maps)'
 );
 
 -- ============================================================================

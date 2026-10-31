@@ -1,55 +1,110 @@
 // lib/rag/pdf-pages.ts
-// Identifies candidate map/illustration pages in an uploaded module PDF and
-// renders them to images for vision transcription (see lib/rag/map-vision.ts).
+// Renders module PDF pages to images for map detection and map reading
+// (see lib/rag/map-vision.ts).
 //
 // Uses unpdf — a pure JS/WASM PDF.js build with no native system executable
 // dependency (unlike Poppler/Ghostscript-based tools such as pdftoppm, which
-// are not reliably present in a serverless environment; this was confirmed
-// directly earlier this session). Page rendering still needs @napi-rs/canvas,
-// but that ships prebuilt native bindings as an npm package rather than
-// shelling out to a system binary, so it works on Vercel.
+// are not reliably present in a serverless environment). Page rendering and
+// tile cropping use @napi-rs/canvas, which ships prebuilt native bindings as
+// an npm package rather than shelling out to a system binary, so it works on
+// Vercel.
 //
-// Detection deliberately does not use unpdf's extractImages() to measure
-// per-page image coverage: it returns raw decoded pixel buffers with no
-// bounding-box or page-dimension data, and it misses vector-drawn line art
-// entirely (plausible for a redrawn/remastered scan of an old module). A
-// cheap per-page extracted-text length is used instead — a page with very
-// little body text is a candidate — which also sidesteps both problems by
-// rendering the whole page once it's flagged, catching vector art for free.
+// Detection used to pick pages by how little text they had, which missed a
+// map printed beside its room key and scans whose text layer picked up the
+// map's numbers. Every page is now shown to Claude as a small thumbnail
+// instead, and Claude decides which pages are maps (classifyMapPages).
 
-import { getDocumentProxy, extractText, renderPageAsImage } from 'unpdf';
+import { getDocumentProxy, renderPageAsImage } from 'unpdf';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
 
-/** Pages with less extracted text than this are treated as candidates. */
-const CANDIDATE_TEXT_THRESHOLD = 500;
+/** Long edge of a classification thumbnail — about 350 visual tokens per page. */
+const THUMBNAIL_LONG_EDGE = 512;
 
-/** Render scale tuned to land around ~1000-1200px on the long edge, keeping
- * per-image vision token cost bounded (see lib/rag/map-vision.ts). */
-const RENDER_SCALE = 1.5;
+/** Long edge of the full map page sent for reading — the highest resolution
+ * current Claude models read without downscaling. */
+const MAP_LONG_EDGE = 2576;
 
-export interface MapCandidatePage {
+/** Long edge of the render the zoomed tiles are cut from. Each tile covers a
+ * little over half the page in each direction, so tiles come out near
+ * MAP_LONG_EDGE — roughly twice the detail of the full-page image, which is
+ * what small room numbers and door symbols need. */
+const TILE_SOURCE_LONG_EDGE = 4400;
+
+/** How far neighbouring tiles overlap, as a share of the page, so a number on
+ * a tile boundary is whole in at least one tile. */
+const TILE_OVERLAP = 0.1;
+
+export interface PageImage {
   pageNumber: number;
   pngBase64: string;
 }
 
-export async function detectMapCandidatePages(fileBuffer: Buffer): Promise<MapCandidatePage[]> {
-  const data = new Uint8Array(fileBuffer);
-  const pdf = await getDocumentProxy(data);
-  const { text } = await extractText(pdf, { mergePages: false });
+export interface MapPageImages {
+  pageNumber: number;
+  fullPagePngBase64: string;
+  tiles: { position: string; pngBase64: string }[];
+}
 
-  const candidates: MapCandidatePage[] = [];
-  for (let i = 0; i < text.length; i++) {
-    if (text[i].trim().length >= CANDIDATE_TEXT_THRESHOLD) continue;
+async function renderAtLongEdge(
+  pdf: Awaited<ReturnType<typeof getDocumentProxy>>,
+  pageNumber: number,
+  longEdge: number
+): Promise<Buffer> {
+  const page = await pdf.getPage(pageNumber);
+  const viewport = page.getViewport({ scale: 1 });
+  const scale = longEdge / Math.max(viewport.width, viewport.height);
+  // unpdf needs the canvas module passed in explicitly under Node; without it
+  // every render throws. That is why no map page was ever read before this fix.
+  const rendered = await renderPageAsImage(pdf, pageNumber, {
+    scale,
+    toDataURL: false,
+    canvasImport: () => import('@napi-rs/canvas'),
+  });
+  return Buffer.from(rendered);
+}
 
-    const pageNumber = i + 1;
-    const rendered = await renderPageAsImage(pdf, pageNumber, {
-      scale: RENDER_SCALE,
-      toDataURL: false,
-    });
-    candidates.push({
-      pageNumber,
-      pngBase64: Buffer.from(rendered).toString('base64'),
-    });
+/** One small thumbnail per page, in page order. */
+export async function renderPageThumbnails(fileBuffer: Buffer): Promise<PageImage[]> {
+  const pdf = await getDocumentProxy(new Uint8Array(fileBuffer));
+  const thumbnails: PageImage[] = [];
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+    const png = await renderAtLongEdge(pdf, pageNumber, THUMBNAIL_LONG_EDGE);
+    thumbnails.push({ pageNumber, pngBase64: png.toString('base64') });
+  }
+  return thumbnails;
+}
+
+/** The full page plus four overlapping zoomed tiles (2×2) of one map page. */
+export async function renderMapPage(fileBuffer: Buffer, pageNumber: number): Promise<MapPageImages> {
+  const pdf = await getDocumentProxy(new Uint8Array(fileBuffer));
+  if (pageNumber < 1 || pageNumber > pdf.numPages) {
+    throw new Error(`Page ${pageNumber} does not exist in this PDF.`);
   }
 
-  return candidates;
+  const source = await loadImage(await renderAtLongEdge(pdf, pageNumber, TILE_SOURCE_LONG_EDGE));
+
+  const fullScale = MAP_LONG_EDGE / Math.max(source.width, source.height);
+  const full = createCanvas(Math.round(source.width * fullScale), Math.round(source.height * fullScale));
+  full.getContext('2d').drawImage(source, 0, 0, full.width, full.height);
+
+  const tileWidth = Math.round(source.width * (0.5 + TILE_OVERLAP / 2));
+  const tileHeight = Math.round(source.height * (0.5 + TILE_OVERLAP / 2));
+  const tileScale = Math.min(1, MAP_LONG_EDGE / Math.max(tileWidth, tileHeight));
+  const tiles: MapPageImages['tiles'] = [];
+  for (const [row, y] of [0, source.height - tileHeight].entries()) {
+    for (const [col, x] of [0, source.width - tileWidth].entries()) {
+      const tile = createCanvas(Math.round(tileWidth * tileScale), Math.round(tileHeight * tileScale));
+      tile.getContext('2d').drawImage(source, x, y, tileWidth, tileHeight, 0, 0, tile.width, tile.height);
+      tiles.push({
+        position: `${row === 0 ? 'top' : 'bottom'} ${col === 0 ? 'left' : 'right'}`,
+        pngBase64: tile.toBuffer('image/png').toString('base64'),
+      });
+    }
+  }
+
+  return {
+    pageNumber,
+    fullPagePngBase64: full.toBuffer('image/png').toString('base64'),
+    tiles,
+  };
 }

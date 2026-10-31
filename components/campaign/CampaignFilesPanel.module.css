@@ -190,6 +190,22 @@
 .btnRetry:hover {
   border-color: var(--crimson-bright);
 }
+.btnRetry:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mapRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.mapStatus {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--ivory-dim);
+}
 
 .btnDelete {
   flex-shrink: 0;

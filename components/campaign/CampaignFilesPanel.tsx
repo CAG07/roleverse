@@ -23,6 +23,35 @@ interface FileEntry {
   sizeBytes: number;
   indexStatus: IndexStatus;
   indexError?: string;
+  /** Progress or result of the map reading that follows text indexing (PDFs only). */
+  mapStatus?: string;
+  readingMaps?: boolean;
+}
+
+interface MapPageResult {
+  pageNumber: number;
+  mapsFound: number;
+  truncated: boolean;
+  read: boolean;
+}
+
+function isPdfFile(name: string): boolean {
+  return name.toLowerCase().endsWith('.pdf');
+}
+
+function plural(count: number, word: string): string {
+  return `${count} ${word}${count === 1 ? '' : 's'}`;
+}
+
+/** Final status line after every map page has been read. */
+function describeMapResults(results: MapPageResult[], failedPages: number[]): string {
+  const maps = results.reduce((sum, r) => sum + r.mapsFound, 0);
+  const parts = [`${plural(maps, 'map')} read`];
+  const unreadable = [...failedPages, ...results.filter((r) => !r.read).map((r) => r.pageNumber)];
+  if (unreadable.length > 0) parts.push(`could not read page ${unreadable.join(', ')}`);
+  const truncated = results.filter((r) => r.truncated).map((r) => r.pageNumber);
+  if (truncated.length > 0) parts.push(`page ${truncated.join(', ')} may be missing rooms`);
+  return parts.join('; ');
 }
 
 function formatSize(bytes: number): string {
@@ -115,10 +144,53 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
     };
   }, [campaignId]);
 
+  const updateFile = (name: string, changes: Partial<FileEntry>) => {
+    setFiles((prev) => prev.map((f) => (f.name === name ? { ...f, ...changes } : f)));
+  };
+
+  // Map reading runs after the text is indexed, one request per map page, so a
+  // module with several large maps never hits a single request's time limit.
+  const handleReadMaps = async (name: string) => {
+    updateFile(name, { readingMaps: true, mapStatus: 'Looking for maps…' });
+    try {
+      const findRes = await fetch(`/api/campaigns/${campaignId}/modules/maps`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: name }),
+      });
+      if (!findRes.ok) {
+        const body = await findRes.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Failed to look for maps.');
+      }
+      const { mapPages } = (await findRes.json()) as { mapPages: number[] };
+      if (mapPages.length === 0) {
+        updateFile(name, { readingMaps: false, mapStatus: 'No maps found' });
+        return;
+      }
+
+      const results: MapPageResult[] = [];
+      const failedPages: number[] = [];
+      for (const [i, pageNumber] of mapPages.entries()) {
+        updateFile(name, { mapStatus: `Reading map page ${i + 1} of ${mapPages.length}…` });
+        const res = await fetch(`/api/campaigns/${campaignId}/modules/maps`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName: name, pageNumber }),
+        });
+        if (res.ok) results.push((await res.json()) as MapPageResult);
+        else failedPages.push(pageNumber);
+      }
+      updateFile(name, { readingMaps: false, mapStatus: describeMapResults(results, failedPages) });
+    } catch (err) {
+      updateFile(name, {
+        readingMaps: false,
+        mapStatus: err instanceof Error ? err.message : 'Failed to read maps.',
+      });
+    }
+  };
+
   const handleIndex = async (name: string) => {
-    setFiles((prev) =>
-      prev.map((f) => (f.name === name ? { ...f, indexStatus: 'indexing', indexError: undefined } : f))
-    );
+    updateFile(name, { indexStatus: 'indexing', indexError: undefined, mapStatus: undefined });
     try {
       const res = await fetch(`/api/campaigns/${campaignId}/modules/ingest`, {
         method: 'POST',
@@ -129,13 +201,13 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
         const body = await res.json().catch(() => ({ error: 'Failed to index file.' }));
         throw new Error(body.error ?? 'Failed to index file.');
       }
-      setFiles((prev) => prev.map((f) => (f.name === name ? { ...f, indexStatus: 'indexed' } : f)));
+      updateFile(name, { indexStatus: 'indexed' });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to index file.';
-      setFiles((prev) =>
-        prev.map((f) => (f.name === name ? { ...f, indexStatus: 'error', indexError: message } : f))
-      );
+      updateFile(name, { indexStatus: 'error', indexError: message });
+      return;
     }
+    if (isPdfFile(name)) await handleReadMaps(name);
   };
 
   const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -298,6 +370,19 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
                 </div>
               )}
               {f.indexStatus === 'indexed' && <span className={styles.statusIndexed}>Indexed ✓</span>}
+              {f.indexStatus === 'indexed' && isPdfFile(f.name) && (
+                <div className={styles.mapRow}>
+                  {f.mapStatus && <span className={styles.mapStatus}>{f.mapStatus}</span>}
+                  <button
+                    type="button"
+                    className={styles.btnRetry}
+                    onClick={() => void handleReadMaps(f.name)}
+                    disabled={f.readingMaps}
+                  >
+                    Re-scan maps
+                  </button>
+                </div>
+              )}
               {f.indexStatus === 'error' && (
                 <div className={styles.statusErrorRow}>
                   <span className={styles.statusError}>{f.indexError ?? 'Indexing failed.'}</span>

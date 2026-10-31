@@ -1,44 +1,31 @@
 // app/api/campaigns/[id]/modules/ingest/route.ts
-// POST — index (or re-index) one uploaded module PDF from the 'campaign-pdfs'
-// Storage bucket into campaign_embeddings, so the Rules Arbiter can retrieve it
-// (the Lore Keeper does not do RAG search). DELETE — remove a file's indexed
-// chunks (called when the PDF itself is deleted from Storage, so RAG content
-// doesn't outlive its source).
+// POST — index (or re-index) one uploaded module file's text from the
+// 'campaign-pdfs' Storage bucket into campaign_embeddings, so the Game Master
+// and Rules Arbiter can retrieve it (the Lore Keeper does not do RAG search).
+// Map pages are found and read afterwards through ../maps/route.ts.
+// DELETE — remove a file's indexed chunks, map chunks included (called when
+// the file itself is deleted from Storage, so RAG content doesn't outlive its
+// source).
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient } from '@/lib/supabase/server';
 import { ingestCampaignPdf, deleteIndexedPdfChunks } from '@/lib/rag/ingest-campaign-pdf';
+import { authAndCampaign, downloadModuleFile } from '@/lib/campaigns/module-file-access';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
-const BUCKET = 'campaign-pdfs';
-
-// Map-page vision transcription (lib/rag/ingest-campaign-pdf.ts) adds several
-// sequential-ish Claude vision calls on top of the existing parse/chunk/embed
-// work, which can exceed the default serverless timeout.
 export const maxDuration = 60;
 
-async function authAndCampaign(campaignId: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) return { error: 'Unauthorized', status: 401, supabase: null, user: null, gameSystem: null };
-
-  const { data: campaign } = await supabase
-    .from('campaigns')
-    .select('id, owner_id, game_system')
-    .eq('id', campaignId)
-    .single();
-
-  if (!campaign || campaign.owner_id !== user.id) {
-    return { error: 'Campaign not found', status: 404, supabase: null, user: null, gameSystem: null };
+async function readFileName(request: NextRequest): Promise<string | NextResponse> {
+  try {
+    const body = (await request.json()) as { fileName?: string };
+    if (!body.fileName) {
+      return NextResponse.json({ error: 'Missing required field: fileName' }, { status: 400 });
+    }
+    return body.fileName;
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
-
-  return { error: null, status: 200, supabase, user, gameSystem: campaign.game_system as string };
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
@@ -49,35 +36,22 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error }, { status });
   }
 
-  let fileName: string;
-  try {
-    const body = (await request.json()) as { fileName?: string };
-    if (!body.fileName) {
-      return NextResponse.json({ error: 'Missing required field: fileName' }, { status: 400 });
-    }
-    fileName = body.fileName;
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
+  const fileName = await readFileName(request);
+  if (fileName instanceof NextResponse) return fileName;
 
-  const path = `${user.id}/${id}/${fileName}`;
-  const { data: fileBlob, error: downloadError } = await supabase.storage.from(BUCKET).download(path);
-  if (downloadError || !fileBlob) {
-    return NextResponse.json(
-      { error: downloadError?.message ?? 'File not found in storage' },
-      { status: 404 }
-    );
+  const file = await downloadModuleFile(supabase, user.id, id, fileName);
+  if (file.error !== null) {
+    return NextResponse.json({ error: file.error }, { status: 404 });
   }
 
   try {
-    const fileBuffer = Buffer.from(await fileBlob.arrayBuffer());
     const result = await ingestCampaignPdf({
       supabase,
       campaignId: id,
       userId: user.id,
       gameSystem,
       fileName,
-      fileBuffer,
+      fileBuffer: file.buffer,
     });
     return NextResponse.json(result);
   } catch (err) {
@@ -94,16 +68,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error }, { status });
   }
 
-  let fileName: string;
-  try {
-    const body = (await request.json()) as { fileName?: string };
-    if (!body.fileName) {
-      return NextResponse.json({ error: 'Missing required field: fileName' }, { status: 400 });
-    }
-    fileName = body.fileName;
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
+  const fileName = await readFileName(request);
+  if (fileName instanceof NextResponse) return fileName;
 
   try {
     await deleteIndexedPdfChunks(supabase, id, fileName);
