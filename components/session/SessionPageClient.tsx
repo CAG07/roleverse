@@ -152,15 +152,20 @@ export default function SessionPageClient({
     savedMarchingOrder,
     [...characters].sort((a, b) => a.name.localeCompare(b.name)).map((c) => c.id)
   );
+  const marchingOrderSaveQueue = useRef<Promise<void>>(Promise.resolve());
   const handleMarchingOrderChange = useCallback(
     (order: MarchingOrder) => {
       setSavedMarchingOrder(order);
-      void createClient()
-        .from('campaigns')
-        .update({ marching_order: order })
-        .eq('id', campaignId)
-        .then(({ error }) => {
+      marchingOrderSaveQueue.current = marchingOrderSaveQueue.current
+        .then(async () => {
+          const { error } = await createClient()
+            .from('campaigns')
+            .update({ marching_order: order })
+            .eq('id', campaignId);
           if (error) console.warn('[marching-order] Failed to save:', error.message);
+        })
+        .catch((error: unknown) => {
+          console.warn('[marching-order] Failed to save:', error);
         });
     },
     [campaignId]
