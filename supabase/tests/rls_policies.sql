@@ -4,7 +4,7 @@
 
 BEGIN;
 
-SELECT plan(32);
+SELECT plan(33);
 
 -- ============================================================================
 -- 1. Verify RLS is enabled on every table in the public schema
