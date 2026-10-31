@@ -139,54 +139,49 @@ export default function ChatWindow({
   const streamingMsgRef = useRef<StreamingMsg | null>(null);
   const scrollRafRef = useRef<number | null>(null);
   const tokenRafRef = useRef<number | null>(null);
-  const isInitialRender = useRef(true);
+  /**
+   * Whether the feed should follow new content. Decided by the player's own
+   * scrolling (and set again on every send), never by measuring after new
+   * content has landed: a long reply, or a burst of streamed text, can add more
+   * than NEAR_BOTTOM_THRESHOLD in one render and would otherwise stop the
+   * follow mid-reply.
+   */
+  const stickToBottomRef = useRef(true);
 
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
-  // Auto-scroll: always on first render; on subsequent renders, only if near bottom
-  useEffect(() => {
-    const el = feedRef.current;
-    if (!el) return;
-    if (isInitialRender.current) {
-      isInitialRender.current = false;
-      el.scrollTop = el.scrollHeight;
-      setShowScrollButton(false);
-      return;
-    }
-    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_THRESHOLD;
-    if (isNearBottom) {
-      el.scrollTop = el.scrollHeight;
-      setShowScrollButton(false);
-    } else {
-      setShowScrollButton(true);
-    }
-  }, [messages]);
-
+  // Follow new messages and streamed text while stuck to the bottom; otherwise
+  // offer the jump-to-latest button.
   const streamingContent = streamingMessage?.content;
 
   useEffect(() => {
     const el = feedRef.current;
-    if (!el || streamingContent === undefined) return;
-    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_THRESHOLD;
-    if (isNearBottom) {
+    if (!el) return;
+    if (stickToBottomRef.current) {
       el.scrollTop = el.scrollHeight;
       setShowScrollButton(false);
     } else {
-      // New content arrived below the viewport while the player is scrolled up.
       setShowScrollButton(true);
     }
-  }, [streamingContent]);
+  }, [messages, streamingContent, isLoading]);
 
+  // Only the player's scrolling changes whether the feed follows. Content
+  // growing below doesn't fire scroll events, and the programmatic scroll above
+  // lands at the bottom, so it keeps the follow on.
   const handleFeedScroll = useCallback((_e: UIEvent<HTMLDivElement>) => {
+    const el = feedRef.current;
+    if (!el) return;
+    // The follow flag is set right away, not on the next frame: streamed text
+    // landing in between would otherwise pull the player back to the bottom
+    // just after they scrolled up. Only the button's state waits a frame.
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_THRESHOLD;
+    stickToBottomRef.current = isNearBottom;
     if (scrollRafRef.current !== null) return;
     scrollRafRef.current = requestAnimationFrame(() => {
       scrollRafRef.current = null;
-      const el = feedRef.current;
-      if (!el) return;
-      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_THRESHOLD;
-      setShowScrollButton(!isNearBottom);
+      setShowScrollButton(!stickToBottomRef.current);
     });
   }, []);
 
@@ -200,7 +195,10 @@ export default function ChatWindow({
   const scrollToBottom = useCallback(() => {
     const el = feedRef.current;
     if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    stickToBottomRef.current = true;
+    // Instant, not smooth: a smooth scroll fires scroll events part way up,
+    // which would switch the follow back off while text is still streaming.
+    el.scrollTop = el.scrollHeight;
     setShowScrollButton(false);
   }, []);
 
@@ -305,6 +303,9 @@ export default function ChatWindow({
       timestamp: new Date(),
     };
 
+    // Sending always jumps to the bottom and follows the reply as it streams,
+    // even if the player had scrolled up to reread something.
+    stickToBottomRef.current = true;
     setMessages((prev) => [...prev, playerMsg]);
     setInput('');
     setIsLoading(true);
