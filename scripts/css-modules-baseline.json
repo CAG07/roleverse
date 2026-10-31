@@ -216,10 +216,6 @@
     "reason": "uses inline style={{ }}"
   },
   {
-    "file": "components/session/PartyStatus.tsx",
-    "reason": "uses inline style={{ }}"
-  },
-  {
     "file": "components/session/SceneDisplay.tsx",
     "reason": "uses inline style={{ }}"
   },

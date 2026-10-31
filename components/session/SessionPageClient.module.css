@@ -293,6 +293,12 @@
   background: linear-gradient(90deg, transparent, var(--crimson-dim), transparent);
 }
 
+.marchingOrderError {
+  margin: 0;
+  color: var(--crimson);
+  font-size: 0.75rem;
+}
+
 /* ── Confirm Stop Session dialog ──────────────────────────────────── */
 
 .confirmOverlay {
