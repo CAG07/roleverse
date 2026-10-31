@@ -262,10 +262,10 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
       <p className={styles.explainer}>
         PDF, plain text, or Markdown files are indexed automatically after upload. The Game
         Master uses them to run your module, and the Rules Arbiter uses them for rules questions,
-        ahead of the built-in rules. Map pages in a PDF are read as images, so the Game Master
-        knows each map&apos;s room numbers and which rooms connect, kept separate for each
-        dungeon level. The rest of a PDF needs a real text layer; a fully scanned PDF can&apos;t
-        be indexed. Up to 50MB per file, 100MB total per campaign.
+        ahead of the built-in rules. Map detection is best-effort: pages with little extracted
+        text can be read as images to help identify room numbers and connections, with map
+        references kept separate by page and label. PDFs still need a real text layer; fully
+        scanned PDFs can&apos;t be indexed. Up to 50MB per file, 100MB total per campaign.
       </p>
 
       {loading ? (
