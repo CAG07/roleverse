@@ -171,14 +171,17 @@ export default function ChatWindow({
   // growing below doesn't fire scroll events, and the programmatic scroll above
   // lands at the bottom, so it keeps the follow on.
   const handleFeedScroll = useCallback((_e: UIEvent<HTMLDivElement>) => {
+    const el = feedRef.current;
+    if (!el) return;
+    // The follow flag is set right away, not on the next frame: streamed text
+    // landing in between would otherwise pull the player back to the bottom
+    // just after they scrolled up. Only the button's state waits a frame.
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_THRESHOLD;
+    stickToBottomRef.current = isNearBottom;
     if (scrollRafRef.current !== null) return;
     scrollRafRef.current = requestAnimationFrame(() => {
       scrollRafRef.current = null;
-      const el = feedRef.current;
-      if (!el) return;
-      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_THRESHOLD;
-      stickToBottomRef.current = isNearBottom;
-      setShowScrollButton(!isNearBottom);
+      setShowScrollButton(!stickToBottomRef.current);
     });
   }, []);
 
