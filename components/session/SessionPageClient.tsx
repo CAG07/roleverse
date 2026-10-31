@@ -152,21 +152,31 @@ export default function SessionPageClient({
     savedMarchingOrder,
     [...characters].sort((a, b) => a.name.localeCompare(b.name)).map((c) => c.id)
   );
+  const confirmedMarchingOrder = useRef(marchingOrder);
+  const latestMarchingOrderSave = useRef(0);
+  const [marchingOrderSaveFailed, setMarchingOrderSaveFailed] = useState(false);
   const marchingOrderSaveQueue = useRef<Promise<void>>(Promise.resolve());
   const handleMarchingOrderChange = useCallback(
     (order: MarchingOrder) => {
       setSavedMarchingOrder(order);
-      marchingOrderSaveQueue.current = marchingOrderSaveQueue.current
-        .then(async () => {
+      setMarchingOrderSaveFailed(false);
+      const requestId = ++latestMarchingOrderSave.current;
+      marchingOrderSaveQueue.current = marchingOrderSaveQueue.current.then(async () => {
+        try {
           const { error } = await createClient()
             .from('campaigns')
             .update({ marching_order: order })
             .eq('id', campaignId);
-          if (error) console.warn('[marching-order] Failed to save:', error.message);
-        })
-        .catch((error: unknown) => {
+          if (error) throw error;
+          confirmedMarchingOrder.current = order;
+        } catch (error: unknown) {
           console.warn('[marching-order] Failed to save:', error);
-        });
+          if (requestId === latestMarchingOrderSave.current) {
+            setSavedMarchingOrder(confirmedMarchingOrder.current);
+            setMarchingOrderSaveFailed(true);
+          }
+        }
+      });
     },
     [campaignId]
   );
@@ -405,11 +415,19 @@ export default function SessionPageClient({
 
           <div className={styles.panelDivider} />
           {partyStatus.length > 0 ? (
-            <PartyStatus
-              members={partyStatus}
-              marchingOrder={marchingOrder}
-              onMarchingOrderChange={handleMarchingOrderChange}
-            />
+            <>
+              <PartyStatus
+                members={partyStatus}
+                marchingOrder={marchingOrder}
+                onMarchingOrderChange={handleMarchingOrderChange}
+              />
+              {marchingOrderSaveFailed && (
+                <p className={styles.marchingOrderError} role="alert">
+                  Could not save the marching order. The displayed order was restored to the last
+                  saved formation.
+                </p>
+              )}
+            </>
           ) : (
             <p className={styles.noCharacterText}>No party members besides the DM yet.</p>
           )}
