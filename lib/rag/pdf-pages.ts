@@ -43,6 +43,8 @@ export interface MapPageImages {
   pageNumber: number;
   fullPagePngBase64: string;
   tiles: { position: string; pngBase64: string }[];
+  /** The high-resolution render the tiles were cut from; saved for map views in play. */
+  sourcePng: Buffer;
 }
 
 async function renderAtLongEdge(
@@ -81,7 +83,8 @@ export async function renderMapPage(fileBuffer: Buffer, pageNumber: number): Pro
     throw new Error(`Page ${pageNumber} does not exist in this PDF.`);
   }
 
-  const source = await loadImage(await renderAtLongEdge(pdf, pageNumber, TILE_SOURCE_LONG_EDGE));
+  const sourcePng = await renderAtLongEdge(pdf, pageNumber, TILE_SOURCE_LONG_EDGE);
+  const source = await loadImage(sourcePng);
 
   const fullScale = MAP_LONG_EDGE / Math.max(source.width, source.height);
   const full = createCanvas(Math.round(source.width * fullScale), Math.round(source.height * fullScale));
@@ -106,5 +109,6 @@ export async function renderMapPage(fileBuffer: Buffer, pageNumber: number): Pro
     pageNumber,
     fullPagePngBase64: full.toBuffer('image/png').toString('base64'),
     tiles,
+    sourcePng,
   };
 }

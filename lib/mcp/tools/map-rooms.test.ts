@@ -49,6 +49,7 @@ describe('prompt formatting', () => {
       pageNumber: 35,
       content: '## Entrance Level (EL) — Room 19',
       connectsTo: ['20'],
+      position: null,
     };
     const neighbor = { ...room, roomKey: '20', content: '## Entrance Level (EL) — Room 20' };
     expect(formatPosition(room, [neighbor])).toBe(

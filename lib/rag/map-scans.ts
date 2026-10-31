@@ -10,6 +10,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { IndexMapPageResult } from './index-map-pages';
+import { MAP_SCAN_VERSION } from './map-scan-version';
 
 export const CLAIM_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -23,6 +24,8 @@ export interface MapScan {
   error: string | null;
   /** True while a request is working on this scan. */
   busy: boolean;
+  /** Which version of map reading produced it (map-scan-version.ts). */
+  version: number;
 }
 
 interface MapScanRow {
@@ -32,9 +35,10 @@ interface MapScanRow {
   page_results: unknown;
   error: string | null;
   claimed_at: string | null;
+  scan_version?: number | null;
 }
 
-const COLUMNS = 'file_name, status, map_pages, page_results, error, claimed_at';
+const COLUMNS = 'file_name, status, map_pages, page_results, error, claimed_at, scan_version';
 
 function staleBefore(): string {
   return new Date(Date.now() - CLAIM_TIMEOUT_MS).toISOString();
@@ -53,6 +57,7 @@ export function toMapScan(row: MapScanRow, now = Date.now()): MapScan {
     pageResults: Array.isArray(row.page_results) ? (row.page_results as IndexMapPageResult[]) : [],
     error: row.error,
     busy: claimedAt !== null && now - claimedAt < CLAIM_TIMEOUT_MS,
+    version: row.scan_version ?? 1,
   };
 }
 
@@ -81,7 +86,13 @@ export async function claimNewScan(
   const { error: insertError } = await supabase
     .from('module_map_scans')
     .upsert(
-      { campaign_id: campaignId, owner_id: userId, file_name: fileName, status: 'finding' },
+      {
+        campaign_id: campaignId,
+        owner_id: userId,
+        file_name: fileName,
+        status: 'finding',
+        scan_version: MAP_SCAN_VERSION,
+      },
       { onConflict: 'campaign_id,file_name', ignoreDuplicates: true }
     );
   if (insertError) throw new Error(`Failed to start the map scan: ${insertError.message}`);
@@ -96,6 +107,7 @@ export async function claimNewScan(
       error: null,
       claimed_at: now,
       updated_at: now,
+      scan_version: MAP_SCAN_VERSION,
     })
     .eq('campaign_id', campaignId)
     .eq('file_name', fileName)

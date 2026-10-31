@@ -57,6 +57,7 @@ Respond with ONLY one JSON object (no markdown fences, no commentary) matching e
       "rooms": [
         {
           "key": string,                   // the room's number or letter exactly as printed
+          "position": { "x": number, "y": number }, // where the room's number sits on the FULL page: x from 0 (left edge) to 1 (right edge), y from 0 (top edge) to 1 (bottom edge)
           "notes": string,                 // one short sentence: shape, size, and features visible on the map (statues, pools, pillars)
           "exits": [
             {
@@ -76,7 +77,9 @@ Respond with ONLY one JSON object (no markdown fences, no commentary) matching e
 
 Rules:
 - Include every numbered or lettered location you can see, even if you are unsure of its exits.
+- Check every wall of every room for a door or opening, including the wall a corridor runs along; a missed door makes the room unreachable in play.
 - Only list an exit you can actually see on the map. When a room opens onto an unnumbered corridor, use "corridor" and name in its notes which rooms that corridor reaches, if visible.
+- Give every room a position, measured on the full page image (not a tile), even if approximate.
 - Do not guess. If a number is hard to read, give your best reading followed by "?" (for example "2?").
 - If the page holds no map, respond {"maps": []}.`;
 
@@ -91,6 +94,17 @@ export interface MapRoom {
   key: string;
   notes: string;
   exits: MapExit[];
+  /** Where the room sits on the page (0-1 from the top-left corner); null if not given. */
+  position: { x: number; y: number } | null;
+}
+
+function asPosition(value: unknown): MapRoom['position'] {
+  if (typeof value !== 'object' || value === null) return null;
+  const { x, y } = value as Record<string, unknown>;
+  const nx = Number(x);
+  const ny = Number(y);
+  if (!Number.isFinite(nx) || !Number.isFinite(ny) || nx < 0 || nx > 1 || ny < 0 || ny > 1) return null;
+  return { x: nx, y: ny };
 }
 
 export interface MapTranscription {
@@ -222,7 +236,7 @@ export function parseMapTranscription(text: string, pageNumber: number): MapTran
           },
         ];
       });
-      return [{ key, notes: asString(room.notes) ?? '', exits }];
+      return [{ key, notes: asString(room.notes) ?? '', exits, position: asPosition(room.position) }];
     });
     if (rooms.length === 0) return [];
 

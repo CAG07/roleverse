@@ -27,11 +27,24 @@
 // along with the rooms it connects to, and saved as the party's position in
 // campaigns.current_map_position, which the GM sees on every later turn. A move
 // with no map_label/room_key (leaving the mapped area) clears that position.
+//
+// Levels (2026-11-01): a room_key alone means a room on the map the party is
+// already on, and moving to a different map (room numbers repeat between
+// levels) needs level_change: true, so a "Room 19" can't silently land the
+// party on the wrong level. The game master shows the matched room's map view
+// alongside this tool's result.
 
 import { searchCampaignPriorityContent } from '@/lib/rag/search-campaign-priority';
 import { createClient } from '@/lib/supabase/server';
 import { generateLocationSeed } from './generate-location-seed';
-import { clearMapPosition, findMapRoom, listCampaignMaps, saveMapPosition } from './map-rooms';
+import {
+  clearMapPosition,
+  findMapRoom,
+  getMapPosition,
+  listCampaignMaps,
+  saveMapPosition,
+  type MapRoomRecord,
+} from './map-rooms';
 import type { MCPContext } from '../types';
 
 export interface UpdateLocationInput {
@@ -40,6 +53,8 @@ export interface UpdateLocationInput {
   map_label?: string;
   /** The room's number or letter on that map. */
   room_key?: string;
+  /** True only when the party actually took stairs or another way to a different map (level). */
+  level_change?: boolean;
 }
 
 export interface MapRoomResult {
@@ -70,6 +85,8 @@ export interface UpdateLocationOutput {
   generatedLocation?: GeneratedLocationResult;
   /** Exact map room, when map_label + room_key matched (saved as the party's position). */
   mapRoom?: MapRoomResult;
+  /** The matched room record, for showing its map view; not sent to the model as text. */
+  mapRoomRecord?: MapRoomRecord;
   note?: string;
 }
 
@@ -81,23 +98,53 @@ export async function executeUpdateLocation(
 
   let mapRoom: MapRoomResult | undefined;
   let note: string | undefined;
-  if (input.map_label?.trim() && input.room_key?.trim()) {
+  let mapRoomRecord: MapRoomRecord | undefined;
+  if (input.room_key?.trim()) {
     const maps = await listCampaignMaps(context.campaignId);
-    const found = await findMapRoom(context.campaignId, input.map_label, input.room_key, maps);
-    if (found) {
+    const current = await getMapPosition(context.campaignId);
+    // A room number alone means a room on the map the party is already on.
+    const requestedMap = input.map_label?.trim() || current?.mapLabel;
+    const found = requestedMap
+      ? await findMapRoom(context.campaignId, requestedMap, input.room_key, maps)
+      : null;
+    const changesLevel =
+      !!current &&
+      !!found &&
+      (found.room.mapLabel !== current.mapLabel ||
+        found.room.fileName !== current.fileName ||
+        found.room.pageNumber !== current.pageNumber);
+
+    if (!requestedMap) {
+      note =
+        `Room "${input.room_key}" needs a map_label: the party has no saved position yet. ` +
+        `Known maps: ${maps.map((m) => m.mapLabel).join('; ') || 'none'}.`;
+    } else if (!found) {
+      note =
+        `No room "${input.room_key}" was found on a map matching "${requestedMap}". ` +
+        `Known maps: ${maps.map((m) => m.mapLabel).join('; ') || 'none'}. ` +
+        'The party position was not changed.';
+    } else if (changesLevel && !input.level_change) {
+      // Room numbers repeat between levels; moving to another map is only
+      // right when the party actually went up or down to it.
+      note =
+        `The party is in Room ${current!.roomKey} on ${current!.mapLabel}. Room ${found.room.roomKey} on ` +
+        `${found.room.mapLabel} is on a different map. If the party actually took stairs or another way ` +
+        'to that level, call updateLocation again with level_change: true. Otherwise pass the room on ' +
+        `${current!.mapLabel} (or leave map_label out). The party position was not changed.`;
+    } else {
       await saveMapPosition(context.campaignId, found.room);
+      mapRoomRecord = found.room;
       mapRoom = {
         mapLabel: found.room.mapLabel,
         roomKey: found.room.roomKey,
         room: found.room.content,
         connectedRooms: found.neighbors.map((n) => n.content),
       };
-    } else {
-      note =
-        `No room "${input.room_key}" was found on a map matching "${input.map_label}". ` +
-        `Known maps: ${maps.map((m) => m.mapLabel).join('; ') || 'none'}. ` +
-        'The party position was not changed.';
     }
+
+    // A room the tool couldn't place: hand the note straight back so the Game
+    // Master retries with the right map, rather than inventing a location.
+    if (!mapRoom) return { locationLabel, mapLayout: [], moduleExcerpts: [], note };
   } else if (!input.map_label?.trim() && !input.room_key?.trim()) {
     // Moved somewhere that isn't a mapped room: a saved room would otherwise
     // keep pulling the party back to the dungeon on every later turn.
@@ -131,7 +178,7 @@ export async function executeUpdateLocation(
 
   if (mapRoom) {
     // The exact room replaces vector-matched map rows, which may come from another level.
-    return { locationLabel, mapRoom, mapLayout: [], moduleExcerpts, note };
+    return { locationLabel, mapRoom, mapRoomRecord, mapLayout: [], moduleExcerpts, note };
   }
 
   if (mapLayout.length > 0 || moduleExcerpts.length > 0) {
