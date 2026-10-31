@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import Pagination from '@/components/ui/Pagination';
 import SessionExportButton from '@/components/session/SessionExportButton';
+import DeleteSessionButton from '@/components/session/DeleteSessionButton';
 import LocalTime from '@/components/session/LocalTime';
 import { sessionPlayTimeLabel } from '@/lib/sessions/play-time';
 import styles from './page.module.css';
@@ -95,7 +96,10 @@ export default async function SessionLogPage({ params, searchParams }: Props) {
       <div className={styles.logHeader}>
         <div className={styles.logHeaderTop}>
           <h1 className={styles.logTitle}>Session Log</h1>
-          <SessionExportButton campaignId={id} sessionId={sessionId} />
+          <div className={styles.logActions}>
+            <SessionExportButton campaignId={id} sessionId={sessionId} />
+            {!isActive && <DeleteSessionButton campaignId={id} sessionId={sessionId} />}
+          </div>
         </div>
         <div className={styles.logMeta}>
           <span>
