@@ -123,7 +123,7 @@ export default function PartyStatus({ members, marchingOrder, onMarchingOrderCha
                         className={classNames}
                         role="button"
                         tabIndex={picked ? 0 : -1}
-                        aria-label="Empty place"
+                        aria-label={`Empty place, ${rankLabel(r, ranks.length)} rank, ${p === 0 ? 'left' : 'right'}. Select to move here.`}
                         onClick={() => handleSelect(position, false)}
                         onKeyDown={(e) => handleKeyDown(e, position, false)}
                         {...dropHandlers(position)}
