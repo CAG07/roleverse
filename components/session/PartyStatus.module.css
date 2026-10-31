@@ -25,22 +25,80 @@
   text-transform: uppercase;
   color: var(--gold);
 }
+.hint {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.725rem;
+  color: var(--ivory-muted);
+}
 .memberList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
   background: var(--surface-card);
   border: var(--rule-thin);
   padding: 0.5rem;
 }
-.memberRow {
+/* One rank of the marching order: a label, then two places side by side. */
+.rankRow {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.35rem;
+  align-items: stretch;
+}
+.rankLabel {
+  align-self: center;
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory-dim);
+}
+.memberBox,
+.emptyPlace {
+  min-height: 2.6rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--void-border);
+  background: var(--void);
+}
+.memberBox {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  cursor: grab;
+  user-select: none;
+  touch-action: manipulation;
+}
+.memberBox:active {
+  cursor: grabbing;
+}
+.emptyPlace {
+  border-style: dashed;
+}
+.memberBox:focus-visible,
+.emptyPlace:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+.picked {
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 1px var(--gold);
+}
+.dropTarget {
+  border-color: var(--gold);
+  border-style: solid;
+  background: var(--surface-card);
+}
+.memberTop,
+.memberBottom {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 0;
-  border-bottom: 1px solid var(--void-border);
-  font-family: var(--font-body);
-  font-size: 0.775rem;
+  gap: 0.35rem;
+  min-width: 0;
 }
-.memberRow:last-child {
-  border-bottom: none;
+.memberBottom {
+  justify-content: space-between;
 }
 .statusDot {
   width: 7px;
@@ -48,21 +106,39 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
+/* Same colors as SessionPageClient.tsx's STATUS_DOT_COLOR avatar strip. */
+.dotActive {
+  background-color: #4a9a5a;
+}
+.dotUnconscious {
+  background-color: #c8873a;
+}
+.dotDead {
+  background-color: #b02020;
+}
 .memberName {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--font-body);
+  font-size: 0.775rem;
   color: var(--ivory);
   font-weight: 500;
 }
 .memberClass {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-body);
   color: var(--ivory-muted);
-  font-size: 0.725rem;
+  font-size: 0.7rem;
 }
 .memberHp {
   font-family: var(--font-heading);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--ivory-dim);
   white-space: nowrap;
 }

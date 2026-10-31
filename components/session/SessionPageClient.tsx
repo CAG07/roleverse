@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase/client';
 import PartyStatus from '@/components/session/PartyStatus';
 import SessionNotes from '@/components/session/SessionNotes';
 import { HpUpdateContext } from '@/lib/characters/hp-update-context';
+import { normalizeMarchingOrder, type MarchingOrder } from '@/lib/characters/marching-order';
 import type { SceneMedia, Character, TranscriptEntry } from '@/lib/types/session';
 import styles from './SessionPageClient.module.css';
 
@@ -58,6 +59,7 @@ export default function SessionPageClient({
   characters: initialCharacters,
   initialTranscript = [],
   initialSceneMedia = null,
+  initialMarchingOrder = null,
   aiAssistEnabled = true,
 }: {
   sessionId: string;
@@ -67,6 +69,8 @@ export default function SessionPageClient({
   characters: Character[];
   initialTranscript?: TranscriptEntry[];
   initialSceneMedia?: SceneMedia | null;
+  /** campaigns.marching_order as saved; reconciled with the characters below. */
+  initialMarchingOrder?: unknown;
   aiAssistEnabled?: boolean;
 }) {
   const router = useRouter();
@@ -138,6 +142,29 @@ export default function SessionPageClient({
       router.push(`/campaigns/${campaignId}`);
     }
   }, [sessionId, campaignId, router]);
+
+  // Marching order shown as the Party Status ranks. Saved straight to the
+  // campaign row (RLS limits it to the owner); the Game Master reads it every turn.
+  const [savedMarchingOrder, setSavedMarchingOrder] = useState<unknown>(initialMarchingOrder);
+  // Characters missing from the saved order join in name order, the same as
+  // the Game Master's party block, so both agree before it's ever rearranged.
+  const marchingOrder = normalizeMarchingOrder(
+    savedMarchingOrder,
+    [...characters].sort((a, b) => a.name.localeCompare(b.name)).map((c) => c.id)
+  );
+  const handleMarchingOrderChange = useCallback(
+    (order: MarchingOrder) => {
+      setSavedMarchingOrder(order);
+      void createClient()
+        .from('campaigns')
+        .update({ marching_order: order })
+        .eq('id', campaignId)
+        .then(({ error }) => {
+          if (error) console.warn('[marching-order] Failed to save:', error.message);
+        });
+    },
+    [campaignId]
+  );
 
   // Build party status entries for PartyStatus
   const partyStatus = characters.map((c) => ({
@@ -373,7 +400,11 @@ export default function SessionPageClient({
 
           <div className={styles.panelDivider} />
           {partyStatus.length > 0 ? (
-            <PartyStatus members={partyStatus} />
+            <PartyStatus
+              members={partyStatus}
+              marchingOrder={marchingOrder}
+              onMarchingOrderChange={handleMarchingOrderChange}
+            />
           ) : (
             <p className={styles.noCharacterText}>No party members besides the DM yet.</p>
           )}
