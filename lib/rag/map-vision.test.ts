@@ -58,6 +58,32 @@ describe('parseMapTranscription', () => {
     expect(maps[0].mapLabel).toBe('Untitled map 2 (page 7)');
   });
 
+  it("keeps each room's position on the page, dropping one outside the page or not a number", () => {
+    const text = JSON.stringify({
+      maps: [
+        {
+          map_label: 'Entrance Level (EL)',
+          rooms: [
+            { key: '19', position: { x: 0.62, y: 0.47 }, exits: [] },
+            { key: '20', position: { x: 1.4, y: 0.5 }, exits: [] },
+            { key: '21', exits: [] },
+            { key: '22', position: { x: null, y: null }, exits: [] },
+            { key: '23', position: { x: '', y: false }, exits: [] },
+            { key: '24', position: { x: '0.5', y: '0.5' }, exits: [] },
+          ],
+        },
+      ],
+    });
+    expect(parseMapTranscription(text, 35)[0].rooms.map((r) => r.position)).toEqual([
+      { x: 0.62, y: 0.47 },
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
+  });
+
   it('throws on a cut-off reply so the caller can report it', () => {
     expect(() => parseMapTranscription('{"maps":[{"map_label":"Entrance Level","rooms":[{"key":"1"', 35)).toThrow();
   });

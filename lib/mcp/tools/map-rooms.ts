@@ -4,8 +4,13 @@
 // (campaigns.current_map_position). Vector search can't tell "Room 19" from
 // "Room 18", or level 1's Room 19 from level 2's, so mapped rooms are looked
 // up here by map label and room key instead.
+//
+// The Game Master is also shown the map itself around the party's room
+// (roomMapView), so corridors, junctions and doors the text reading missed
+// still come from the printed map.
 
 import { createClient } from '@/lib/supabase/server';
+import { loadMapView, mapImagePath, type MapPoint, type MapView } from '@/lib/rag/map-images';
 
 export interface CampaignMap {
   mapLabel: string;
@@ -21,6 +26,8 @@ export interface MapRoomRecord {
   pageNumber: number;
   content: string;
   connectsTo: string[];
+  /** Where the room sits on its map page (0-1 from the top-left), if the scan recorded it. */
+  position: MapPoint | null;
 }
 
 export interface MapPosition {
@@ -89,6 +96,12 @@ function toCampaignMap(row: MapRow): CampaignMap | null {
   };
 }
 
+function toPoint(value: unknown): MapPoint | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const { x, y } = value as Record<string, unknown>;
+  return typeof x === 'number' && typeof y === 'number' ? { x, y } : null;
+}
+
 function toRoomRecord(row: MapRow): MapRoomRecord | null {
   const m = row.metadata;
   if (typeof m.mapLabel !== 'string' || typeof m.roomKey !== 'string' || typeof m.title !== 'string') {
@@ -101,6 +114,7 @@ function toRoomRecord(row: MapRow): MapRoomRecord | null {
     pageNumber: Number(m.pageNumber),
     content: row.content,
     connectsTo: Array.isArray(m.connectsTo) ? m.connectsTo.map(String) : [],
+    position: toPoint(m.position),
   };
 }
 
@@ -214,16 +228,43 @@ export function formatPosition(room: MapRoomRecord, neighbors: MapRoomRecord[]):
 }
 
 /**
- * Everything the Game Master needs about maps for one turn: the list of known
- * maps and, if one is saved, the party's current room with its neighbours.
- * Both strings are empty for a campaign with no maps.
+ * The map around a room: a zoomed crop of its saved page image centred on the
+ * room, or the whole page when the scan didn't record where the room is. Null
+ * when the page has no saved image (scanned before images were saved).
  */
-export async function fetchMapContext(
-  campaignId: string
-): Promise<{ knownMaps: string; currentPosition: string }> {
+export async function roomMapView(userId: string, campaignId: string, room: MapRoomRecord): Promise<MapView | null> {
+  const supabase = await createClient();
+  return loadMapView(supabase, mapImagePath(userId, campaignId, room.fileName, room.pageNumber), room.position);
+}
+
+/** A whole map page's saved image, or null if it has none. */
+export async function pageMapView(
+  userId: string,
+  campaignId: string,
+  fileName: string,
+  pageNumber: number
+): Promise<MapView | null> {
+  const supabase = await createClient();
+  return loadMapView(supabase, mapImagePath(userId, campaignId, fileName, pageNumber), null);
+}
+
+export interface MapContext {
+  knownMaps: string;
+  currentPosition: string;
+  /** The map around the party's room, shown to the Game Master with the player's message. */
+  currentView: { mapLabel: string; roomKey: string; view: MapView } | null;
+}
+
+/**
+ * Everything the Game Master needs about maps for one turn: the list of known
+ * maps and, if one is saved, the party's current room with its neighbours and
+ * a view of the map around it. Empty for a campaign with no maps.
+ */
+export async function fetchMapContext(campaignId: string, userId: string): Promise<MapContext> {
+  const empty: MapContext = { knownMaps: '', currentPosition: '', currentView: null };
   try {
     const maps = await listCampaignMaps(campaignId);
-    if (maps.length === 0) return { knownMaps: '', currentPosition: '' };
+    if (maps.length === 0) return empty;
 
     // Restore on the exact map it was saved on (same file, page, and label), so
     // a duplicate label in another upload can't make it ambiguous, and deleting
@@ -239,12 +280,16 @@ export async function fetchMapContext(
       : undefined;
     const found =
       position && savedMap ? await findMapRoom(campaignId, savedMap.mapLabel, position.roomKey, [savedMap]) : null;
+    const view = found ? await roomMapView(userId, campaignId, found.room) : null;
+
     return {
       knownMaps: formatKnownMaps(maps),
       currentPosition: found ? formatPosition(found.room, found.neighbors) : '',
+      currentView:
+        found && view ? { mapLabel: found.room.mapLabel, roomKey: found.room.roomKey, view } : null,
     };
   } catch (err) {
     console.warn('[map-rooms] Failed to load map context:', err);
-    return { knownMaps: '', currentPosition: '' };
+    return empty;
   }
 }

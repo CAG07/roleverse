@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { ingestCampaignPdf, deleteIndexedPdfChunks } from '@/lib/rag/ingest-campaign-pdf';
 import { deleteMapScan } from '@/lib/rag/map-scans';
+import { deleteMapImages } from '@/lib/rag/map-images';
 import { authAndCampaign, downloadModuleFile } from '@/lib/campaigns/module-file-access';
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
-  const { error, status, supabase } = await authAndCampaign(id);
+  const { error, status, supabase, user } = await authAndCampaign(id);
 
   if (error || !supabase) {
     return NextResponse.json({ error }, { status });
@@ -75,6 +76,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     await deleteIndexedPdfChunks(supabase, id, fileName);
     await deleteMapScan(supabase, id, fileName);
+    await deleteMapImages(supabase, user.id, id, fileName);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to delete indexed chunks';

@@ -12,6 +12,7 @@ import CharacterSheetModal from '@/components/character/CharacterSheetModal';
 import { assembleCharacterData } from '@/lib/character/assembleCharacterData';
 import { createClient } from '@/lib/supabase/client';
 import PartyStatus from '@/components/session/PartyStatus';
+import MapLocation from '@/components/session/MapLocation';
 import SessionNotes from '@/components/session/SessionNotes';
 import { HpUpdateContext } from '@/lib/characters/hp-update-context';
 import { normalizeMarchingOrder, type MarchingOrder } from '@/lib/characters/marching-order';
@@ -142,6 +143,11 @@ export default function SessionPageClient({
       router.push(`/campaigns/${campaignId}`);
     }
   }, [sessionId, campaignId, router]);
+
+  // Bumped after each Game Master reply so the map location reloads (the
+  // Game Master may have moved the party during the reply).
+  const [replyCount, setReplyCount] = useState(0);
+  const handleReplyComplete = useCallback(() => setReplyCount((n) => n + 1), []);
 
   // Marching order shown as the Party Status ranks. Saved straight to the
   // campaign row (RLS limits it to the owner); the Game Master reads it every turn.
@@ -319,6 +325,7 @@ export default function SessionPageClient({
             {aiAssistEnabled ? (
               <ChatWindow
                 onSceneMediaUpdate={setSceneMedia}
+                onReplyComplete={handleReplyComplete}
                 sessionId={sessionId}
                 campaignId={campaignId}
                 initialTranscript={initialTranscript}
@@ -431,6 +438,7 @@ export default function SessionPageClient({
           ) : (
             <p className={styles.noCharacterText}>No party members besides the DM yet.</p>
           )}
+          <MapLocation campaignId={campaignId} refreshKey={replyCount} />
           <div className={styles.panelDivider} />
           <SessionNotes campaignId={campaignId} />
         </div>

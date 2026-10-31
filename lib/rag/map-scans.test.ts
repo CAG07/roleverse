@@ -45,6 +45,7 @@ describe('toMapScan', () => {
       pageResults: [],
       error: null,
       busy: false,
+      version: 1,
     });
   });
 });

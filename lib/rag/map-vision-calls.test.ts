@@ -19,7 +19,7 @@ const reply = (text: string, stop_reason = 'end_turn') => ({
 });
 
 const thumbnails = [1, 2, 3].map((pageNumber) => ({ pageNumber, pngBase64: 'x' }));
-const pageImages = { pageNumber: 7, fullPagePngBase64: 'x', tiles: [] };
+const pageImages = { pageNumber: 7, fullPagePngBase64: 'x', tiles: [], sourcePng: Buffer.from('') };
 
 beforeEach(() => {
   create.mockReset();

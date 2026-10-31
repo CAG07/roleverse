@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { assertWithinQuota, getUsedBytes } from '@/lib/storage/check-quota';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { MAP_SCAN_VERSION } from '@/lib/rag/map-scan-version';
 import styles from './CampaignFilesPanel.module.css';
 
 const FILE_MAX_BYTES = 50 * 1024 * 1024; // 50MB per file (Supabase Free plan per-upload cap)
@@ -43,6 +44,7 @@ interface MapScan {
   pageResults: MapPageResult[];
   error: string | null;
   busy: boolean;
+  version: number;
 }
 
 /** How long to wait before checking again while another tab or request is reading. */
@@ -242,7 +244,7 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
 
       // Map reading with no clicks: show each PDF's saved result, continue any
       // scan that was interrupted, and scan indexed PDFs that were never
-      // scanned (uploaded before map reading was saved). One file at a time.
+      // scanned or were scanned by an older version. One file at a time.
       const scans = await fetchMapScans(campaignId).catch(() => null);
       if (!scans || cancelled) return;
       const byFile = new Map(scans.map((scan) => [scan.fileName, scan]));
@@ -250,7 +252,9 @@ export default function CampaignFilesPanel({ campaignId }: { campaignId: string 
       for (const f of loaded) {
         if (!isPdfFile(f.name) || f.indexStatus !== 'indexed') continue;
         const scan = byFile.get(f.name);
-        if (!scan) toRun.push({ name: f.name, restart: true });
+        // Never scanned, or scanned by an older version of map reading (no
+        // map pictures for the Game Master): read it again.
+        if (!scan || (scan.version < MAP_SCAN_VERSION && !scan.busy)) toRun.push({ name: f.name, restart: true });
         else if (scan.status === 'finding' || scan.status === 'reading') toRun.push({ name: f.name, restart: false });
         else {
           const mapStatus = describeScan(scan);

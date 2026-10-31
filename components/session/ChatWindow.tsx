@@ -108,6 +108,8 @@ const NEAR_BOTTOM_THRESHOLD = 150;
 
 interface ChatWindowProps {
   onSceneMediaUpdate?: (media: SceneMedia) => void;
+  /** Called after each reply finishes (or fails), e.g. to refresh the party's map location. */
+  onReplyComplete?: () => void;
   sessionId: string;
   campaignId: string;
   initialTranscript?: TranscriptEntry[];
@@ -115,6 +117,7 @@ interface ChatWindowProps {
 
 export default function ChatWindow({
   onSceneMediaUpdate,
+  onReplyComplete,
   sessionId,
   campaignId,
   initialTranscript = [],
@@ -475,8 +478,9 @@ export default function ChatWindow({
       if (streamingMsgRef.current) {
         finalizeStream();
       }
+      onReplyComplete?.();
     }
-  }, [input, isLoading, sessionId, finalizeStream, onSceneMediaUpdate]);
+  }, [input, isLoading, sessionId, finalizeStream, onSceneMediaUpdate, onReplyComplete]);
 
   // Brand-new session (no transcript yet) — auto-trigger one GM turn instead of
   // leaving the player staring at an empty feed. The GM already has the previous

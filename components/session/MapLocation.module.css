@@ -1,0 +1,101 @@
+.mapLocation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.sectionLabel {
+  font-family: var(--font-heading);
+  font-size: 0.575rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.summaryRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  padding: 0.4rem 0.5rem;
+}
+.summary {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--ivory);
+}
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: var(--surface-card);
+  border: var(--rule-thin);
+  padding: 0.5rem;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.fieldLabel {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+}
+.select {
+  width: 100%;
+  padding: 0.25rem 0.35rem;
+  background: var(--void);
+  border: 1px solid var(--void-border);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--ivory);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.btnChange,
+.btnSave,
+.btnPlain {
+  flex-shrink: 0;
+  padding: 0.15rem 0.45rem;
+  background: transparent;
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btnChange,
+.btnSave {
+  border: 1px solid var(--gold);
+  color: var(--gold);
+}
+.btnSave {
+  background: var(--gold);
+  color: var(--on-accent);
+}
+.btnPlain {
+  border: 1px solid var(--void-border);
+  color: var(--ivory-muted);
+}
+.btnChange:disabled,
+.btnSave:disabled,
+.btnPlain:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.error {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--crimson-bright);
+}

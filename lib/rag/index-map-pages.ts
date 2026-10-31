@@ -9,9 +9,14 @@
 // Game Master can look a room up exactly by level and number during play
 // (lib/mcp/tools/map-rooms.ts) instead of relying on vector search, which
 // can't tell "Room 19" from "Room 18".
+//
+// Each map page's high-resolution render is also saved (map-images.ts), and
+// each room chunk records where the room sits on the page, so the Game Master
+// can be shown the map around the party's room during play.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { embedBatch } from './embed';
+import { deleteMapImages, mapImagePath, saveMapPageImage } from './map-images';
 import { renderMapPage, renderPageThumbnails } from './pdf-pages';
 import {
   classifyMapPages,
@@ -70,6 +75,9 @@ export async function findMapPages(ctx: MapPageContext): Promise<number[]> {
   const thumbnails = await renderPageThumbnails(ctx.fileBuffer);
   const mapPages = await classifyMapPages(thumbnails);
   await deleteStaleMapChunks(ctx, mapPages);
+  await deleteMapImages(ctx.supabase, ctx.userId, ctx.campaignId, ctx.fileName, mapPages).catch((err) =>
+    console.warn('[map-pages] Failed to remove old map images:', err)
+  );
   return mapPages;
 }
 
@@ -120,6 +128,7 @@ export async function indexMapPage(ctx: MapPageContext, pageNumber: number): Pro
         metadata: {
           ...base,
           roomKey: room.key,
+          ...(room.position ? { position: room.position } : {}),
           connectsTo: [...new Set(room.exits.filter((e) => !e.toLevel).map((e) => e.to))],
         },
       });
@@ -127,6 +136,15 @@ export async function indexMapPage(ctx: MapPageContext, pageNumber: number): Pro
   }
 
   const embeddings = await embedBatch(rows.map((r) => r.content));
+
+  // The page image the Game Master is shown in play. A failure here doesn't
+  // stop the rooms being saved: play falls back to the text alone.
+  try {
+    const path = mapImagePath(ctx.userId, ctx.campaignId, ctx.fileName, pageNumber);
+    await saveMapPageImage(ctx.supabase, path, images.sourcePng);
+  } catch (err) {
+    console.warn(`[map-pages] Failed to save the image of page ${pageNumber}:`, err);
+  }
 
   // Replace: delete the page's old rows, then insert the new ones right away.
   await deleteMapChunks(ctx.supabase, ctx.campaignId, ctx.fileName, pageNumber);
