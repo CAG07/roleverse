@@ -57,7 +57,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
   // Last 5 sessions for history panel
   const { data: recentSessions } = await supabase
     .from('sessions')
-    .select('id, started_at, ended_at, transcript')
+    .select('id, started_at, ended_at, play_time_seconds, transcript')
     .eq('campaign_id', id)
     .eq('user_id', user!.id)
     .order('started_at', { ascending: false })

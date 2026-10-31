@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { getGameSystem } from '@/lib/game-systems/registry';
-import FGConnectionStatus from './FGConnectionStatus';
 import VoiceStatus from './VoiceStatus';
 import OraclePanel from './OraclePanel';
 import styles from './SessionSidebar.module.css';
@@ -106,7 +105,6 @@ export default function SessionSidebar({
 
       {/* Status indicators */}
       <div className={styles.sidebarFooter}>
-        <FGConnectionStatus />
         <VoiceStatus />
       </div>
     </aside>
