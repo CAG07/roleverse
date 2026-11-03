@@ -60,9 +60,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Pinned: `latest` jumped to CLI v3.0.0 on 2026-11-02 (breaking changes)
+      # and broke `supabase start` here. Upgrade deliberately, following
+      # https://supabase.com/docs/guides/local-development/cli/migrating-to-v3
       - uses: supabase/setup-cli@v3
         with:
-          version: latest
+          version: 2.122.0
         env:
           SUPABASE_CLI_GITHUB_TOKEN: ${{ github.token }}
 
