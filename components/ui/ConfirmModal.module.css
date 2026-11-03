@@ -65,7 +65,7 @@
 
 .title {
   font-family: var(--font-heading);
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--ivory);
@@ -74,7 +74,7 @@
 
 .message {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.9625rem;
   color: var(--ivory-muted);
   margin: 0 0 1.5rem;
   line-height: 1.5;
@@ -87,7 +87,7 @@
 .typeToConfirmLabel {
   display: block;
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   color: var(--ivory-muted);
   margin-bottom: 0.4rem;
 }
@@ -102,7 +102,7 @@
   border: var(--rule-thin);
   color: var(--ivory);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.9625rem;
   padding: 0.5rem 0.75rem;
   outline: none;
   box-sizing: border-box;
@@ -120,7 +120,7 @@
 
 .btnConfirm {
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -141,7 +141,7 @@
 
 .btnCancel {
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;

@@ -42,7 +42,7 @@
 
 .signInSubtitle {
   font-family: var(--font-body);
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   color: var(--ivory-muted);
   letter-spacing: 0.08em;
   margin: 0;
@@ -127,7 +127,7 @@
 
 .cardTitle {
   font-family: var(--font-heading);
-  font-size: 1.25rem;
+  font-size: 1.3125rem;
   font-weight: 600;
   color: var(--gold);
   letter-spacing: 0.12em;
@@ -137,7 +137,7 @@
 
 .cardBody {
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 1.0125rem;
   color: var(--ivory-muted);
   margin: 0 0 1.75rem;
   line-height: 1.55;
@@ -155,7 +155,7 @@
   margin-top: 1rem;
   text-align: center;
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--ivory-dim);
   animation: fadeRise 0.4s ease 0.4s both;
 }

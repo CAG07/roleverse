@@ -21,7 +21,7 @@
 }
 .sectionLabel {
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -36,7 +36,7 @@
   border: var(--rule-thin);
   color: var(--ivory);
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.9125rem;
   padding: 0.5rem 0.75rem;
   outline: none;
   transition: border-color 0.2s;

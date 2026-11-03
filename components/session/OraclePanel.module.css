@@ -19,7 +19,7 @@
 }
 .sectionLabel {
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -37,7 +37,7 @@
   border: 1px solid var(--void-border);
   color: var(--ivory-muted);
   font-family: var(--font-heading);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -74,7 +74,7 @@
   border: 1px solid var(--void-border);
   color: var(--ivory-dim);
   font-family: var(--font-body);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   cursor: pointer;
   transition:
     border-color 0.15s,
@@ -109,7 +109,7 @@
   border: var(--rule-thin);
   color: var(--ivory);
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.15s;
@@ -119,7 +119,7 @@
 }
 .presetLikelihood {
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -151,7 +151,7 @@
   border: var(--rule-thin);
   color: var(--ivory);
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   padding: 0.3rem 0.5rem;
   outline: none;
   transition: border-color 0.2s;
@@ -169,7 +169,7 @@
   border: 1px solid var(--void-border);
   color: var(--ivory-muted);
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -189,7 +189,7 @@
 
 .explainer {
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
   color: var(--ivory-dim);
   line-height: 1.4;
   margin: 0;
@@ -206,7 +206,7 @@
   border: var(--rule-thin);
   color: var(--ivory-muted);
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
   cursor: pointer;
   transition:
     border-color 0.15s,
@@ -227,7 +227,7 @@
 }
 .fluxLabel {
   font-family: var(--font-heading);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -244,7 +244,7 @@
   border: 1px solid var(--oracle);
   color: var(--oracle);
   font-family: var(--font-heading);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -271,19 +271,19 @@
 }
 .resultAnswer {
   font-family: var(--font-heading);
-  font-size: 0.85rem;
+  font-size: 0.9125rem;
   font-weight: 700;
   color: var(--ivory);
 }
 .resultDetail {
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
   color: var(--ivory-dim);
 }
 
 .fieldLabel {
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -296,7 +296,7 @@
   border: var(--rule-thin);
   color: var(--ivory);
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   padding: 0.4rem 0.6rem;
   outline: none;
   transition: border-color 0.2s;
@@ -316,7 +316,7 @@
 
 .myAnswer {
   font-family: var(--font-body);
-  font-size: 0.775rem;
+  font-size: 0.8375rem;
   color: var(--ivory);
   line-height: 1.5;
   background: var(--void-raised);
@@ -327,7 +327,7 @@
 }
 .myError {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--crimson-bright);
   margin: 0;
 }

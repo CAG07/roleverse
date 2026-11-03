@@ -101,7 +101,7 @@
 .agentLabel {
   display: inline-block;
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -121,7 +121,7 @@
 }
 .agentBubble.loading {
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: 1.0625rem;
   color: var(--ivory-dim);
 }
 .inlineDiceIcon {
@@ -140,7 +140,7 @@
   background: var(--gold-subtle);
   border: 1px solid var(--gold-dim);
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -148,7 +148,7 @@
 }
 .msgTimestamp {
   font-family: var(--font-body);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   color: var(--ivory-dim);
 }
 
@@ -167,20 +167,20 @@
 }
 .npcFlagName {
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   color: var(--gold);
 }
 .npcFlagMeta {
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
   color: var(--ivory-dim);
 }
 .npcFlagDescription {
   margin: 0.3rem 0 0;
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   color: var(--ivory-muted);
   line-height: 1.4;
 }
@@ -193,7 +193,7 @@
 .npcFlagDismiss {
   padding: 0.3rem 0.7rem;
   font-family: var(--font-heading);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -226,7 +226,7 @@
 .npcFlagError {
   margin: 0.35rem 0 0;
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
   color: var(--crimson-bright);
 }
 
@@ -240,7 +240,7 @@
 .oracleLabel {
   display: inline-block;
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -269,7 +269,7 @@
 }
 .playerName {
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -306,7 +306,7 @@
   border: var(--rule-thin);
   color: var(--ivory);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.9625rem;
   padding: 0.5rem 0.75rem;
   outline: none;
   transition: border-color 0.2s;

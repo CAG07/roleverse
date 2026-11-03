@@ -35,7 +35,7 @@
 
 .emptyText {
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.9125rem;
   font-style: italic;
   color: var(--ivory-dim);
   line-height: 1.5;
@@ -52,7 +52,7 @@
   background: var(--void-raised);
   padding: 0.75rem 0.875rem;
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 1.0125rem;
   color: var(--ivory);
   line-height: 1.6;
   white-space: pre-wrap;
@@ -61,7 +61,7 @@
 
 .entryTimestamp {
   font-family: var(--font-body);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   color: var(--ivory-dim);
 }
 
@@ -80,7 +80,7 @@
   border: var(--rule-thin);
   color: var(--ivory);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.9625rem;
   padding: 0.625rem 0.75rem;
   outline: none;
   transition: border-color 0.2s;
@@ -103,7 +103,7 @@
 
 .errorText {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--crimson-bright);
   margin: 0;
   margin-right: auto;
@@ -114,7 +114,7 @@
   background: var(--crimson);
   border: 1px solid var(--crimson-bright);
   font-family: var(--font-heading);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;

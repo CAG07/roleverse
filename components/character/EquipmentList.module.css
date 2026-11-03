@@ -14,7 +14,7 @@
 
 .sectionLabel {
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -36,7 +36,7 @@
   align-items: baseline;
   gap: 0.5rem;
   font-family: var(--font-body);
-  font-size: 0.775rem;
+  font-size: 0.8375rem;
   padding: 0.3rem 0;
   border-bottom: 1px solid var(--void-border);
 }
@@ -51,7 +51,7 @@
 
 .badge {
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   color: var(--gold);
   background: var(--gold-tint);
@@ -61,6 +61,6 @@
 
 .detail {
   color: var(--ivory-muted);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
   flex-basis: 100%;
 }

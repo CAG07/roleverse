@@ -34,7 +34,7 @@
 
 .pageTitle {
   font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: 1.5625rem;
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: 0.1em;
@@ -45,7 +45,7 @@
 
 .pageSubtitle {
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   line-height: 1.2;
   color: var(--ivory-muted);
   margin: 0.25rem 0 0;
@@ -57,7 +57,7 @@
   border: var(--rule-thin);
   color: var(--ivory);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.9625rem;
   padding: 0.5rem 0.875rem;
   width: 16rem;
   outline: none;
@@ -79,7 +79,7 @@
   background: var(--crimson);
   border: 1px solid var(--crimson-bright);
   font-family: var(--font-heading);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -103,7 +103,7 @@
 }
 .sectionLabelText {
   font-family: var(--font-heading);
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -241,7 +241,7 @@
 
 .cardName {
   font-family: var(--font-heading);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.25;
   /* Exactly 2 lines (2 x 1.25em) whether the title actually wraps or not —
@@ -257,7 +257,7 @@
 
 .cardSystemBadge {
   font-family: var(--font-heading);
-  font-size: 0.55rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: 0.08em;
@@ -271,7 +271,7 @@
 
 .cardDate {
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
   line-height: 1.25;
   color: var(--ivory-dim);
 }
@@ -288,7 +288,7 @@
 }
 .emptyStateTitle {
   font-family: var(--font-heading);
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -297,7 +297,7 @@
 }
 .emptyStateBody {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.9625rem;
   color: var(--ivory-muted);
   max-width: 28rem;
   margin: 0 0 1.5rem;

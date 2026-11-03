@@ -20,7 +20,7 @@
 
 .pageTitle {
   font-family: var(--font-heading);
-  font-size: 1.75rem;
+  font-size: 1.8125rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -54,7 +54,7 @@
 
 .formCardTitle {
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -71,7 +71,7 @@
 .formLabel {
   display: block;
   font-family: var(--font-heading);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -81,7 +81,7 @@
 
 .formHint {
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   color: var(--ivory-dim);
   margin: 0 0 0.5rem;
 }
@@ -93,7 +93,7 @@
   border: var(--rule-thin);
   color: var(--ivory);
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 1.0125rem;
   padding: 0.625rem 0.875rem;
   outline: none;
   transition: border-color 0.2s;
@@ -183,7 +183,7 @@
 
 .systemName {
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--ivory);
@@ -192,14 +192,14 @@
 
 .systemDescription {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--ivory-dim);
   margin: 0;
 }
 
 .errorMsg {
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--crimson-bright);
   margin-bottom: 1rem;
 }
@@ -210,7 +210,7 @@
   background: var(--crimson);
   border: 1px solid var(--crimson-bright);
   font-family: var(--font-heading);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;

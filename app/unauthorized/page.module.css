@@ -82,7 +82,7 @@
 
 .errorTitle {
   font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: 1.5625rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -92,7 +92,7 @@
 
 .errorBody {
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 1.0125rem;
   color: var(--ivory-muted);
   margin: 0 0 1.75rem;
   line-height: 1.55;
@@ -105,7 +105,7 @@
   background: var(--void-raised);
   border: var(--rule-thin);
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -127,7 +127,7 @@
 
 .returnLink {
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--gold);
   text-decoration: none;
   transition: color 0.2s;

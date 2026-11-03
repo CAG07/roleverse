@@ -21,7 +21,7 @@
 }
 .eyebrowText {
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -36,7 +36,7 @@
 
 .title {
   font-family: var(--font-heading);
-  font-size: 1.85rem;
+  font-size: 1.9125rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--ivory);
@@ -45,7 +45,7 @@
 
 .dek {
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: 1.0625rem;
   color: var(--ivory-muted);
   margin: 0;
 }
@@ -53,7 +53,7 @@
 .prose {
   max-width: 720px;
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 1.0125rem;
   line-height: 1.75;
   color: var(--ivory-dim);
 }
@@ -64,7 +64,7 @@
 
 .prose h2 {
   font-family: var(--font-heading);
-  font-size: 1rem;
+  font-size: 1.0625rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -109,7 +109,7 @@
   border-left: 2px solid var(--crimson-dim);
   padding: 0.9rem 1.1rem;
   margin: 0 0 1.25rem;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--ivory-muted);
 }
 .note strong {
@@ -140,14 +140,14 @@
 }
 .footerNavDirection {
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ivory-dim);
 }
 .footerNavTitle {
-  font-size: 0.9rem;
+  font-size: 0.9625rem;
   color: var(--gold);
   transition: color 0.15s;
 }

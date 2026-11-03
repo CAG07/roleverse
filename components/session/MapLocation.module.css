@@ -5,7 +5,7 @@
 }
 .sectionLabel {
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -23,7 +23,7 @@
   flex: 1;
   min-width: 0;
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   color: var(--ivory);
 }
 .editor {
@@ -41,7 +41,7 @@
 }
 .fieldLabel {
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ivory-muted);
@@ -52,7 +52,7 @@
   background: var(--void);
   border: 1px solid var(--void-border);
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   color: var(--ivory);
 }
 .actions {
@@ -67,7 +67,7 @@
   padding: 0.15rem 0.45rem;
   background: transparent;
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -96,6 +96,6 @@
 .error {
   margin: 0;
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--crimson-bright);
 }
