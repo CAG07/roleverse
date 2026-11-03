@@ -15,6 +15,10 @@ import PartyStatus from '@/components/session/PartyStatus';
 import MapLocation from '@/components/session/MapLocation';
 import SessionNotes from '@/components/session/SessionNotes';
 import { HpUpdateContext } from '@/lib/characters/hp-update-context';
+import {
+  CharacterDataUpdateContext,
+  type CharacterDataUpdateCallback,
+} from '@/lib/characters/character-data-update-context';
 import { normalizeMarchingOrder, type MarchingOrder } from '@/lib/characters/marching-order';
 import type { SceneMedia, Character, TranscriptEntry } from '@/lib/types/session';
 import styles from './SessionPageClient.module.css';
@@ -78,6 +82,17 @@ export default function SessionPageClient({
   const [characters, setCharacters] = useState<Character[]>(initialCharacters);
   const handleCharacterHpChange = useCallback((characterId: string, hp: number) => {
     setCharacters((prev) => prev.map((c) => (c.id === characterId ? { ...c, hp } : c)));
+  }, []);
+  // Keeps the session's copy of a character in step with sheet panels that save one
+  // JSONB key (the Spell Book), so reopening the maximized sheet isn't stale.
+  const handleCharacterDataChange = useCallback<CharacterDataUpdateCallback>((characterId, column, key, value) => {
+    setCharacters((prev) =>
+      prev.map((c) => {
+        if (c.id !== characterId) return c;
+        const current = ((c as unknown as Record<string, unknown>)[column] as Record<string, unknown> | undefined) ?? {};
+        return { ...c, [column]: { ...current, [key]: value } };
+      })
+    );
   }, []);
   const [sceneMedia, setSceneMedia] = useState<SceneMedia | null>(initialSceneMedia);
   // Skip the first persistence write — sceneMedia already matches the DB
@@ -228,6 +243,7 @@ export default function SessionPageClient({
 
   return (
     <HpUpdateContext.Provider value={handleCharacterHpChange}>
+    <CharacterDataUpdateContext.Provider value={handleCharacterDataChange}>
     <div className={styles.sessionRoot}>
       {/* Confirm Stop Session dialog */}
       {confirmStop && (
@@ -444,6 +460,7 @@ export default function SessionPageClient({
         </div>
       </div>
     </div>
+    </CharacterDataUpdateContext.Provider>
     </HpUpdateContext.Provider>
   );
 }

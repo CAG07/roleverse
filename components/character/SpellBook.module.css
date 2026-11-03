@@ -1,0 +1,288 @@
+/* Live Spell Book panel — rendered inside BaseSheet via its `extra` slot. */
+
+.spellBook {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Matches BaseSheet's section label */
+.sectionLabel {
+  font-family: var(--font-heading);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.restButton,
+.addButton {
+  font-family: var(--font-heading);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--gold-tint);
+  border: 1px solid var(--gold-dim);
+  padding: 0.3rem 0.65rem;
+  cursor: pointer;
+}
+.restButton:hover:not(:disabled),
+.addButton:hover:not(:disabled) {
+  background: var(--gold-glow);
+}
+.restButton:disabled,
+.addButton:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.level {
+  border-top: var(--rule-thin);
+  padding-top: 0.5rem;
+}
+
+.levelHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.levelName {
+  font-family: var(--font-heading);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ivory);
+}
+
+.levelCount {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--ivory-muted);
+}
+.over {
+  color: var(--crimson);
+}
+
+.slotPips,
+.castPips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Square pips: filled blue = ready, hollow crossed = cast/expended */
+.pip {
+  width: 0.875rem;
+  height: 0.875rem;
+  padding: 0;
+  background: var(--gold);
+  border: 1px solid var(--gold);
+  cursor: pointer;
+}
+.pipUsed {
+  background: transparent;
+  border-color: var(--ivory-dim);
+  background-image: linear-gradient(
+    to top right,
+    transparent calc(50% - 1px),
+    var(--ivory-dim) calc(50% - 1px),
+    var(--ivory-dim) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+}
+.pip:focus-visible,
+.iconButton:focus-visible,
+.prepareButton:focus-visible,
+.restButton:focus-visible,
+.addButton:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.spellList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.spell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--void-border);
+}
+.spell:last-child {
+  border-bottom: none;
+}
+
+.spellName {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  color: var(--ivory);
+  overflow-wrap: anywhere;
+}
+.spent {
+  color: var(--ivory-dim);
+  text-decoration: line-through;
+}
+
+.controls {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.count {
+  min-width: 1.25rem;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ivory);
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  color: var(--ivory-muted);
+  background: transparent;
+  border: 1px solid var(--void-border);
+  cursor: pointer;
+}
+.iconButton:hover:not(:disabled) {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+}
+.iconButton:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.prepareButton {
+  font-family: var(--font-heading);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+  background: transparent;
+  border: 1px solid var(--void-border);
+  padding: 0.25rem 0.55rem;
+  cursor: pointer;
+}
+.prepared {
+  color: var(--on-accent);
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.atWill {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: var(--ivory-muted);
+}
+
+.empty {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: var(--ivory-muted);
+}
+
+.addForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+  border-top: var(--rule-thin);
+  padding-top: 0.6rem;
+}
+
+.addLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-family: var(--font-heading);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+}
+.nameLabel {
+  flex: 1;
+  min-width: 10rem;
+}
+
+.levelInput,
+.nameInput {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  color: var(--ivory);
+  background: var(--void-raised);
+  border: 1px solid var(--void-border);
+  padding: 0.3rem 0.45rem;
+}
+.levelInput {
+  width: 4rem;
+}
+.nameInput {
+  width: 100%;
+}
+.levelInput:focus,
+.nameInput:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.error {
+  margin: 0;
+  min-height: 0;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--crimson);
+}
+.error:empty {
+  display: none;
+}
+
+@media print {
+  .restButton,
+  .addForm,
+  .iconButton {
+    display: none;
+  }
+}

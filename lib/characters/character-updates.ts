@@ -34,3 +34,28 @@ export async function updateCharacterGameDataColumn(
   const { error } = await supabase.from('characters').update({ [column]: value }).eq('id', characterId);
   if (error) console.error(`Failed to update character ${column}`, error);
 }
+
+/** Set one key inside a JSONB column, reading the column fresh first so other keys
+ *  aren't overwritten from stale client state. Throws on failure. */
+export async function updateCharacterGameDataKey(
+  characterId: string,
+  column: GameDataColumn,
+  key: string,
+  value: unknown
+): Promise<void> {
+  const supabase = createClient();
+  const { data, error: readError } = await supabase.from('characters').select(column).eq('id', characterId).single();
+  if (readError) {
+    console.error(`Failed to read character ${column}`, readError);
+    throw readError;
+  }
+  const current = ((data as Record<string, unknown> | null)?.[column] as Record<string, unknown> | null) ?? {};
+  const { error } = await supabase
+    .from('characters')
+    .update({ [column]: { ...current, [key]: value } })
+    .eq('id', characterId);
+  if (error) {
+    console.error(`Failed to update character ${column}.${key}`, error);
+    throw error;
+  }
+}

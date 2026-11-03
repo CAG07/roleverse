@@ -11,6 +11,7 @@
 // .claude/commands/character-sheets.md.
 import type { AssembledCharacterData } from '@/lib/types/character';
 import { abilityModifier, characterDocument, group, idList, leaf } from './xml';
+import { formatMemorizedSpellLines } from '@/lib/character/spellbook';
 
 const ABILITIES: { full: string; tag: string }[] = [
   { full: 'Strength', tag: 'strength' },
@@ -32,7 +33,6 @@ export function exportDnd35e(data: AssembledCharacterData, equipment: unknown[])
   const money = (data.money as Record<string, number> | undefined) ?? {};
   const attacks = (data.attacks as Record<string, unknown>[] | undefined) ?? [];
   const spellsPerDay = (data.spellsPerDay as Record<string, unknown>[] | undefined) ?? [];
-  const knownSpells = (data.knownSpells as Record<string, unknown>[] | undefined) ?? [];
   const acBreakdown = (data.acBreakdown as Record<string, number> | undefined) ?? {};
   const encumbrance = (data.encumbrance as Record<string, number> | undefined) ?? {};
 
@@ -142,9 +142,7 @@ export function exportDnd35e(data: AssembledCharacterData, equipment: unknown[])
           ),
         ]
       : []),
-    ...(knownSpells.length > 0
-      ? ['Known Spells:', ...knownSpells.map((s) => `  - Level ${s.level ?? 0}: ${s.name ?? 'Unknown'}${s.prepared ? ` [${s.prepared}]` : ''}`)]
-      : []),
+    ...formatMemorizedSpellLines(data.knownSpells, 'Known Spells'),
     ...((data.playersName as string) ? [`Player's Name: ${data.playersName}`] : []),
     ...((data.campaign as string) ? [`Campaign: ${data.campaign}`] : []),
   ];

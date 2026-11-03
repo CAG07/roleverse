@@ -277,6 +277,21 @@ const schema: SystemSheetSchema = {
       kind: 'spell-slots',
       levels: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
     },
+    {
+      // A wizard's spell book (or a priest's prayers): every spell known, how many
+      // times each is memorized today, and how many of those have been cast. Shown as
+      // the live Spell Book panel on the sheet — see lib/character/spellbook.ts.
+      key: 'spellbook',
+      label: 'Spell Book',
+      column: 'combat',
+      kind: 'table',
+      columns: [
+        { key: 'level', label: 'Level', type: 'number' },
+        { key: 'name', label: 'Spell Name', type: 'text' },
+        { key: 'memorized', label: 'Memorized', type: 'number' },
+        { key: 'cast', label: 'Cast Today', type: 'number' },
+      ],
+    },
   ],
 };
 

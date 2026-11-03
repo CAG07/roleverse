@@ -1,6 +1,7 @@
 'use client';
 
 import BaseSheet from './BaseSheet';
+import SpellBook from '../SpellBook';
 import schema from '@/lib/character/sheet-schema/add1e';
 
 interface ADD1ESheetProps {
@@ -24,7 +25,8 @@ export default function ADD1ESheet({ characterId, data, equipment = [], compact 
       data={data}
       equipment={equipment}
       metaLines={[`${race} ${characterClass} · Level ${level} · ${alignment}`]}
-      hiddenFieldKeys={['alignment']}
+      hiddenFieldKeys={['alignment', 'spellSlots', 'spellbook']}
+      extra={<SpellBook characterId={characterId} gameSystem="ADD1E" data={data} />}
       compact={compact}
     />
   );
