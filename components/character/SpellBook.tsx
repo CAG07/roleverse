@@ -1,10 +1,17 @@
 'use client';
 
-import { useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
 import { Minus, Plus, X } from 'lucide-react';
 import styles from './SpellBook.module.css';
-import { updateCharacterGameDataKey } from '@/lib/characters/character-updates';
 import { useCharacterDataUpdate } from '@/lib/characters/character-data-update-context';
+import {
+  clearSettledGameDataKey,
+  gameDataStoreKey,
+  getGameDataKeyError,
+  getGameDataKeyValue,
+  setGameDataKey,
+  subscribeGameDataKey,
+} from '@/lib/characters/game-data-key-store';
 import {
   SPELL_SLOTS_EXPENDED_KEY,
   expendedByLevel,
@@ -27,6 +34,16 @@ interface SpellBookProps {
 
 const COLUMN = 'game_data_combat' as const;
 
+/** Subscribes to one store key and reads it with `read` (the store's value or error). */
+function useStoreValue<T>(storeKey: string, read: (storeKey: string) => T): T | undefined {
+  const subscribe = useCallback((listener: () => void) => subscribeGameDataKey(storeKey, listener), [storeKey]);
+  return useSyncExternalStore(
+    subscribe,
+    () => read(storeKey),
+    () => undefined
+  );
+}
+
 function levelHeading(level: number, style: 'memorized' | 'prepared'): string {
   if (level === 0) return style === 'prepared' ? 'Cantrips' : 'Level 0';
   return `Level ${level}`;
@@ -34,8 +51,9 @@ function levelHeading(level: number, style: 'memorized' | 'prepared'): string {
 
 /**
  * Live spell book on the character sheet: memorize (AD&D/3.5E) or prepare (5E) spells,
- * mark them cast, and rest. Saves straight to game_data_combat — one key per change —
- * and tells the host page through CharacterDataUpdateContext.
+ * mark them cast, and rest. Saves one game_data_combat key per change through
+ * game-data-key-store, and tells the host page through CharacterDataUpdateContext
+ * after each successful write.
  */
 export default function SpellBook({ characterId, gameSystem, data }: SpellBookProps) {
   const config = getSpellbookConfig(gameSystem);
@@ -43,53 +61,52 @@ export default function SpellBook({ characterId, gameSystem, data }: SpellBookPr
   const spellKey = config?.spellKey ?? '';
   const notifyHost = useCharacterDataUpdate();
 
-  const sourceRows = data[spellKey];
-  const sourceExpended = data[SPELL_SLOTS_EXPENDED_KEY];
-  const totals = slotTotalsByLevel(gameSystem, data);
-
-  const [rows, setRows] = useState<SpellRow[]>(() => normalizeSpellRows(sourceRows, style));
-  const [expended, setExpended] = useState<Record<number, number>>(() => expendedByLevel(sourceExpended, totals));
-  const [pending, setPending] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const memorizedKey = config?.memorizedKey ?? 'memorized';
   const [newLevel, setNewLevel] = useState(style === 'prepared' ? '0' : '1');
   const [newName, setNewName] = useState('');
 
-  // Re-sync from props when the host page hands over fresher data — but never while a
-  // save is in flight, so a refresh that lands mid-click can't roll back local edits.
-  const sourceSignature = JSON.stringify([sourceRows ?? null, sourceExpended ?? null]);
-  const [syncedSignature, setSyncedSignature] = useState(sourceSignature);
-  if (sourceSignature !== syncedSignature && pending === 0) {
-    setSyncedSignature(sourceSignature);
-    setRows(normalizeSpellRows(sourceRows, style));
-    setExpended(expendedByLevel(sourceExpended, totals));
-  }
+  // Saves go through a module-level store (lib/characters/game-data-key-store.ts) so
+  // they survive this panel unmounting — e.g. the session's sheet modal closing
+  // mid-save. While the store holds a value for a key, it's shown instead of props.
+  const rowsStoreKey = gameDataStoreKey(characterId, COLUMN, spellKey);
+  const expendedStoreKey = gameDataStoreKey(characterId, COLUMN, SPELL_SLOTS_EXPENDED_KEY);
+  const pendingRows = useStoreValue(rowsStoreKey, getGameDataKeyValue);
+  const pendingExpended = useStoreValue(expendedStoreKey, getGameDataKeyValue);
+  const rowsError = useStoreValue(rowsStoreKey, getGameDataKeyError);
+  const expendedError = useStoreValue(expendedStoreKey, getGameDataKeyError);
+  const error = rowsError ?? expendedError ?? null;
 
-  // Saves run one at a time so a slow early write can't land after a later one.
-  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  // Derived every render, so a props-only change (say, an import that changes just
+  // the slot totals) is reflected immediately and expended slots stay clamped.
+  const totals = slotTotalsByLevel(gameSystem, data);
+  const rows = normalizeSpellRows(pendingRows !== undefined ? pendingRows : data[spellKey], style, memorizedKey);
+  const expended = expendedByLevel(
+    pendingExpended !== undefined ? pendingExpended : data[SPELL_SLOTS_EXPENDED_KEY],
+    totals
+  );
 
-  function persist(key: string, value: unknown, revert: () => void) {
-    setPending((n) => n + 1);
-    setError(null);
-    saveQueue.current = saveQueue.current
-      .then(() => updateCharacterGameDataKey(characterId, COLUMN, key, value))
-      .then(() => notifyHost?.(characterId, COLUMN, key, value))
-      .catch(() => {
-        revert();
-        setError('The spell book could not be saved. Please try again.');
-      })
-      .finally(() => setPending((n) => n - 1));
+  // A saved value stays in the store until this panel sees its props change (the host
+  // caught up, or something else updated the character) — or on first mount, where
+  // props are already at least as fresh as any save that finished before it.
+  const propsSignature = JSON.stringify([data[spellKey] ?? null, data[SPELL_SLOTS_EXPENDED_KEY] ?? null]);
+  const seenSignature = useRef<string | null>(null);
+  useEffect(() => {
+    if (seenSignature.current === propsSignature) return;
+    seenSignature.current = propsSignature;
+    clearSettledGameDataKey(rowsStoreKey);
+    clearSettledGameDataKey(expendedStoreKey);
+  }, [propsSignature, rowsStoreKey, expendedStoreKey]);
+
+  function commit(key: string, value: unknown) {
+    setGameDataKey(characterId, COLUMN, key, value, (saved) => notifyHost?.(characterId, COLUMN, key, saved));
   }
 
   function commitRows(next: SpellRow[]) {
-    const previous = rows;
-    setRows(next);
-    persist(spellKey, serializeSpellRows(next, style), () => setRows(previous));
+    commit(spellKey, serializeSpellRows(next, style, memorizedKey));
   }
 
   function commitExpended(next: Record<number, number>) {
-    const previous = expended;
-    setExpended(next);
-    persist(SPELL_SLOTS_EXPENDED_KEY, next, () => setExpended(previous));
+    commit(SPELL_SLOTS_EXPENDED_KEY, next);
   }
 
   if (!config) return null;

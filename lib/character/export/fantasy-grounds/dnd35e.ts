@@ -142,7 +142,7 @@ export function exportDnd35e(data: AssembledCharacterData, equipment: unknown[])
           ),
         ]
       : []),
-    ...formatMemorizedSpellLines(data.knownSpells, 'Known Spells'),
+    ...formatMemorizedSpellLines(data.knownSpells, 'Known Spells', 'prepared'),
     ...((data.playersName as string) ? [`Player's Name: ${data.playersName}`] : []),
     ...((data.campaign as string) ? [`Campaign: ${data.campaign}`] : []),
   ];

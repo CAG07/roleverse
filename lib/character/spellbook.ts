@@ -17,16 +17,20 @@ export interface SpellbookConfig {
   style: SpellbookStyle;
   /** Key of the spell-row table field in the system's sheet schema. */
   spellKey: string;
+  /** Memorized style only: the row key holding the memorized count. 3.5E keeps its
+   *  original free-text `prepared` column (3.5E's own word for it), so rows saved
+   *  before the Spell Book existed — "Yes", "2" — still read correctly everywhere. */
+  memorizedKey: string;
   /** Label for the rest button. */
   restLabel: string;
 }
 
 const CONFIGS: Record<string, SpellbookConfig> = {
-  ADD1E: { style: 'memorized', spellKey: 'spellbook', restLabel: 'Rest' },
-  ADD2E: { style: 'memorized', spellKey: 'spellbook', restLabel: 'Rest' },
-  '3_5E': { style: 'memorized', spellKey: 'knownSpells', restLabel: 'Rest' },
-  '5E_2014': { style: 'prepared', spellKey: 'knownSpells', restLabel: 'Long Rest' },
-  '5E_2024': { style: 'prepared', spellKey: 'knownSpells', restLabel: 'Long Rest' },
+  ADD1E: { style: 'memorized', spellKey: 'spellbook', memorizedKey: 'memorized', restLabel: 'Rest' },
+  ADD2E: { style: 'memorized', spellKey: 'spellbook', memorizedKey: 'memorized', restLabel: 'Rest' },
+  '3_5E': { style: 'memorized', spellKey: 'knownSpells', memorizedKey: 'prepared', restLabel: 'Rest' },
+  '5E_2014': { style: 'prepared', spellKey: 'knownSpells', memorizedKey: 'memorized', restLabel: 'Long Rest' },
+  '5E_2024': { style: 'prepared', spellKey: 'knownSpells', memorizedKey: 'memorized', restLabel: 'Long Rest' },
 };
 
 export const SPELL_SLOTS_KEY = 'spellSlots';
@@ -61,33 +65,42 @@ export function isPreparedText(value: unknown): boolean {
   return !NOT_PREPARED.has(String(value).trim().toLowerCase());
 }
 
-/**
- * Reads raw table rows into SpellRows. For the memorized style, a row saved before the
- * Memorized column existed (3.5E's old free-text `prepared`) is read as a count when it
- * is numeric, otherwise as 1 copy when it is any "yes"-like text.
- */
-export function normalizeSpellRows(rows: unknown, style: SpellbookStyle): SpellRow[] {
+/** A memorized count from a number or free text: "2" → 2, "Yes"/"x" → 1, blank/"no" → 0. */
+export function memorizedCount(value: unknown): number {
+  const n = toCount(value);
+  if (n > 0) return n;
+  if (typeof value !== 'string' || !Number.isNaN(Number(value.trim()))) return 0;
+  return isPreparedText(value) ? 1 : 0;
+}
+
+/** Reads raw table rows into SpellRows. */
+export function normalizeSpellRows(
+  rows: unknown,
+  style: SpellbookStyle,
+  memorizedKey = 'memorized'
+): SpellRow[] {
   if (!Array.isArray(rows)) return [];
   return rows
     .filter((r): r is Record<string, unknown> => typeof r === 'object' && r !== null)
     .map((r) => {
       const level = Number.isFinite(Number(r.level)) ? Math.max(0, Math.floor(Number(r.level))) : 0;
       const name = typeof r.name === 'string' ? r.name.trim() : String(r.name ?? '').trim();
-      let memorized = toCount(r.memorized);
-      if (style === 'memorized' && r.memorized === undefined && r.prepared !== undefined) {
-        memorized = toCount(r.prepared) || (isPreparedText(r.prepared) ? 1 : 0);
-      }
+      const memorized = style === 'memorized' ? memorizedCount(r[memorizedKey]) : 0;
       const cast = Math.min(toCount(r.cast), memorized);
-      return { level, name, memorized, cast, prepared: isPreparedText(r.prepared) };
+      return { level, name, memorized, cast, prepared: style === 'prepared' && isPreparedText(r.prepared) };
     })
     .filter((r) => r.name.length > 0);
 }
 
 /** Back to the stored table shape, matching each style's schema columns. */
-export function serializeSpellRows(rows: SpellRow[], style: SpellbookStyle): Record<string, unknown>[] {
+export function serializeSpellRows(
+  rows: SpellRow[],
+  style: SpellbookStyle,
+  memorizedKey = 'memorized'
+): Record<string, unknown>[] {
   return rows.map((r) =>
     style === 'memorized'
-      ? { level: r.level, name: r.name, memorized: r.memorized, cast: r.cast }
+      ? { level: r.level, name: r.name, [memorizedKey]: r.memorized, cast: r.cast }
       : { level: r.level, name: r.name, ...(r.prepared ? { prepared: 'Yes' } : {}) }
   );
 }
@@ -142,8 +155,8 @@ export function spellLevels(rows: SpellRow[], totals: Record<number, number>): n
 }
 
 /** Plain-text lines for the Fantasy Grounds <notes> fold (memorized style). */
-export function formatMemorizedSpellLines(rawRows: unknown, heading: string): string[] {
-  const rows = normalizeSpellRows(rawRows, 'memorized');
+export function formatMemorizedSpellLines(rawRows: unknown, heading: string, memorizedKey = 'memorized'): string[] {
+  const rows = normalizeSpellRows(rawRows, 'memorized', memorizedKey);
   if (rows.length === 0) return [];
   return [
     `${heading}:`,

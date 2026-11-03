@@ -15,7 +15,11 @@ import {
 describe('getSpellbookConfig', () => {
   it('uses the memorized style for AD&D and 3.5E, prepared for 5E', () => {
     expect(getSpellbookConfig('ADD1E')).toMatchObject({ style: 'memorized', spellKey: 'spellbook' });
-    expect(getSpellbookConfig('3_5E')).toMatchObject({ style: 'memorized', spellKey: 'knownSpells' });
+    expect(getSpellbookConfig('3_5E')).toMatchObject({
+      style: 'memorized',
+      spellKey: 'knownSpells',
+      memorizedKey: 'prepared',
+    });
     expect(getSpellbookConfig('5E_2024')).toMatchObject({ style: 'prepared', spellKey: 'knownSpells' });
   });
 
@@ -49,16 +53,20 @@ describe('normalizeSpellRows', () => {
     ]);
   });
 
-  it('reads legacy 3.5E free-text prepared values as memorized copies', () => {
+  it('reads 3.5E free-text prepared values as memorized copies', () => {
     const rows = normalizeSpellRows(
       [
         { level: 1, name: 'Shield', prepared: '2' },
         { level: 1, name: 'Grease', prepared: 'Yes' },
+        { level: 1, name: 'Mage Armor', prepared: 3 },
         { level: 2, name: 'Web', prepared: 'no' },
+        { level: 2, name: 'Blur', prepared: '0' },
+        { level: 2, name: 'Knock' },
       ],
-      'memorized'
+      'memorized',
+      'prepared'
     );
-    expect(rows.map((r) => r.memorized)).toEqual([2, 1, 0]);
+    expect(rows.map((r) => r.memorized)).toEqual([2, 1, 3, 0, 0, 0]);
   });
 
   it('reads 5E prepared text', () => {
@@ -77,6 +85,7 @@ describe('serializeSpellRows', () => {
   it('writes each style in its schema shape', () => {
     const row = { level: 1, name: 'Sleep', memorized: 2, cast: 1, prepared: true };
     expect(serializeSpellRows([row], 'memorized')).toEqual([{ level: 1, name: 'Sleep', memorized: 2, cast: 1 }]);
+    expect(serializeSpellRows([row], 'memorized', 'prepared')).toEqual([{ level: 1, name: 'Sleep', prepared: 2, cast: 1 }]);
     expect(serializeSpellRows([row], 'prepared')).toEqual([{ level: 1, name: 'Sleep', prepared: 'Yes' }]);
     expect(serializeSpellRows([{ ...row, prepared: false }], 'prepared')).toEqual([{ level: 1, name: 'Sleep' }]);
   });
@@ -114,7 +123,7 @@ describe('formatMemorizedSpellLines', () => {
         [
           { level: 2, name: 'Web', memorized: 0 },
           { level: 1, name: 'Sleep', memorized: 2, cast: 1 },
-          { level: 1, name: 'Shield', prepared: 'Yes' },
+          { level: 1, name: 'Shield', memorized: '1' },
         ],
         'Spell Book'
       )

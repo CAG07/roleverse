@@ -124,12 +124,14 @@ const schema: SystemSheetSchema = {
       label: 'Known Spells',
       column: 'combat',
       kind: 'table',
-      // Memorized/Cast Today replaced a free-text "Prepared" column; rows saved with
-      // the old `prepared` key are still read by lib/character/spellbook.ts.
+      // `prepared` stays free text on purpose: the Spell Book reads it as a count
+      // ("2") or one copy ("Yes") and writes counts back, so rows saved before the
+      // Spell Book existed keep their value in every reader (Edit page, plain-text
+      // export/import). See memorizedKey in lib/character/spellbook.ts.
       columns: [
         { key: 'level', label: 'Level', type: 'number' },
         { key: 'name', label: 'Spell Name', type: 'text' },
-        { key: 'memorized', label: 'Memorized', type: 'number' },
+        { key: 'prepared', label: 'Prepared', type: 'text' },
         { key: 'cast', label: 'Cast Today', type: 'number' },
       ],
     },
