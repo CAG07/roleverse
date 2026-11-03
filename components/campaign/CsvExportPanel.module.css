@@ -11,7 +11,7 @@
 
 .infoPanelTitle {
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -23,7 +23,7 @@
 
 .explainer {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--ivory-dim);
   line-height: 1.5;
   margin: 0 0 0.875rem;
@@ -40,7 +40,7 @@
   background: transparent;
   border: 1px solid var(--gold-dim);
   font-family: var(--font-heading);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -61,7 +61,7 @@
 
 .errorMsg {
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   color: var(--crimson-bright);
   margin: 0.75rem 0 0;
 }

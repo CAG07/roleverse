@@ -1,6 +1,7 @@
 'use client';
 
 import BaseSheet from './BaseSheet';
+import SpellBook from '../SpellBook';
 import schema from '@/lib/character/sheet-schema/dnd5e2024';
 
 interface DND5E2024SheetProps {
@@ -30,7 +31,8 @@ export default function DND5E2024Sheet({ characterId, data, equipment = [], comp
         `${species} ${characterClass}${subclass ? ` (${subclass})` : ''} · Level ${level}`,
         `${background} · ${alignment}`,
       ]}
-      hiddenFieldKeys={['background', 'alignment']}
+      hiddenFieldKeys={['background', 'alignment', 'spellSlots', 'knownSpells']}
+      extra={<SpellBook characterId={characterId} gameSystem="5E_2024" data={data} />}
       compact={compact}
     />
   );

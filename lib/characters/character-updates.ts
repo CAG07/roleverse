@@ -34,3 +34,50 @@ export async function updateCharacterGameDataColumn(
   const { error } = await supabase.from('characters').update({ [column]: value }).eq('id', characterId);
   if (error) console.error(`Failed to update character ${column}`, error);
 }
+
+const KEY_UPDATE_ATTEMPTS = 4;
+
+/**
+ * Set one key inside a JSONB column without clobbering the column's other keys.
+ * Reads the column fresh, then writes only if the row's `updated_at` (bumped by the
+ * update_characters_updated_at trigger on every write) is unchanged since that read;
+ * if another write landed in between, re-reads and tries again. Throws on failure.
+ */
+export async function updateCharacterGameDataKey(
+  characterId: string,
+  column: GameDataColumn,
+  key: string,
+  value: unknown
+): Promise<void> {
+  const supabase = createClient();
+  for (let attempt = 0; attempt < KEY_UPDATE_ATTEMPTS; attempt++) {
+    const { data, error: readError } = await supabase
+      .from('characters')
+      .select(`${column}, updated_at`)
+      .eq('id', characterId)
+      .single();
+    if (readError) {
+      console.error(`Failed to read character ${column}`, readError);
+      throw readError;
+    }
+    const row = data as Record<string, unknown> | null;
+    const current = (row?.[column] as Record<string, unknown> | null) ?? {};
+    const readAt = row?.updated_at as string | null | undefined;
+
+    let update = supabase
+      .from('characters')
+      .update({ [column]: { ...current, [key]: value } })
+      .eq('id', characterId);
+    update = readAt ? update.eq('updated_at', readAt) : update.is('updated_at', null);
+    const { data: written, error } = await update.select('id');
+    if (error) {
+      console.error(`Failed to update character ${column}.${key}`, error);
+      throw error;
+    }
+    if (written && written.length > 0) return;
+    // Zero rows: the row changed after our read — loop to re-read and re-apply.
+  }
+  const conflict = new Error(`Character ${column}.${key} kept changing during the save; gave up after retries.`);
+  console.error(conflict);
+  throw conflict;
+}

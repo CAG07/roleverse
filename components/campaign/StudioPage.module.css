@@ -27,7 +27,7 @@
 
 .backLink {
   font-family: var(--font-body);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--ivory-muted);
   text-decoration: none;
   margin-bottom: 1rem;
@@ -38,7 +38,7 @@
 
 .navHeading {
   font-family: var(--font-heading);
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -47,7 +47,7 @@
 
 .navSubheading {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--ivory-muted);
   margin-bottom: 0.75rem;
   overflow: hidden;
@@ -65,7 +65,7 @@
   border-left: 3px solid transparent;
   color: var(--ivory-muted);
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -99,7 +99,7 @@
 
 .placeholder {
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--ivory-muted);
 }
 
@@ -137,7 +137,7 @@
 
 .imageLabel {
   font-family: var(--font-body);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--ivory);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -146,7 +146,7 @@
 
 .imageSource {
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -185,7 +185,7 @@
 
 .videoSource {
   font-family: var(--font-heading);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -194,14 +194,14 @@
 
 .videoSnippet {
   font-family: var(--font-body);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--ivory-muted);
   margin: 0;
 }
 
 .videoUrl {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--gold);
   text-decoration: none;
   overflow: hidden;
@@ -244,7 +244,7 @@
   background: var(--void);
   border: var(--rule-thin);
   color: var(--ivory);
-  font-size: 1.25rem;
+  font-size: 1.3125rem;
   line-height: 1;
   cursor: pointer;
   z-index: 1;

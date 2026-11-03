@@ -82,7 +82,7 @@
 
 .welcomeTitle {
   font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: 1.5625rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -92,7 +92,7 @@
 
 .welcomeBody {
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 1.0125rem;
   color: var(--ivory-muted);
   margin: 0 0 1.5rem;
   line-height: 1.6;
@@ -111,7 +111,7 @@
 
 .tosHeading {
   font-family: var(--font-heading);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -121,7 +121,7 @@
 
 .tosText {
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.9125rem;
   color: var(--ivory-muted);
   line-height: 1.6;
   margin: 0;
@@ -129,7 +129,7 @@
 
 .welcomeError {
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.9125rem;
   color: var(--crimson-bright);
   margin: 0 0 1rem;
 }
@@ -141,7 +141,7 @@
   background: var(--void-raised);
   border: var(--rule-thin);
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;

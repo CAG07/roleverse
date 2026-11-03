@@ -1,6 +1,7 @@
 'use client';
 
 import BaseSheet from './BaseSheet';
+import SpellBook from '../SpellBook';
 import schema from '@/lib/character/sheet-schema/dnd35e';
 
 interface DND35ESheetProps {
@@ -25,7 +26,8 @@ export default function DND35ESheet({ characterId, data, equipment = [], compact
       equipment={equipment}
       showAbilityModifiers
       metaLines={[`${race} ${characterClass} · Level ${level} · ${alignment}`]}
-      hiddenFieldKeys={['alignment']}
+      hiddenFieldKeys={['alignment', 'knownSpells']}
+      extra={<SpellBook characterId={characterId} gameSystem="3_5E" data={data} />}
       compact={compact}
     />
   );

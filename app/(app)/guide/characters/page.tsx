@@ -46,6 +46,17 @@ export default function CharactersGuide() {
         <strong>Exporting &amp; Importing Characters</strong> for printing a sheet, exporting
         it to Fantasy Grounds, or bringing in updates from a file later on.
       </p>
+      <p>
+        Spellcasters in AD&amp;D 1st and 2nd Edition, D&amp;D 3.5, and both editions of 5th
+        Edition get a <strong>Spell Book</strong> on their sheet, grouped by spell level. Add
+        spells with <strong>Add Spell</strong>, then memorize them (AD&amp;D and 3.5 — use the
+        plus and minus buttons, and the book shows how many of that level&apos;s slots are
+        filled) or mark them prepared (5th Edition). Tick a box each time you cast: in
+        AD&amp;D and 3.5 the box belongs to the memorized spell, in 5th Edition to the spell
+        slot it used. <strong>Rest</strong> (or <strong>Long Rest</strong> in 5th Edition)
+        restores everything you cast. The Spell Book appears once the character has spell
+        slots or spells recorded; fill in spell slots on the character&apos;s edit page.
+      </p>
     </GuideTopic>
   );
 }

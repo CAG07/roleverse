@@ -72,6 +72,7 @@
 // absent. Fixed by adding the missing <base> leaf.
 import type { AssembledCharacterData } from '@/lib/types/character';
 import { characterDocument, diceLeaf, group, idList, leaf } from './xml';
+import { formatMemorizedSpellLines } from '@/lib/character/spellbook';
 
 const THIEF_SKILL_LABELS: Record<string, string> = {
   pickPockets: 'Pick Pockets',
@@ -446,6 +447,9 @@ export function exportAdd(gameSystem: 'ADD1E' | 'ADD2E', data: AssembledCharacte
     ...(turnUndeadLine ? [turnUndeadLine] : []),
     ...weaponDetailLines,
     ...animalCompanionLines,
+    // No real FG sample shows a populated AD&D spell list, so the spell book is
+    // folded into notes rather than guessed into spell tags.
+    ...formatMemorizedSpellLines(data.spellbook, 'Spell Book'),
   ];
   const notesXml = notesParts.length > 0 ? leaf('notes', 'string', notesParts.join('\n')) : '';
 

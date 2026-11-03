@@ -12,7 +12,7 @@
   align-items: center;
   gap: 0.375rem;
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--ivory-muted);
   text-decoration: none;
   margin-bottom: 1.5rem;
@@ -32,7 +32,7 @@
 
 .title {
   font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: 1.5625rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -42,7 +42,7 @@
 
 .count {
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   color: var(--ivory-dim);
 }
 
@@ -61,7 +61,7 @@
 
 .empty {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.9625rem;
   color: var(--ivory-dim);
   font-style: italic;
 }
@@ -106,20 +106,20 @@
 
 .sessionDate {
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--ivory);
   flex: 1;
 }
 
 .sessionDuration {
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   color: var(--ivory-muted);
 }
 
 .activeBadge {
   font-family: var(--font-heading);
-  font-size: 0.55rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -130,7 +130,7 @@
 
 .sessionPreview {
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   color: var(--ivory-dim);
   line-height: 1.5;
   margin: 0.5rem 0 0;

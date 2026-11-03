@@ -20,7 +20,7 @@
 
 .sectionDivider {
   font-family: var(--font-heading);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -56,7 +56,7 @@
 .formLabel {
   display: block;
   font-family: var(--font-heading);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -71,7 +71,7 @@
   border: var(--rule-thin);
   color: var(--ivory);
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 1.0125rem;
   padding: 0.625rem 0.875rem;
   outline: none;
   transition: border-color 0.2s;
@@ -89,7 +89,7 @@
 
 .hint {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--ivory-dim);
   margin: -0.5rem 0 1rem;
 }
@@ -104,7 +104,7 @@
 
 .openRemove {
   font-family: var(--font-heading);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   background: transparent;
   border: none;
   color: var(--ivory-dim);
@@ -125,7 +125,7 @@
 
 .tableHeaderCell {
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -134,7 +134,7 @@
 
 .addBtn {
   font-family: var(--font-heading);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;

@@ -19,7 +19,7 @@
 }
 .sectionLabel {
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -28,7 +28,7 @@
 .hint {
   margin: 0;
   font-family: var(--font-body);
-  font-size: 0.725rem;
+  font-size: 0.7875rem;
   color: var(--ivory-muted);
 }
 .memberList {
@@ -49,7 +49,7 @@
 .rankLabel {
   align-self: center;
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ivory-dim);
@@ -123,7 +123,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--font-body);
-  font-size: 0.775rem;
+  font-size: 0.8375rem;
   color: var(--ivory);
   font-weight: 500;
 }
@@ -134,16 +134,16 @@
   white-space: nowrap;
   font-family: var(--font-body);
   color: var(--ivory-muted);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
 }
 .memberHp {
   font-family: var(--font-heading);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   color: var(--ivory-dim);
   white-space: nowrap;
 }
 .empty {
   font-family: var(--font-body);
-  font-size: 0.775rem;
+  font-size: 0.8375rem;
   color: var(--ivory-dim);
 }

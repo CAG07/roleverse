@@ -1,6 +1,7 @@
 'use client';
 
 import BaseSheet from './BaseSheet';
+import SpellBook from '../SpellBook';
 import schema from '@/lib/character/sheet-schema/dnd5e';
 
 interface DND5ESheetProps {
@@ -30,7 +31,8 @@ export default function DND5ESheet({ characterId, data, equipment = [], compact 
         `${race} ${characterClass}${subclass ? ` (${subclass})` : ''} · Level ${level}`,
         `${background} · ${alignment}`,
       ]}
-      hiddenFieldKeys={['background', 'alignment']}
+      hiddenFieldKeys={['background', 'alignment', 'spellSlots', 'knownSpells']}
+      extra={<SpellBook characterId={characterId} gameSystem="5E_2014" data={data} />}
       compact={compact}
     />
   );

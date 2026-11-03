@@ -35,7 +35,7 @@
   border: var(--rule-thin);
   padding: 0.3rem 0.5rem;
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
 }
 .funnelName {
   color: var(--ivory);
@@ -55,13 +55,13 @@
 .occupationLine,
 .luckySignLine {
   font-family: var(--font-body);
-  font-size: 0.775rem;
+  font-size: 0.8375rem;
   color: var(--ivory-muted);
   margin: 0.2rem 0 0;
 }
 .occupationLabel {
   font-family: var(--font-heading);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -70,7 +70,7 @@
 
 .sectionLabel {
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -92,7 +92,7 @@
 }
 .combatLabel {
   font-family: var(--font-heading);
-  font-size: 0.525rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -101,7 +101,7 @@
 }
 .combatValue {
   font-family: var(--font-heading);
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   font-weight: 700;
   display: block;
 }
@@ -119,7 +119,7 @@
 }
 .plainListItem {
   font-family: var(--font-body);
-  font-size: 0.775rem;
+  font-size: 0.8375rem;
   color: var(--ivory-muted);
 }
 .spellName {

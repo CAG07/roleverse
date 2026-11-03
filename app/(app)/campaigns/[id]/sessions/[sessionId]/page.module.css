@@ -9,7 +9,7 @@
   align-items: center;
   gap: 0.375rem;
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--ivory-muted);
   text-decoration: none;
   margin-bottom: 1.5rem;
@@ -41,7 +41,7 @@
 
 .logTitle {
   font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: 1.5625rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -51,7 +51,7 @@
 
 .logMeta {
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--ivory-muted);
   display: flex;
   align-items: center;
@@ -60,7 +60,7 @@
 
 .activeBadge {
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -98,7 +98,7 @@
 
 .entryPlayerName {
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -110,7 +110,7 @@
   border: var(--rule-thin);
   padding: 0.625rem 0.875rem;
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.9625rem;
   color: var(--ivory);
   max-width: 80%;
   line-height: 1.55;
@@ -126,7 +126,7 @@
 .entryAgentLabel {
   display: inline-block;
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -140,7 +140,7 @@
   border-left: 2px solid var(--crimson-dim);
   padding: 0.625rem 0.875rem;
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.9625rem;
   color: var(--ivory);
   line-height: 1.55;
   max-width: 80%;
@@ -149,13 +149,13 @@
 
 .entryTime {
   font-family: var(--font-body);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   color: var(--ivory-dim);
 }
 
 .logEmpty {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.9625rem;
   color: var(--ivory-dim);
   font-style: italic;
 }
@@ -172,7 +172,7 @@
 
 .summaryTitle {
   font-family: var(--font-heading);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -182,7 +182,7 @@
 
 .summaryBody {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.9625rem;
   color: var(--ivory-muted);
   line-height: 1.65;
   white-space: pre-wrap;

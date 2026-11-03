@@ -124,10 +124,15 @@ const schema: SystemSheetSchema = {
       label: 'Known Spells',
       column: 'combat',
       kind: 'table',
+      // `prepared` stays free text on purpose: the Spell Book reads it as a count
+      // ("2") or one copy ("Yes") and writes counts back, so rows saved before the
+      // Spell Book existed keep their value in every reader (Edit page, plain-text
+      // export/import). See memorizedKey in lib/character/spellbook.ts.
       columns: [
         { key: 'level', label: 'Level', type: 'number' },
         { key: 'name', label: 'Spell Name', type: 'text' },
         { key: 'prepared', label: 'Prepared', type: 'text' },
+        { key: 'cast', label: 'Cast Today', type: 'number' },
       ],
     },
   ],

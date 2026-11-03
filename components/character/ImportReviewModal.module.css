@@ -60,7 +60,7 @@
 
 .title {
   font-family: var(--font-heading);
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--ivory);
@@ -69,7 +69,7 @@
 
 .message {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.9625rem;
   color: var(--ivory-muted);
   margin: 0 0 1.25rem;
   line-height: 1.5;
@@ -91,12 +91,12 @@
   background: var(--void-surface);
   border-left: 2px solid var(--gold-dim);
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
 }
 
 .diffLabel {
   font-family: var(--font-heading);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -137,7 +137,7 @@
 
 .caveatsTitle {
   font-family: var(--font-heading);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -149,14 +149,14 @@
   margin: 0;
   padding-left: 1.1rem;
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   color: var(--ivory-dim);
   line-height: 1.5;
 }
 
 .errorMsg {
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--crimson-bright);
   margin: 0 0 1rem;
 }
@@ -169,7 +169,7 @@
 
 .btnConfirm {
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -190,7 +190,7 @@
 
 .btnCancel {
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;

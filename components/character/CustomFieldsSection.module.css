@@ -14,7 +14,7 @@
 
 .sectionLabel {
   font-family: var(--font-heading);
-  font-size: 0.575rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -24,7 +24,7 @@
 
 .emptyText {
   font-family: var(--font-body);
-  font-size: 0.775rem;
+  font-size: 0.8375rem;
   color: var(--ivory-dim);
   margin: 0 0 0.5rem;
 }
@@ -42,7 +42,7 @@
   justify-content: space-between;
   gap: 0.5rem;
   font-family: var(--font-body);
-  font-size: 0.775rem;
+  font-size: 0.8375rem;
   padding: 0.25rem 0;
   border-bottom: 1px solid var(--void-border);
 }
@@ -106,7 +106,7 @@
   border: var(--rule-thin);
   color: var(--ivory);
   font-family: var(--font-body);
-  font-size: 0.775rem;
+  font-size: 0.8375rem;
   padding: 0.3rem 0.5rem;
   outline: none;
 }
@@ -118,7 +118,7 @@
 .addCancel,
 .addBtn {
   font-family: var(--font-heading);
-  font-size: 0.65rem;
+  font-size: 0.7125rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;

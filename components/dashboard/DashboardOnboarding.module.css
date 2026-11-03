@@ -81,7 +81,7 @@
 
 .welcomeLabel {
   font-family: var(--font-heading);
-  font-size: 0.7rem;
+  font-size: 0.7625rem;
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -118,7 +118,7 @@
 
 .welcomeBody {
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: 1.0625rem;
   font-style: italic;
   color: var(--ivory-muted);
   line-height: 1.6;
@@ -131,7 +131,7 @@
   background: var(--crimson);
   border: 1px solid var(--crimson-bright);
   font-family: var(--font-heading);
-  font-size: 0.8rem;
+  font-size: 0.8625rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
