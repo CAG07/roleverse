@@ -19,7 +19,7 @@
 }
 .sectionLabel {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -49,7 +49,7 @@
 .rankLabel {
   align-self: center;
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ivory-dim);
@@ -138,7 +138,7 @@
 }
 .memberHp {
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   color: var(--ivory-dim);
   white-space: nowrap;
 }

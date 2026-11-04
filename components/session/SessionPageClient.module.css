@@ -41,7 +41,7 @@
   background: var(--void-mid);
   border: none;
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -173,7 +173,7 @@
 /* Section label */
 .sectionLabel {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -245,7 +245,7 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--ivory);
   background: var(--crimson-dim);
@@ -253,7 +253,7 @@
 }
 .avatarName {
   font-family: var(--font-body);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: var(--ivory-muted);
   max-width: 52px;
   overflow: hidden;
@@ -337,7 +337,7 @@
   background: var(--void-surface);
   border: 1px solid var(--gold-dim);
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -361,7 +361,7 @@
   background: none;
   border: 1px solid var(--void-border);
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
