@@ -60,7 +60,7 @@
 
 .activeBadge {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -98,7 +98,7 @@
 
 .entryPlayerName {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -126,7 +126,7 @@
 .entryAgentLabel {
   display: inline-block;
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -149,7 +149,7 @@
 
 .entryTime {
   font-family: var(--font-body);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   color: var(--ivory-dim);
 }
 
@@ -172,7 +172,7 @@
 
 .summaryTitle {
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;

@@ -52,7 +52,7 @@
 
 .dispBadge {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -68,7 +68,7 @@
 
 .sourceBadge {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -125,7 +125,7 @@
   background: transparent;
   border: 1px solid var(--void-border);
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -146,7 +146,7 @@
   background: transparent;
   border: 1px solid var(--crimson-dim);
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -184,7 +184,7 @@
 }
 .sectionLabelText {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -299,7 +299,7 @@
   background: var(--crimson);
   border: 1px solid var(--crimson-bright);
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -315,7 +315,7 @@
   background: transparent;
   border: 1px solid var(--void-border);
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;

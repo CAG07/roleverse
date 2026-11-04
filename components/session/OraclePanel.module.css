@@ -19,7 +19,7 @@
 }
 .sectionLabel {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -37,7 +37,7 @@
   border: 1px solid var(--void-border);
   color: var(--ivory-muted);
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -74,7 +74,7 @@
   border: 1px solid var(--void-border);
   color: var(--ivory-dim);
   font-family: var(--font-body);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   cursor: pointer;
   transition:
     border-color 0.15s,
@@ -119,7 +119,7 @@
 }
 .presetLikelihood {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -169,7 +169,7 @@
   border: 1px solid var(--void-border);
   color: var(--ivory-muted);
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -227,7 +227,7 @@
 }
 .fluxLabel {
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -283,7 +283,7 @@
 
 .fieldLabel {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;

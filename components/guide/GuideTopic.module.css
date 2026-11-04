@@ -21,7 +21,7 @@
 }
 .eyebrowText {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -140,7 +140,7 @@
 }
 .footerNavDirection {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;

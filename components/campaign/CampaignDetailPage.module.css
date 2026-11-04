@@ -56,7 +56,7 @@
 
 .systemBadge {
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -85,7 +85,7 @@
 }
 .sectionLabelText {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -331,7 +331,7 @@
 
 .statLabel {
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -356,7 +356,7 @@
 
 .moduleSectionLabel {
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -367,7 +367,7 @@
   background: transparent;
   border: none;
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -439,7 +439,7 @@
   background: var(--gold-tint);
   border: 1px solid var(--gold-dim);
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -629,7 +629,7 @@
 
 .sessionDuration {
   font-family: var(--font-heading);
-  font-size: 0.7125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -711,7 +711,7 @@
   background: var(--void-surface);
   border: 1px solid var(--crimson-dim);
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -735,7 +735,7 @@
   background: none;
   border: 1px solid var(--void-border);
   font-family: var(--font-heading);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
